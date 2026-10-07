@@ -25,6 +25,8 @@ Al correr dentro del devcontainer, el dev server necesita `--host` (o `server.ho
 
 Landing page de **"Hathor Frequency"**, un sello discográfico / estudio de producción musical, video y live sessions para bandas emergentes en CDMX, con React + Vite.
 
+> **El diseño exacto y aprobado de cada vista (desktop y móvil) está en [`docs/DESIGN.md`](docs/DESIGN.md).** Esa especificación prevalece sobre las descripciones de secciones de abajo (Servicios = "Consola de canales", Artistas = "Tracklist", Contacto = "Vinyl centrado", y se añade la sección Reservar = "Calendario"). Implementa cada componente tal como está ahí; pregunta antes de desviarte.
+
 ### Stack
 - Docker (devcontainer)
 - React + Vite (JavaScript o TypeScript)
