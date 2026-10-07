@@ -1,0 +1,40 @@
+# Levanta todo el proyecto: `docker compose up`
+#   app → http://localhost:5173 (Vite)
+#   db  → PostgreSQL (puerto del host: ${DB_PORT:-5440})
+name: hathor-frequency
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-hathor}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hathor}
+      POSTGRES_DB: ${POSTGRES_DB:-hathor_frequency}
+    ports:
+      - "${DB_PORT:-5440}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-hathor}:${POSTGRES_PASSWORD:-hathor}@db:5432/${POSTGRES_DB:-hathor_frequency}?schema=public
+      PRISMA_HIDE_UPDATE_MESSAGE: "1"
+    ports:
+      - "${APP_PORT:-5173}:5173"
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+
+volumes:
+  pgdata:
+  node_modules:

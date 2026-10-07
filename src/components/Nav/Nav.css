@@ -1,0 +1,117 @@
+.hf-nav {
+  /* siempre visible */
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--c-bg);
+  border-bottom: 1px solid var(--c-line);
+}
+
+.hf-nav__bar {
+  height: 96px;
+  padding: 0 var(--pad-x);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+}
+
+.hf-nav__links {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.hf-nav__links a:not(.hf-btn) { transition: color .2s; }
+.hf-nav__links a:not(.hf-btn):hover,
+.hf-nav__links a[aria-current="page"]:not(.hf-btn) { color: var(--c-gold); }
+
+.hf-nav__links--right { justify-self: end; }
+
+.hf-nav__logo--desktop { justify-self: center; }
+
+.hf-nav__logo--mobile,
+.hf-nav__mobile-actions { display: none; }
+
+/* Entre 768 y ~1100px los links necesitan menos aire */
+@media (max-width: 1100px) and (min-width: 768px) {
+  .hf-nav__links { gap: 24px; letter-spacing: 0.15em; }
+  .hf-nav__links--right .hf-btn { padding: 0 18px; }
+}
+
+@media (max-width: 767px) {
+  .hf-nav__bar {
+    height: 72px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .hf-nav__links,
+  .hf-nav__logo--desktop { display: none; }
+
+  .hf-nav__logo--mobile { display: inline-flex; }
+
+  .hf-nav__mobile-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.hf-nav__burger {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--c-line-2);
+  border-radius: 50%;
+  color: var(--c-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Menú desplegado (solo móvil) */
+.hf-mmenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--c-bg);
+  border-bottom: 1px solid var(--c-line);
+  padding: 16px 16px 32px;
+  display: flex;
+  flex-direction: column;
+}
+
+.hf-mmenu a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 60px;
+  border-bottom: 1px solid var(--c-line-3);
+  font-family: var(--font-display);
+  font-size: 24px;
+  transition: color .2s;
+}
+
+.hf-mmenu a:hover,
+.hf-mmenu a[aria-current="page"] { color: var(--c-gold); }
+
+.hf-mmenu a span {
+  color: var(--c-gold);
+  font-size: 14px;
+}
+
+.hf-mmenu__slogan {
+  margin-top: 24px;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--c-gold);
+  font-size: 16px;
+}
+
+@media (min-width: 768px) {
+  .hf-mmenu { display: none; }
+}

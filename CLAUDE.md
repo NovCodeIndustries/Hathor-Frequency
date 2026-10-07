@@ -4,22 +4,42 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Estado actual
 
-El repo está sin scaffolding: solo contiene `.gitignore` (plantilla Node), un `README.md` stub y este archivo. No existe `package.json`, `/src` ni devcontainer. La primera tarea real es crear el proyecto Vite y la estructura descrita en "Qué construir".
+La landing está construida (React + TypeScript + Vite) siguiendo `docs/DESIGN.md`, con Docker Compose (app + PostgreSQL) y Prisma.
+
+- Multipágina con `react-router`, definido en `src/App.tsx`:
+  - `src/components/Layout/` contiene Nav sticky + `<Outlet>` + Ticker + Footer;
+  - las páginas están en `src/pages/`;
+  - rutas: `/`, `/servicios`, `/artistas`, `/reservar`, `/contacto` y `/estudio` (provisional).
+  - En producción, el hosting debe redirigir toda ruta a `index.html` (SPA fallback).
+- Componentes en `src/components/<Seccion>/` (un `.tsx` + `.css` por componente) y compartidos en `src/components/shared/`.
+- Estilos: CSS plano con prefijo `hf-`, tokens en `src/styles/tokens.css`. Breakpoint único: `@media (max-width: 767px)`.
+- Datos editables en `src/data/*.ts`, con tipos en `src/data/types.ts`.
+- Formularios (Contacto, Reservar): todo envío pasa por `src/lib/submit.ts`, que hoy solo simula. **Aún no hay API.** La base de datos está preparada (Prisma), pero el frontend no la usa todavía.
+- Base de datos:
+  - esquema en `prisma/schema.prisma`, con los modelos `ContactRequest` y `Booking`;
+  - migraciones en `prisma/migrations/`;
+  - configuración en `prisma.config.ts` (Prisma 7: la URL va en la config, no en el schema);
+  - el cliente se genera en `server/generated/prisma` y está en gitignore.
+- El código de Prisma nunca va en `src/`, porque `src/` es el bundle del navegador. El código de servidor va en `/server`.
 
 ## Comandos
 
-Aún no hay `package.json`, así que ningún comando funciona todavía. Tras el scaffolding (`npm create vite@latest . -- --template react`):
-
 ```bash
-npm install      # dependencias
-npm run dev      # servidor de desarrollo (Vite, http://localhost:5173)
-npm run build    # build de producción a /dist
-npm run preview  # sirve el build de /dist
+docker compose up --build   # todo: db (PostgreSQL 17, host :5440) + app (Vite :5173); migra al arrancar
+npm install                 # dependencias (sin Docker)
+npm run dev                 # Vite en http://localhost:5173 (server.host: true ya configurado)
+npm run build               # tsc -b (chequeo de tipos) + build a /dist
+npm run preview             # sirve /dist
+npm run lint                # oxlint
+npm run db:migrate          # prisma migrate dev (nueva migración tras editar el schema)
+npm run db:deploy           # prisma migrate deploy
+npm run db:generate         # prisma generate
+npm run db:studio           # prisma studio
 ```
 
-No hay linter ni suite de tests configurados; no asumas que existen `npm test` o `npm run lint`. Si se añaden, documéntalos aquí.
+Dentro de Docker, los comandos de Prisma se corren con `docker compose exec app npm run db:migrate`. Desde el host, `.env` (copia de `.env.example`) apunta a `localhost:5440`.
 
-Al correr dentro del devcontainer, el dev server necesita `--host` (o `server.host: true` en `vite.config.js`) para ser accesible desde fuera del contenedor.
+No hay suite de tests. El arranque del contenedor `app` lo hace `docker/entrypoint.sh`: reinstala dependencias si cambió el lock, ejecuta `prisma generate` y `prisma migrate deploy`, y devuelve `server/` al dueño del repo.
 
 ## Qué construir
 
@@ -29,8 +49,9 @@ Landing page de **"Hathor Frequency"**, un sello discográfico / estudio de prod
 
 ### Stack
 - Docker (devcontainer)
-- React + Vite (JavaScript o TypeScript)
-- CSS Modules o CSS plano con variables en `:root` (sin frameworks de UI)
+- React + Vite con TypeScript
+- PostgreSQL + Prisma (tablas vía migraciones), todo levantado con `docker compose`
+- CSS plano con variables en `:root` y clases prefijadas `hf-` (sin frameworks de UI)
 - Componentes separados por sección en `/src/components`
 - Responsive (desktop primero, que funcione bien en móvil)
 

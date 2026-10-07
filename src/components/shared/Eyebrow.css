@@ -1,0 +1,29 @@
+.hf-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 13px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--c-gold);
+  --eyebrow-line: 36px;
+}
+
+.hf-eyebrow--both { justify-content: center; }
+
+.hf-eyebrow__line {
+  flex: none;
+  width: var(--eyebrow-line);
+  height: 1px;
+  background: var(--c-gold);
+}
+
+@media (max-width: 767px) {
+  .hf-eyebrow {
+    gap: 12px;
+    font-size: 12px;
+    --eyebrow-line: 28px;
+  }
+}

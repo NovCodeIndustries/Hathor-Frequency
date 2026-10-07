@@ -1,0 +1,233 @@
+.hf-services {
+  min-height: 900px;
+  padding: 96px var(--pad-x);
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+}
+
+.hf-services__head {
+  display: grid;
+  grid-template-columns: 7fr 5fr;
+  gap: 80px;
+  align-items: end;
+}
+
+.hf-services__title {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.hf-console {
+  flex-grow: 1;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+}
+
+/* Canal de consola */
+.hf-strip {
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius-card);
+  padding: 24px;
+  background: var(--c-surface-2);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  transition: border-color .25s, box-shadow .25s;
+}
+
+.hf-strip:hover {
+  border-color: var(--c-gold-2);
+  box-shadow: 0 0 28px rgba(242,201,76,0.12);
+}
+
+/* Desktop: fila CH + LED, perillas en una fila propia debajo */
+.hf-strip__top {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "ch led"
+    "knobs knobs";
+  align-items: center;
+  row-gap: 20px;
+}
+
+.hf-strip__ch {
+  grid-area: ch;
+  font-family: var(--font-display);
+  color: var(--c-gold);
+  font-size: 14px;
+  letter-spacing: 0.2em;
+}
+
+.hf-strip__led {
+  grid-area: led;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--c-gold);
+  box-shadow: var(--glow-led);
+  /* el LED se apaga cuando el fader baja */
+  opacity: calc(0.25 + var(--level, 100) * 0.0075);
+  transition: opacity .15s;
+}
+
+.hf-strip__knobs {
+  grid-area: knobs;
+  display: flex;
+  gap: 14px;
+}
+
+/* Fader vertical (interactivo: arrastrar o teclado) */
+.hf-strip__fader {
+  position: relative;
+  height: 170px;
+  border-left: 1px dashed var(--c-line);
+  margin-left: 17px;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.hf-strip__fader:focus { outline: none; }
+
+.hf-strip__fader:focus-visible .hf-strip__cap {
+  outline: 2px solid var(--c-gold);
+  outline-offset: 3px;
+}
+
+.hf-strip__track {
+  position: absolute;
+  left: -2px;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--c-line-3);
+}
+
+.hf-strip__cap {
+  position: absolute;
+  left: -18px;
+  /* recorrido: 170px de pista − 14px de cap */
+  top: calc((100 - var(--level)) * (100% - 14px) / 100);
+  width: 36px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--grad-gold-v);
+  box-shadow: var(--glow-cap);
+  cursor: grab;
+  transition: box-shadow .25s;
+}
+
+.hf-strip:hover .hf-strip__cap,
+.hf-strip__fader.is-dragging .hf-strip__cap { box-shadow: 0 0 22px rgba(242,201,76,0.7); }
+
+.hf-strip__fader.is-dragging,
+.hf-strip__fader.is-dragging .hf-strip__cap { cursor: grabbing; }
+
+.hf-strip__body {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hf-strip__body h3 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.hf-strip__body p {
+  color: var(--c-text-2);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.55;
+}
+
+@media (max-width: 1200px) and (min-width: 768px) {
+  .hf-services__head { gap: 48px; }
+  .hf-strip { padding: 18px; }
+  .hf-strip__body h3 { font-size: 18px; }
+}
+
+@media (max-width: 767px) {
+  .hf-services {
+    min-height: 0;
+    padding: 56px 16px;
+    gap: 32px;
+  }
+
+  .hf-services__head {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .hf-services__title { gap: 16px; }
+
+  .hf-console {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .hf-strip {
+    padding: 20px;
+    gap: 16px;
+  }
+
+  /* Móvil: CH, LED y perillas en una sola fila */
+  .hf-strip__top {
+    display: flex;
+    gap: 12px;
+  }
+
+  .hf-strip__ch { font-size: 13px; }
+
+  .hf-strip__knobs {
+    margin-left: auto;
+    gap: 8px;
+  }
+
+  .hf-strip__knob {
+    width: 26px;
+    height: 26px;
+  }
+
+  /* Fader horizontal */
+  .hf-strip__fader {
+    height: 30px;
+    margin-left: 0;
+    border-left: 0;
+    border-bottom: 1px dashed var(--c-line);
+    /* permite seguir haciendo scroll vertical en la página */
+    touch-action: pan-y;
+  }
+
+  .hf-strip__track {
+    left: 0;
+    right: 0;
+    top: 14px;
+    bottom: auto;
+    width: auto;
+    height: 3px;
+  }
+
+  .hf-strip__cap {
+    top: 0;
+    left: calc(var(--level) * (100% - 14px) / 100);
+    width: 14px;
+    height: 30px;
+    background: var(--grad-gold);
+  }
+
+  .hf-strip__body { gap: 6px; }
+
+  .hf-strip__body p { font-size: 15px; }
+}

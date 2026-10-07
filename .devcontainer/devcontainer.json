@@ -1,0 +1,17 @@
+{
+  "name": "Hathor Frequency",
+  "dockerComposeFile": ["../docker-compose.yml"],
+  "service": "app",
+  "runServices": ["db", "app"],
+  "workspaceFolder": "/app",
+  "forwardPorts": [5173, 4173],
+  "portsAttributes": {
+    "5173": { "label": "Vite dev" },
+    "4173": { "label": "Vite preview" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["Prisma.prisma", "oxc.oxc-vscode"]
+    }
+  }
+}

@@ -1,0 +1,34 @@
+:root {
+  --c-bg: #000;          /* fondo dominante */
+  --c-bg-alt: #0b0b0b;   /* mitad izquierda del hero */
+  --c-surface: #0a0a0a;  /* paneles (reservar), disco */
+  --c-surface-2: #050505;/* tarjetas/canales de consola */
+  --c-gold: #F2C94C;     /* acento principal, glow */
+  --c-gold-2: #B8860B;   /* dorado secundario (degradados) */
+  --c-text: #fff;
+  --c-text-2: #bbb;      /* párrafos, labels */
+  --c-text-3: #888;      /* labels terciarios (días de semana, dt) */
+  --c-line: #333;        /* bordes, divisores, palabras apagadas */
+  --c-line-2: #444;      /* bordes de inputs y botones secundarios */
+  --c-line-3: #222;      /* divisores sutiles, pistas de fader */
+
+  --grad-gold: linear-gradient(90deg, #F2C94C, #B8860B);
+  --grad-gold-v: linear-gradient(180deg, #F2C94C, #B8860B); /* caps de fader */
+  --glow-btn: 0 0 22px rgba(242,201,76,0.35);
+  --glow-btn-hover: 0 0 34px rgba(242,201,76,0.55);
+  --glow-text: 0 0 24px rgba(242,201,76,0.25);
+  --glow-cap: 0 0 14px rgba(242,201,76,0.45);
+  --glow-led: 0 0 10px #F2C94C;
+
+  --radius-pill: 40px;
+  --radius-card: 6px;
+
+  --font-display: 'Cinzel', serif;
+  --font-body: 'Josefin Sans', sans-serif;
+
+  --pad-x: 80px;
+}
+
+@media (max-width: 767px) {
+  :root { --pad-x: 16px; }
+}

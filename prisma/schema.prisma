@@ -1,0 +1,60 @@
+// Esquema de base de datos de Hathor Frequency (PostgreSQL).
+// Tablas para los formularios de la landing: Contacto y Reservar.
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../server/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Servicios que se pueden reservar (mismos que src/data/booking.ts)
+enum Service {
+  GRABACION     @map("grabacion")
+  MEZCLA        @map("mezcla")
+  MASTERIZACION @map("masterizacion")
+  VIDEO         @map("video")
+  LIVE_SESSIONS @map("live_sessions")
+
+  @@map("service")
+}
+
+enum BookingStatus {
+  PENDING   @map("pending")
+  CONFIRMED @map("confirmed")
+  CANCELLED @map("cancelled")
+
+  @@map("booking_status")
+}
+
+/// Correos enviados desde la sección Contacto
+model ContactRequest {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @db.VarChar(254)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([email])
+  @@map("contact_requests")
+}
+
+/// Solicitudes de sesión desde la sección Reservar
+model Booking {
+  id        String        @id @default(uuid()) @db.Uuid
+  /// Día de la sesión (sin hora)
+  date      DateTime      @db.Date
+  /// Hora de inicio "HH:MM" (10:00, 12:00, 15:00, 17:00, 19:00, 21:00)
+  startTime String        @map("start_time") @db.VarChar(5)
+  service   Service
+  status    BookingStatus @default(PENDING)
+  /// Contacto de quien reserva (el diseño actual aún no lo pide)
+  email     String?       @db.VarChar(254)
+  name      String?       @db.VarChar(120)
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([date])
+  @@map("bookings")
+}

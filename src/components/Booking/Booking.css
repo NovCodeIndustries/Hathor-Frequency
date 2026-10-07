@@ -1,0 +1,318 @@
+.hf-booking {
+  min-height: 1000px;
+  padding: 88px var(--pad-x);
+  display: grid;
+  grid-template-columns: 7fr 5fr;
+  gap: 64px;
+}
+
+.hf-booking__main {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.hf-booking__title {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Calendario */
+.hf-cal {
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius-card);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.hf-cal__nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.hf-cal__arrow {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--c-line-2);
+  color: var(--c-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color .2s, opacity .2s;
+}
+
+.hf-cal__arrow:hover:not(:disabled) { border-color: var(--c-gold); }
+
+.hf-cal__arrow:disabled {
+  opacity: .3;
+  cursor: not-allowed;
+}
+
+.hf-cal__title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  letter-spacing: 0.08em;
+}
+
+.hf-cal__week,
+.hf-cal__days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.hf-cal__week {
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--c-text-3);
+  text-align: center;
+}
+
+.hf-cal__wd-short { display: none; }
+
+.hf-cal__day {
+  height: 56px;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--c-line-3);
+  color: var(--c-text);
+  font-family: var(--font-display);
+  font-size: 18px;
+  transition: border-color .2s, background .2s, color .2s;
+}
+
+.hf-cal__day:hover:not(:disabled) { border-color: var(--c-gold); }
+
+.hf-cal__day[aria-pressed="true"] {
+  background: var(--c-gold);
+  border-color: var(--c-gold);
+  color: #000;
+  box-shadow: 0 0 22px rgba(242,201,76,0.4);
+}
+
+.hf-cal__day:disabled {
+  color: var(--c-line-2);
+  cursor: not-allowed;
+}
+
+.hf-cal__arrow:focus-visible,
+.hf-cal__day:focus-visible,
+.hf-slot:focus-visible { outline-offset: 2px; }
+
+/* Panel de la sesión */
+.hf-session {
+  position: relative;
+  overflow: hidden;
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius-card);
+  padding: 48px 40px;
+  display: flex;
+}
+
+.hf-session__rings {
+  position: absolute;
+  right: -160px;
+  bottom: -160px;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.hf-session__form {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.hf-session__date {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hf-session__kicker {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--c-gold);
+}
+
+.hf-session__day {
+  font-family: var(--font-display);
+  font-size: 30px;
+  line-height: 1.15;
+}
+
+.hf-session__field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hf-label {
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--c-text-2);
+}
+
+.hf-select {
+  height: 52px;
+  background: #000;
+  border: 1px solid var(--c-line-2);
+  border-radius: var(--radius-pill);
+  padding: 0 20px;
+  color: var(--c-text);
+  font-size: 16px;
+  font-weight: 400;
+  transition: border-color .2s;
+}
+
+.hf-select:focus { outline: none; border-color: var(--c-gold); }
+.hf-select:focus-visible { outline: 2px solid var(--c-gold); outline-offset: 2px; }
+
+.hf-session__slots legend {
+  padding: 0;
+  margin-bottom: 12px;
+}
+
+.hf-session__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.hf-slot {
+  height: 48px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--c-line-2);
+  color: var(--c-text);
+  font-size: 16px;
+  font-weight: 400;
+  transition: border-color .2s, background .2s, color .2s;
+}
+
+.hf-slot:hover { border-color: var(--c-gold); }
+
+.hf-slot[aria-pressed="true"] {
+  border-color: var(--c-gold);
+  background: rgba(242,201,76,0.12);
+  color: var(--c-gold);
+}
+
+.hf-session__note {
+  color: var(--c-text-2);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.hf-session__submit {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hf-session__submit .hf-btn { height: 56px; }
+
+.hf-session__status {
+  min-height: 1.4em;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--c-gold);
+}
+
+.hf-session__status:empty { min-height: 0; }
+
+@media (max-width: 1200px) and (min-width: 768px) {
+  .hf-booking { gap: 32px; }
+  .hf-cal { padding: 20px; }
+  .hf-session { padding: 32px 24px; }
+}
+
+@media (max-width: 767px) {
+  .hf-booking {
+    min-height: 0;
+    padding: 56px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .hf-booking__main { gap: 28px; }
+
+  .hf-booking__title { gap: 16px; }
+
+  .hf-cal {
+    padding: 16px 12px;
+    gap: 14px;
+  }
+
+  .hf-cal__title {
+    font-size: 19px;
+    letter-spacing: 0.06em;
+  }
+
+  .hf-cal__week,
+  .hf-cal__days { gap: 4px; }
+
+  .hf-cal__week {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+
+  .hf-cal__wd-long { display: none; }
+  .hf-cal__wd-short { display: inline; }
+
+  .hf-cal__day {
+    height: 44px;
+    padding: 0;
+    font-size: 16px;
+  }
+
+  .hf-cal__day[aria-pressed="true"] { box-shadow: 0 0 18px rgba(242,201,76,0.4); }
+
+  .hf-session { padding: 24px 16px; }
+
+  .hf-session__rings {
+    width: 240px;
+    height: 240px;
+    right: -110px;
+    top: -110px;
+    bottom: auto;
+  }
+
+  .hf-session__form { gap: 22px; }
+
+  .hf-session__date { gap: 6px; }
+
+  .hf-session__kicker { font-size: 12px; }
+
+  .hf-session__day {
+    font-size: 24px;
+    line-height: 1.2;
+  }
+
+  .hf-session__field { gap: 8px; }
+
+  .hf-select { padding: 0 18px; }
+
+  .hf-session__slots legend { margin-bottom: 10px; }
+
+  .hf-session__grid { gap: 8px; }
+
+  .hf-session__note { font-size: 14px; }
+
+  .hf-session__submit { margin-top: 0; }
+}

@@ -1,0 +1,35 @@
+.hf-logo {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  font-family: var(--font-display);
+  color: var(--c-text);
+}
+
+.hf-logo__main {
+  font-weight: 700;
+  font-size: var(--logo-main);
+  letter-spacing: var(--logo-track);
+  /* compensa el tracking del último carácter para centrar */
+  padding-left: var(--logo-track);
+}
+
+.hf-logo__sub {
+  font-weight: 400;
+  font-size: var(--logo-sub);
+  letter-spacing: var(--logo-track-sub);
+  color: var(--c-text-2);
+  margin-top: 6px;
+  padding-left: var(--logo-track-sub);
+}
+
+.hf-logo--nav { --logo-main: 26px; --logo-sub: 12px; --logo-track: 0.4em; --logo-track-sub: 0.55em; }
+.hf-logo--navMobile { --logo-main: 20px; --logo-sub: 10px; --logo-track: 0.35em; --logo-track-sub: 0.5em; }
+.hf-logo--footer { --logo-main: 22px; --logo-sub: 11px; --logo-track: 0.4em; --logo-track-sub: 0.55em; }
+
+/* En el nav móvil el logo va alineado a la izquierda, sin compensación */
+.hf-logo--navMobile { align-items: flex-start; }
+.hf-logo--navMobile .hf-logo__main,
+.hf-logo--navMobile .hf-logo__sub { padding-left: 0; }
+.hf-logo--navMobile .hf-logo__sub { margin-top: 5px; }

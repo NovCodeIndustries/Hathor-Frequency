@@ -1,0 +1,68 @@
+.hf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 54px;
+  padding: 0 32px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: background-color .25s, color .25s, border-color .25s, box-shadow .25s, transform .25s;
+}
+
+.hf-btn--block { display: flex; width: 100%; }
+
+.hf-btn--primary {
+  background: var(--c-gold);
+  color: #000;
+  font-weight: 600;
+  box-shadow: var(--glow-btn);
+}
+
+.hf-btn--primary:hover {
+  box-shadow: var(--glow-btn-hover);
+  transform: translateY(-1px);
+}
+
+.hf-btn--primary:disabled {
+  opacity: .6;
+  transform: none;
+  cursor: progress;
+}
+
+.hf-btn--ghost {
+  border: 1px solid var(--c-text);
+  color: var(--c-text);
+}
+
+.hf-btn--ghost:hover {
+  background: var(--c-text);
+  color: #000;
+}
+
+.hf-btn--outline-gold {
+  height: 44px;
+  padding: 0 26px;
+  border: 1px solid var(--c-gold);
+  color: var(--c-gold);
+}
+
+.hf-btn--outline-gold:hover {
+  background: var(--c-gold);
+  color: #000;
+}
+
+@media (max-width: 767px) {
+  .hf-btn { height: 52px; }
+
+  .hf-btn--outline-gold {
+    height: 44px;
+    padding: 0 16px;
+    font-size: 13px;
+    letter-spacing: 0.15em;
+  }
+}

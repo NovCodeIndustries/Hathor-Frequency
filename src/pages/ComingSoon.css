@@ -1,0 +1,30 @@
+.hf-soon {
+  position: relative;
+  overflow: hidden;
+  min-height: 560px;
+  padding: 96px var(--pad-x);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  text-align: center;
+}
+
+.hf-soon > :not(.hf-soon__rings) { position: relative; }
+
+.hf-soon__rings {
+  position: absolute;
+  left: calc(50% - 210px);
+  top: calc(50% - 210px);
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+@media (max-width: 767px) {
+  .hf-soon {
+    min-height: 420px;
+    padding: 64px 16px;
+    gap: 24px;
+  }
+}

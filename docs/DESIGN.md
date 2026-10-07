@@ -100,8 +100,17 @@ text-shadow: 0 0 24px rgba(242,201,76,0.25); /* hero: 0 0 28px rgba(...,0.3) */
   - Implementar con contenedor fluido (`max-width: 1440px; margin: 0 auto`) y columnas en `fr`, no en px fijos.
 - **Móvil** (diseño a 390px): padding lateral de 16px, padding vertical de sección de 48–64px y zonas táctiles de al menos 44px.
 - **Breakpoint**: layout móvil por debajo de **768px** y layout desktop desde 768px. Entre 768 y 1200px se usa el layout desktop, fluido. Las versiones intermedias (tablet) no están diseñadas: si algo se rompe, consultar.
-- **Orden de la página**: Nav+Hero → Ticker → Servicios → Artistas → Reservar → Contacto → Footer.
-- **Anclas**: `#servicios`, `#artistas`, `#reservar`, `#contacto`, `#estudio` (el destino de `#estudio` está pendiente).
+- **Estructura multipágina** (cambio del 2026-10-07): cada vista es una página propia con su ruta. Todas comparten el mismo layout:
+  - **Nav** fijo arriba y siempre visible (`position: sticky; top: 0`), con el mismo diseño de siempre;
+  - el contenido de la página;
+  - el **Ticker** encima del Footer;
+  - el **Footer**.
+- **Rutas**:
+  - `/` → Hero;
+  - `/servicios`, `/artistas`, `/reservar`, `/contacto`;
+  - `/estudio` → página provisional "Muy pronto", porque Estudio aún no tiene diseño.
+- **Títulos**: el título principal de cada página es su `h1`.
+- **Link activo**: el link del nav de la página actual se muestra en dorado (`aria-current="page"`).
 
 ---
 
@@ -202,6 +211,32 @@ Datos (`src/data`): la descripción corta de cada uno de los 5 servicios. **No i
 | 03 | Masterización | Consistencia y pegada para streaming, radio y vinil. | 18px | 86% | (27,12) · (11,5) |
 | 04 | Video | Videoclips con la misma intención que tu sonido. | 96px | 40% | (6,17) · (23,5) |
 | 05 | Live Sessions | Tu show en vivo, audio y video, listo para publicar. | 48px | 68% | (28,20) · (9,7) |
+
+**Faders interactivos** (cambio del 2026-10-07):
+- **Nivel:** cada fader tiene un nivel de 0 a 100, que vive en `src/data/services.ts` como `level`. Los niveles iniciales son 80 / 55 / 87 / 39 / 69, equivalentes a las posiciones de la tabla.
+- **Posición del cap:**
+  - en desktop, `top = (100 − nivel) × (170 − 14) / 100` px;
+  - en móvil, `left = nivel × (100% − 14px) / 100`.
+- **Control:**
+  - se arrastra con mouse o touch, y un clic en la pista salta a ese punto;
+  - con teclado: ↑/→ y ↓/← mueven ±1 (con Shift, ±10), RePág/AvPág ±10, Inicio = 0 y Fin = 100.
+- **Accesibilidad:** cada fader es un `role="slider"` con `aria-label` "Nivel de {servicio}", `aria-valuenow` y `aria-orientation` (vertical en desktop, horizontal en móvil). El foco visible es un contorno dorado en el cap.
+- **Arrastre:** mientras se arrastra, el cap usa el glow de hover y el cursor `grabbing`.
+- **Touch:** en móvil la pista usa `touch-action: pan-y`, para que se pueda seguir haciendo scroll vertical.
+- **LED:** su opacidad sigue al nivel (`0.25 + nivel × 0.0075`): se atenúa al bajar el fader.
+
+**Easter egg "Señal recibida"** (`AlienSignal.tsx`):
+- **Combinación:** se dispara cuando los faders quedan en CH1 abajo (≤ 15) · CH2 mitad (40–60) · CH3 arriba (≥ 85) · CH4 mitad · CH5 abajo. Con cualquier otra posición no pasa nada.
+- **Repetición:** se activa solo al entrar en la combinación. Para volver a verlo hay que salir de ella y volver a formarla.
+- **Ventana:** cubre toda la página (`position: fixed`, z-index 100) con:
+  - un rostro de extraterrestre en degradado dorado con glow;
+  - anillos girando al fondo;
+  - el eyebrow "Transmisión entrante · CH 01–05";
+  - el título "Señal recibida.";
+  - el texto "Encontraste la frecuencia correcta. Hasta en otros planetas, todo suena mejor cuando pasa por la misma consola.";
+  - una barra dorada de cuenta regresiva.
+- **Cierre:** se quita sola a los **10 s**, o antes con clic o Escape.
+- **Movimiento:** con reduced-motion, las animaciones se desactivan.
 
 ### Desktop (1440 × 900)
 - Sección con padding 96px 80px, flex en columna y gap de 56px.
@@ -405,7 +440,7 @@ Las miniaturas tienen fondo `#0a0a0a`, borde `#333` y trazos dorados con `stroke
 ## 9. Accesibilidad (obligatoria)
 
 - HTML semántico: `header`, `nav` con `aria-label`, `section` con `aria-labelledby`, `article` en los canales, `dl` en las cifras, `figure`/`blockquote`/`figcaption` en el testimonio, `fieldset`/`legend` en los horarios y `aside` en el panel de la sesión.
-- Un solo `h1` (en el hero). Cada sección lleva su `h2` y los elementos internos `h3`.
+- Un solo `h1` por página: el titular de su vista (en Inicio, el del hero). Los elementos internos llevan `h3`.
 - Los SVG decorativos llevan `aria-hidden="true"`. El disco de Artistas lleva `role="img"` y un `aria-label`.
 - Todos los inputs tienen `<label>`; cuando el label se oculta visualmente, se usa una clase sr-only.
 - Los botones de selección (días, horarios, hamburguesa) usan `aria-pressed` o `aria-expanded`. Los botones que solo tienen icono llevan `aria-label`.
@@ -428,7 +463,7 @@ Las miniaturas tienen fondo `#0a0a0a`, borde `#333` y trazos dorados con `stroke
 
 - **Testimonio**: el texto de Sofía M. es provisional.
 - **Placeholder**: falta reemplazar `[TIEMPO DE RESPUESTA]`.
-- **Navegación**: el link "Estudio" (`#estudio`) no tiene sección de destino.
+- **Navegación**: "Estudio" (`/estudio`) muestra una página provisional hasta que tenga diseño.
 - **Envíos**: falta definir a dónde van el formulario de contacto y la reserva (backend o servicio).
 - **Calendario**: la disponibilidad y la navegación entre meses son estáticas en el diseño.
 - **Redes**: Contacto repite los links que también aparecen en el Footer (decisión abierta).

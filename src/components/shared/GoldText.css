@@ -1,0 +1,14 @@
+.hf-gold-text {
+  background: var(--grad-gold);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: var(--glow-text);
+  /* el degradado no debe partirse entre líneas en bloques separados */
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.hf-gold-text--strong {
+  text-shadow: 0 0 28px rgba(242,201,76,0.3);
+}
