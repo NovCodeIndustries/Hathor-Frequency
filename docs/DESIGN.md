@@ -427,7 +427,7 @@ Las miniaturas tienen fondo `#0a0a0a`, borde `#333` y trazos dorados con `stroke
      - Links de 14px, tracking 0.2em, mayúsculas, #bbb, con hover en dorado.
      - Los ◆ van en dorado de 8px, con `aria-hidden`.
      - Gap de 28px.
-  3. **Derecha**: "© 2025 Hathor Frequency · CDMX", 14px, tracking 0.08em, #bbb.
+  3. **Derecha**: "© 2026 Hathor Frequency · MX", 14px, tracking 0.08em, #bbb.
 
 ### Móvil (390 × ~280)
 - Todo apilado y centrado, con padding 40px 16px y gap de 24px:

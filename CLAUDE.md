@@ -43,7 +43,7 @@ No hay suite de tests. El arranque del contenedor `app` lo hace `docker/entrypoi
 
 ## Qué construir
 
-Landing page de **"Hathor Frequency"**, un sello discográfico / estudio de producción musical, video y live sessions para bandas emergentes en CDMX, con React + Vite.
+Landing page de **"Hathor Frequency"**, un sello discográfico / estudio de producción musical, video y live sessions para bandas emergentes en MX, con React + Vite.
 
 > **El diseño exacto y aprobado de cada vista (desktop y móvil) está en [`docs/DESIGN.md`](docs/DESIGN.md).** Esa especificación prevalece sobre las descripciones de secciones de abajo (Servicios = "Consola de canales", Artistas = "Tracklist", Contacto = "Vinyl centrado", y se añade la sección Reservar = "Calendario"). Implementa cada componente tal como está ahí; pregunta antes de desviarte.
 
@@ -86,7 +86,7 @@ De las 11 propuestas exploradas en el canvas de diseño, se eligió la **11 (com
 
 6. **Feature / Contacto** — sección dividida, con la mitad derecha en fondo negro: testimonio "— Sofía M., artista" y un input de email con botón "Contactar" (dorado).
 
-7. **Footer** — logo (lockup "HATHOR" / "Frequency") a la izquierda, links (Instagram, Spotify, YouTube) al centro, "© 2025 Hathor Frequency · CDMX" a la derecha. Borde superior de 1px.
+7. **Footer** — logo (lockup "HATHOR" / "Frequency") a la izquierda, links (Instagram, Spotify, YouTube) al centro, "© 2026 Hathor Frequency · MX" a la derecha. Borde superior de 1px.
 
 ### Requisitos
 - Datos (servicios, artistas, stats) en un archivo `/src/data` separado para editarlos fácil

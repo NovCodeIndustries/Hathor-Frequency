@@ -12,7 +12,7 @@ const SITE = 'Hathor Frequency'
 export function HomePage() {
   return (
     <>
-      <title>{`${SITE} — Sello discográfico independiente en CDMX`}</title>
+      <title>{`${SITE} — Sello discográfico independiente en MX`}</title>
       <Hero />
     </>
   )

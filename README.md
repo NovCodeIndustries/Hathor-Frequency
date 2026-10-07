@@ -1,6 +1,6 @@
 # Hathor Frequency
 
-Landing page de **Hathor Frequency**, sello discográfico y estudio de producción musical, video y live sessions para bandas emergentes en CDMX.
+Landing page de **Hathor Frequency**, sello discográfico y estudio de producción musical, video y live sessions para bandas emergentes en MX.
 
 Stack: React 19 + TypeScript + Vite · CSS plano con variables · PostgreSQL + Prisma · Docker Compose.
 

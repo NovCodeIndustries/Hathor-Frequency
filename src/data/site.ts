@@ -30,6 +30,6 @@ export const testimonial = {
   author: '— Sofía M., artista',
 }
 
-export const copyright = '© 2025 Hathor Frequency · CDMX'
+export const copyright = '© 2026 Hathor Frequency · MX'
 
 export const tickerItems = ['Grabación', 'Mezcla', 'Masterización', 'Video', 'Live Sessions']
