@@ -1,2 +1,2 @@
-# Hathor-Studios
-Hathor Studios
+# Hathor-Frequency
+Hathor Frequency
