@@ -225,18 +225,28 @@ Datos (`src/data`): la descripción corta de cada uno de los 5 servicios. **No i
 - **Touch:** en móvil la pista usa `touch-action: pan-y`, para que se pueda seguir haciendo scroll vertical.
 - **LED:** su opacidad sigue al nivel (`0.25 + nivel × 0.0075`): se atenúa al bajar el fader.
 
-**Easter egg "Señal recibida"** (`AlienSignal.tsx`):
+**Easter egg "Contacto establecido"** (`AlienSignal.tsx`, estilo **A3 · Osciloscopio** del canvas https://claude.ai/artifact/Y1xkrireKBrrmBSM7iswed):
 - **Combinación:** se dispara cuando los faders quedan en CH1 abajo (≤ 15) · CH2 mitad (40–60) · CH3 arriba (≥ 85) · CH4 mitad · CH5 abajo. Con cualquier otra posición no pasa nada.
 - **Repetición:** se activa solo al entrar en la combinación. Para volver a verlo hay que salir de ella y volver a formarla.
-- **Ventana:** cubre toda la página (`position: fixed`, z-index 100) con:
-  - un rostro de extraterrestre en degradado dorado con glow;
-  - anillos girando al fondo;
-  - el eyebrow "Transmisión entrante · CH 01–05";
-  - el título "Señal recibida.";
-  - el texto "Encontraste la frecuencia correcta. Hasta en otros planetas, todo suena mejor cuando pasa por la misma consola.";
-  - una barra dorada de cuenta regresiva.
+- **Contenedor:** pantalla completa (`position: fixed`, z-index 100, fondo #000), flex en columna centrada con gap de 40px y padding 56px 80px.
+- **Pantalla del osciloscopio:**
+  - ancho `min(1040px, 100%)`, proporción 2:1 (como máximo 58vh de alto), borde #333, radius de 6px, fondo #050505 y glow interior dorado;
+  - cuadrícula de 52px al 8%, más los ejes centrales al 18%;
+  - onda punteada (6/6) que se desplaza;
+  - barrido dorado que cruza la pantalla cada 2.4s;
+  - lecturas en las esquinas (12px, tracking 0.2em): "CH 01–05", "Freq 432 Hz", LED + "Señal 100%" y "Origen · desconocido".
+- **Rostro:** relleno con un patrón de ondas senoidales doradas, contorno dorado de 2px y glow. Los ojos son negros con borde dorado y pupilas doradas que parpadean. Ocupa el 69% del alto de la pantalla, centrado.
+- **Texto:** grid de 2 columnas con gap de 64px.
+  - Izquierda: H2 Cinzel 56px "Contacto **establecido.**", con la segunda palabra en degradado dorado.
+  - Derecha: log de 14px en mayúsculas, tracking 0.15em, con "›" dorados:
+    - "Decodificando la mezcla… 100%";
+    - "Patrón 1·2·3·2·1 reconocido";
+    - "Mensaje: “Suena increíble desde aquí.”" (en blanco);
+    - la nota "Se cierra en 10 s · clic o Esc para cerrar" (12px, #888).
+- **Cuenta regresiva:** barra dorada de 3px abajo que se vacía en 10s.
+- **Móvil:** pantalla en proporción 4:5 (como máximo 52vh), rostro al 62%, lecturas de 10px (sin "Freq"), texto apilado y H2 de 34px.
 - **Cierre:** se quita sola a los **10 s**, o antes con clic o Escape.
-- **Movimiento:** con reduced-motion, las animaciones se desactivan.
+- **Movimiento:** con reduced-motion se desactivan las animaciones y el barrido.
 
 ### Desktop (1440 × 900)
 - Sección con padding 96px 80px, flex en columna y gap de 56px.
