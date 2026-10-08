@@ -119,10 +119,7 @@ text-shadow: 0 0 24px rgba(242,201,76,0.25); /* hero: 0 0 28px rgba(...,0.3) */
 
 Canvas de propuestas: https://claude.ai/artifact/Da2u8EXGAkktnoC22uBh7y
 
-- **Cuándo aparece:**
-  - solo en la **primera visita**: al cerrarse guarda `hf-welcome-seen = 1` en `localStorage`;
-  - si `localStorage` no está disponible, no se muestra;
-  - con `?intro` en la URL se fuerza, para revisarla.
+- **Cuándo aparece:** **siempre**, cada vez que se carga o recarga el sitio. Al navegar entre páginas no vuelve a salir, porque el layout no se recarga.
 - **Comportamiento:**
   - la barra va de 0 a 100 % en **4 s** y luego entra sola al sitio con un fundido de 0.6 s;
   - "Entrar ahora →" o Escape la saltan en cualquier momento;

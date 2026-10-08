@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react'
 import { Outlet, ScrollRestoration } from 'react-router'
-import { markWelcomeSeen, shouldShowWelcome } from '../../lib/welcome'
 import { Footer } from '../Footer/Footer'
 import { Nav } from '../Nav/Nav'
 import { Ticker } from '../Ticker/Ticker'
@@ -9,11 +8,9 @@ import './Layout.css'
 
 /** Estructura común de todas las páginas: nav fijo arriba, ticker sobre el footer */
 export function Layout() {
-  const [welcome, setWelcome] = useState(shouldShowWelcome)
-  const closeWelcome = useCallback(() => {
-    markWelcomeSeen()
-    setWelcome(false)
-  }, [])
+  // La bienvenida aparece cada vez que se carga el sitio (no al navegar entre páginas)
+  const [welcome, setWelcome] = useState(true)
+  const closeWelcome = useCallback(() => setWelcome(false), [])
 
   return (
     <div className="hf-layout">

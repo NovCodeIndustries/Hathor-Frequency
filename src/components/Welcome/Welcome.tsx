@@ -29,7 +29,7 @@ interface WelcomeProps {
   onDone: () => void
 }
 
-/** Vista de bienvenida "Sintonizando" (B3), solo en la primera visita */
+/** Vista de bienvenida "Sintonizando" (B3), al cargar el sitio */
 export function Welcome({ onDone }: WelcomeProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [progress, setProgress] = useState(0)
