@@ -114,6 +114,41 @@ text-shadow: 0 0 24px rgba(242,201,76,0.25); /* hero: 0 0 28px rgba(...,0.3) */
 
 ---
 
+## 1.5 Bienvenida — "Sintonizando" (`Welcome.tsx`, estilo **B3**)
+
+Canvas de propuestas: https://claude.ai/artifact/Da2u8EXGAkktnoC22uBh7y
+
+- **Cuándo aparece:**
+  - solo en la **primera visita**: al cerrarse guarda `hf-welcome-seen = 1` en `localStorage`;
+  - si `localStorage` no está disponible, no se muestra;
+  - con `?intro` en la URL se fuerza, para revisarla.
+- **Comportamiento:**
+  - la barra va de 0 a 100 % en **4 s** y luego entra sola al sitio con un fundido de 0.6 s;
+  - "Entrar ahora →" o Escape la saltan en cualquier momento;
+  - mientras está abierta, la página de fondo no hace scroll.
+- **Contenedor:** pantalla completa (`position: fixed`, z-index 200, fondo #000), flex en columna con `space-between` y padding 72px 120px 64px.
+- **Dial (arriba):**
+  - escala de 64px de alto con borde inferior #333 y 41 marcas: menores de 10px (#444), medias de 18px y mayores de 32px (#bbb);
+  - la marca "HF" está al 60 %, mide 48px y es dorada;
+  - una aguja dorada de 2px con glow entra desde la izquierda, se pasa un poco y se asienta en "HF" (2.6 s);
+  - etiquetas en Cinzel 14px: 88 · 92 · 96 · **HF** · 104 · 108.
+- **Nombre (centro):**
+  - LED + "Estás sintonizando" (13px, tracking 0.3em, dorado);
+  - "HATHOR" en Cinzel 700, `clamp(44px, 8.4vw, 120px)`, tracking 0.3em;
+  - "Frequency" en Cinzel 400, `clamp(16px, 2.4vw, 34px)`, tracking 0.55em, en degradado dorado;
+  - el eslogan en cursiva de 18px, #bbb.
+- **Pie:**
+  - ecualizador de 60 barras con degradado dorado vertical, alto de 72px y envolvente en campana; cada barra sube y baja en 1.2 s con desfases;
+  - fila de progreso: "Sintonizando…" (12px, #888), una pista de 2px (#222) con relleno dorado, el porcentaje en Cinzel dorado (`role="progressbar"`) y el botón "Entrar ahora →".
+- **Móvil:**
+  - padding 40px 16px 32px;
+  - dial de 48px;
+  - la mitad de las barras (30) en 56px de alto;
+  - fila de progreso partida en dos: arriba la etiqueta y el %, debajo la pista a todo el ancho y el botón centrado a todo el ancho (44px).
+- **Movimiento:** con reduced-motion, la aguja y el ecualizador quedan quietos y no hay fundidos.
+
+---
+
 ## 2. Vista 1 — Nav + Hero (`Main.dc.html`)
 
 ### Desktop (1440 × 900)

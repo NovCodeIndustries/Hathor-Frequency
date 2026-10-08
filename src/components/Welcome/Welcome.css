@@ -1,0 +1,265 @@
+/* Bienvenida — estilo B3 · Sintonizando */
+.hf-welcome {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  overflow: hidden;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 72px 120px 64px;
+  animation: hf-welcome-in .4s ease-out both;
+}
+
+.hf-welcome:focus { outline: none; }
+
+.hf-welcome.is-leaving {
+  animation: hf-welcome-out var(--fade-ms) ease-in both;
+  pointer-events: none;
+}
+
+/* Dial */
+.hf-welcome__dial {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hf-welcome__scale {
+  position: relative;
+  height: 64px;
+  border-bottom: 1px solid var(--c-line);
+}
+
+.hf-welcome__ticks {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.hf-welcome__tick {
+  width: 1px;
+  background: var(--c-line-2);
+}
+
+.hf-welcome__tick--minor { height: 10px; }
+.hf-welcome__tick--mid { height: 18px; }
+.hf-welcome__tick--major { height: 32px; background: var(--c-text-2); }
+.hf-welcome__tick--hf { height: 48px; background: var(--c-gold); }
+
+.hf-welcome__needle {
+  position: absolute;
+  top: -12px;
+  bottom: -12px;
+  left: calc(60% - 1px);
+  width: 2px;
+  background: var(--c-gold);
+  box-shadow: 0 0 16px rgba(242,201,76,0.8);
+  animation: hf-welcome-needle 2.6s cubic-bezier(.3,.7,.2,1) both;
+}
+
+.hf-welcome__labels {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-display);
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  color: var(--c-text-3);
+}
+
+.hf-welcome__labels .is-hf { color: var(--c-gold); }
+
+/* Nombre */
+.hf-welcome__brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  text-align: center;
+}
+
+.hf-welcome__kicker {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--c-gold);
+}
+
+.hf-welcome__led {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--c-gold);
+  box-shadow: var(--glow-led);
+}
+
+.hf-welcome__title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  font-family: var(--font-display);
+}
+
+.hf-welcome__main {
+  font-weight: 700;
+  font-size: clamp(44px, 8.4vw, 120px);
+  letter-spacing: 0.3em;
+  padding-left: 0.3em;
+}
+
+.hf-welcome__sub {
+  margin-top: 16px;
+  font-weight: 400;
+  font-size: clamp(16px, 2.4vw, 34px);
+  letter-spacing: 0.55em;
+  padding-left: 0.55em;
+}
+
+.hf-welcome__slogan {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--c-text-2);
+  font-size: 18px;
+}
+
+/* Ecualizador y progreso */
+.hf-welcome__foot {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.hf-welcome__eq {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 72px;
+}
+
+.hf-welcome__bar {
+  flex: 1;
+  background: var(--grad-gold-v);
+  transform-origin: bottom;
+  animation: hf-welcome-eq 1.2s ease-in-out infinite;
+}
+
+.hf-welcome__progress {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.hf-welcome__label {
+  flex: none;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--c-text-3);
+}
+
+.hf-welcome__track {
+  position: relative;
+  flex: 1;
+  height: 2px;
+  background: var(--c-line-3);
+}
+
+.hf-welcome__fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--c-gold);
+  box-shadow: 0 0 10px rgba(242,201,76,0.6);
+}
+
+.hf-welcome__pct {
+  flex: none;
+  min-width: 3.5ch;
+  text-align: right;
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--c-gold);
+}
+
+.hf-welcome__skip {
+  flex: none;
+  min-height: 44px;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--c-text-2);
+  transition: color .2s;
+}
+
+.hf-welcome__skip:hover { color: var(--c-gold); }
+
+@keyframes hf-welcome-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes hf-welcome-out {
+  from { opacity: 1; }
+  to { opacity: 0; visibility: hidden; }
+}
+
+@keyframes hf-welcome-needle {
+  0% { left: 6%; }
+  60% { left: 63%; }
+  75% { left: 57.5%; }
+  100% { left: calc(60% - 1px); }
+}
+
+@keyframes hf-welcome-eq {
+  0%, 100% { transform: scaleY(.35); }
+  50% { transform: scaleY(1); }
+}
+
+@media (max-width: 1100px) and (min-width: 768px) {
+  .hf-welcome { padding: 56px 64px 48px; }
+}
+
+@media (max-width: 767px) {
+  .hf-welcome { padding: 40px 16px 32px; }
+
+  .hf-welcome__scale { height: 48px; }
+  .hf-welcome__tick--major { height: 24px; }
+  .hf-welcome__tick--hf { height: 36px; }
+  .hf-welcome__labels { font-size: 12px; }
+
+  .hf-welcome__brand { gap: 16px; }
+  .hf-welcome__kicker { font-size: 11px; letter-spacing: 0.25em; gap: 10px; }
+  .hf-welcome__sub { margin-top: 12px; }
+  .hf-welcome__slogan { font-size: 16px; }
+
+  .hf-welcome__eq { gap: 3px; height: 56px; }
+  /* la mitad de las barras basta en móvil */
+  .hf-welcome__bar:nth-child(odd) { display: none; }
+
+  .hf-welcome__progress {
+    flex-wrap: wrap;
+    gap: 12px 16px;
+  }
+
+  .hf-welcome__track { order: 3; flex-basis: 100%; }
+  .hf-welcome__pct { margin-left: auto; }
+  .hf-welcome__skip { order: 4; width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hf-welcome,
+  .hf-welcome__needle,
+  .hf-welcome__bar { animation: none; }
+  .hf-welcome.is-leaving { animation: none; opacity: 0; }
+}
