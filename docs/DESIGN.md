@@ -92,6 +92,7 @@ text-shadow: 0 0 24px rgba(242,201,76,0.25); /* hero: 0 0 28px rgba(...,0.3) */
 - **Input subrayado**: fondo transparente, sin borde salvo `border-bottom: 1px solid #444`. Texto blanco de 17px, placeholder `#888`. En focus el borde pasa a `#F2C94C`.
 - **Pill de horario / día seleccionable**: un `<button>` con `aria-pressed`. Estados en la sección 5.
 - **Transiciones**: entre .2s y .25s en color, fondo, borde y sombra.
+- **Favicon** (`public/favicon.svg`, propuesta **F5 · Onda** del canvas https://claude.ai/artifact/UYCM6kBZqkC7cC5eiNYAHH): un círculo negro con aro dorado en degradado (3px), ejes tenues al 18% y una onda senoidal dorada de 3.6px con remates redondos. Es un SVG vectorial, sin fuentes.
 - **Focus visible**: `outline: 2px solid #F2C94C; outline-offset: 2–3px` en todos los controles.
 
 ### 1.4 Layout y breakpoints
