@@ -39,6 +39,8 @@ npm run db:studio           # prisma studio
 
 Dentro de Docker, los comandos de Prisma se corren con `docker compose exec app npm run db:migrate`. Desde el host, `.env` (copia de `.env.example`) apunta a `localhost:5440`.
 
+Para compartir un link temporal se usa un túnel rápido de Cloudflare: el contenedor `hathor-tunnel`; los comandos están en el README. **Es temporal:** `vite.config.ts` permite `allowedHosts: ['.trycloudflare.com']` solo para esto, y hay que quitarlo antes de la publicación definitiva.
+
 No hay suite de tests. El arranque del contenedor `app` lo hace `docker/entrypoint.sh`: reinstala dependencias si cambió el lock, ejecuta `prisma generate` y `prisma migrate deploy`, y devuelve `server/` al dueño del repo.
 
 ## Qué construir

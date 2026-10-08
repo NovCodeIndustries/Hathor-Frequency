@@ -34,6 +34,20 @@ docker compose down -v                        # detener y borrar la base
 
 También funciona como **devcontainer** (VS Code → "Reopen in Container"): usa el mismo `docker-compose.yml`.
 
+## Compartir un link temporal (Cloudflare)
+
+Con el stack levantado (`docker compose up -d`):
+
+```bash
+docker run -d --name hathor-tunnel --network hathor-frequency_default \
+  cloudflare/cloudflared:latest tunnel --no-autoupdate --url http://app:5173
+docker logs hathor-tunnel 2>&1 | grep trycloudflare.com   # muestra el link público
+docker rm -f hathor-tunnel                                 # cerrar el link
+```
+
+- **Duración:** el link funciona mientras el equipo, Docker y el túnel sigan encendidos, y cambia cada vez que se reinicia el túnel.
+- **Antes de publicar el sitio definitivo:** quitar `allowedHosts: ['.trycloudflare.com']` de `vite.config.ts`. Es solo para este modo de compartir.
+
 ## Sin Docker
 
 Requisitos: Node 22+. La base es opcional para el frontend.

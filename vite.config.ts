@@ -5,6 +5,7 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [react()],
   // Accesible desde fuera del devcontainer
-  server: { host: true },
-  preview: { host: true },
+  // allowedHosts: permite compartir por un túnel temporal de Cloudflare (*.trycloudflare.com)
+  server: { host: true, allowedHosts: ['.trycloudflare.com'] },
+  preview: { host: true, allowedHosts: ['.trycloudflare.com'] },
 })
