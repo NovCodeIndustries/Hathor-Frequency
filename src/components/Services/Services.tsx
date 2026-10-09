@@ -6,8 +6,10 @@ import { Eyebrow } from '../shared/Eyebrow'
 import { GoldText } from '../shared/GoldText'
 import { AlienSignal } from './AlienSignal'
 import { ChannelStrip } from './ChannelStrip'
+import { MasterMeter } from './MasterMeter'
 import { PackageCard } from './PackageCard'
 import { PackageDrawer } from './PackageDrawer'
+import { SignalScope } from './SignalScope'
 import { WaveTransition, type WavePhase } from './WaveTransition'
 import './Services.css'
 
@@ -31,6 +33,8 @@ const REVEAL_MS = 1200
 
 export function Services() {
   const [levels, setLevels] = useState(() => services.map((s) => s.level))
+  // Solo cuentan los faders que el usuario movió (algunos arrancan dentro de su zona)
+  const [touched, setTouched] = useState(() => services.map(() => false))
   const [signal, setSignal] = useState(false)
   const [view, setView] = useState<View>('servicios')
   const [wave, setWave] = useState<{ phase: WavePhase; target: View } | null>(null)
@@ -46,7 +50,11 @@ export function Services() {
     // Se dispara solo al entrar en la combinación (no se repite mientras se mantenga)
     if (matchesSecret(next) && !matchesSecret(levels)) setSignal(true)
     setLevels(next)
+    if (!touched[index]) setTouched(touched.map((t, i) => t || i === index))
   }
+
+  const locked = levels.map((l, i) => touched[i] && inZone(l, SECRET[i]))
+  const lockedCount = locked.filter(Boolean).length
 
   const switchTo = (target: View) => {
     if (wave || target === view) return
@@ -128,10 +136,14 @@ export function Services() {
           <p className="hf-packages__note">{packagesNote}</p>
         </div>
       ) : (
-        <div className="hf-console">
-          {services.map((s, i) => (
-            <ChannelStrip key={s.ch} service={s} level={levels[i]} onLevel={(v) => setLevel(i, v)} />
-          ))}
+        <div className="hf-mixer">
+          <SignalScope count={lockedCount} total={SECRET.length} />
+          <div className="hf-console">
+            {services.map((s, i) => (
+              <ChannelStrip key={s.ch} service={s} level={levels[i]} locked={locked[i]} onLevel={(v) => setLevel(i, v)} />
+            ))}
+            <MasterMeter count={lockedCount} />
+          </div>
         </div>
       )}
 

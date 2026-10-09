@@ -1,10 +1,13 @@
 import { useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from 'react'
 import { useMediaQuery } from '../../lib/useMediaQuery'
+import { levelToDb } from './db'
 
 interface FaderProps {
   label: string
   value: number
   onChange: (value: number) => void
+  /** En su posición del easter egg: el cap emite ondas */
+  locked?: boolean
 }
 
 const clamp = (n: number) => Math.min(100, Math.max(0, Math.round(n)))
@@ -13,7 +16,7 @@ const clamp = (n: number) => Math.min(100, Math.max(0, Math.round(n)))
  * Fader de consola: vertical en desktop, horizontal en móvil (< 768px).
  * Se arrastra con mouse/touch y se controla con el teclado (role="slider").
  */
-export function Fader({ label, value, onChange }: FaderProps) {
+export function Fader({ label, value, onChange, locked = false }: FaderProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [dragging, setDragging] = useState(false)
   const horizontal = useMediaQuery('(max-width: 767px)')
@@ -63,7 +66,7 @@ export function Fader({ label, value, onChange }: FaderProps) {
   return (
     <div
       ref={ref}
-      className={`hf-strip__fader ${dragging ? 'is-dragging' : ''}`}
+      className={`hf-strip__fader ${dragging ? 'is-dragging' : ''} ${locked ? 'is-locked' : ''}`}
       style={{ '--level': value } as CSSProperties}
       role="slider"
       tabIndex={0}
@@ -72,6 +75,7 @@ export function Fader({ label, value, onChange }: FaderProps) {
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={value}
+      aria-valuetext={levelToDb(value)}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={stopDrag}

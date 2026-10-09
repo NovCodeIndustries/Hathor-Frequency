@@ -268,6 +268,13 @@ Datos (`src/data`): la descripción corta de cada uno de los 5 servicios. **No i
 - **Touch:** en móvil la pista usa `touch-action: pan-y`, para que se pueda seguir haciendo scroll vertical.
 - **LED:** su opacidad sigue al nivel (`0.25 + nivel × 0.0075`): se atenúa al bajar el fader.
 
+**Escala dB y pistas del easter egg** (estilo **F6 · Combinada** del canvas https://claude.ai/artifact/WX4AytuWMigiv3Lq5oqZTU, 2026-10-09):
+- **Escala dB** junto a cada fader (`db.ts`): +10, +5, 0, −5, −10, −20, −30, −40, −∞, en monoespaciada de 10px #666, con rayitas de 6px (la del 0 de 10px y más clara). Las marcas van a la altura del nivel correspondiente (100, 87, 75, 62, 50, 37, 25, 12, 0). Debajo de la descripción se muestra el valor exacto ("−7.3 dB", interpolado) y el slider lo anuncia con `aria-valuetext`. En tablet y móvil se ocultan +5, −5, −30 y −40; en móvil la escala va debajo del fader horizontal.
+- **Pista al acertar**: cuando el usuario mueve un fader y queda en su zona del easter egg (solo cuentan los faders movidos; Mezcla y Masterización arrancan dentro de su zona), el canal se enciende: borde dorado oscuro, LED fijo con glow y del cap salen dos ondas doradas continuas (1.6s, desfasadas 0.8s).
+- **Osciloscopio** arriba de la consola (`SignalScope.tsx`, 96px; 72px en móvil): onda dorada con ruido que se limpia con cada acierto (semilla fija, transición de 0.6s) y "Sintonizando · 0–100%".
+- **Canal MASTER** (`MasterMeter.tsx`), sexta columna de 120px (84px en tablet; fila horizontal en móvil): 5 LEDs de consola de abajo arriba, verde, verde, amarillo, amarillo y rojo; encendidos con degradado, glow de su color y reflejo blanco, apagados con su color muy tenue. Debajo, "Señal n/5" (`aria-live`). Borde dorado desde el primer acierto y glow desde el tercero. El rojo se enciende con el quinto, justo cuando aparece el extraterrestre.
+- Con `prefers-reduced-motion` no hay ondas en el cap ni transición en la onda.
+
 **Easter egg "Contacto establecido"** (`AlienSignal.tsx`, estilo **A3 · Osciloscopio** del canvas https://claude.ai/artifact/Y1xkrireKBrrmBSM7iswed):
 - **Combinación:** se dispara cuando los faders quedan en CH1 abajo (≤ 15) · CH2 mitad (40–60) · CH3 arriba (≥ 85) · CH4 mitad · CH5 abajo. Con cualquier otra posición no pasa nada.
 - **Repetición:** se activa solo al entrar en la combinación. Para volver a verlo hay que salir de ella y volver a formarla.
