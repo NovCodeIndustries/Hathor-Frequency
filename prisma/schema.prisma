@@ -30,6 +30,14 @@ enum BookingStatus {
   @@map("booking_status")
 }
 
+/// Representante de la reserva: alguien de la banda o una persona externa (mánager, productor…)
+enum RepresentativeType {
+  INTEGRANTE @map("integrante")
+  EXTERNO    @map("externo")
+
+  @@map("representative_type")
+}
+
 /// Correos enviados desde la sección Contacto
 model ContactRequest {
   id        String   @id @default(uuid()) @db.Uuid
@@ -42,18 +50,21 @@ model ContactRequest {
 
 /// Solicitudes de sesión desde la sección Reservar
 model Booking {
-  id        String        @id @default(uuid()) @db.Uuid
+  id                 String             @id @default(uuid()) @db.Uuid
   /// Día de la sesión (sin hora)
-  date      DateTime      @db.Date
+  date               DateTime           @db.Date
   /// Hora de inicio "HH:MM" (10:00, 12:00, 15:00, 17:00, 19:00, 21:00)
-  startTime String        @map("start_time") @db.VarChar(5)
-  service   Service
-  status    BookingStatus @default(PENDING)
-  /// Contacto de quien reserva (el diseño actual aún no lo pide)
-  email     String?       @db.VarChar(254)
-  name      String?       @db.VarChar(120)
-  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  startTime          String             @map("start_time") @db.VarChar(5)
+  service            Service
+  status             BookingStatus      @default(PENDING)
+  /// Nombre de la banda o proyecto
+  project            String             @db.VarChar(120)
+  representativeType RepresentativeType @map("representative_type")
+  representativeName String             @map("representative_name") @db.VarChar(120)
+  phone              String             @db.VarChar(20)
+  email              String             @db.VarChar(254)
+  createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@index([date])
   @@map("bookings")

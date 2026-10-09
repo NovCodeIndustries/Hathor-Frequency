@@ -4,7 +4,20 @@
  * reemplazar el cuerpo de estas funciones por un `fetch` al endpoint.
  */
 
-export interface BookingRequest {
+/** Quién es el representante: alguien de la banda o una persona externa (mánager, productor…) */
+export type RepresentativeType = 'integrante' | 'externo'
+
+/** Datos de contacto que pide Reservar */
+export interface BookingContact {
+  /** Nombre de la banda o proyecto */
+  project: string
+  representativeType: RepresentativeType
+  representativeName: string
+  phone: string
+  email: string
+}
+
+export interface BookingRequest extends BookingContact {
   /** Fecha local en formato YYYY-MM-DD */
   date: string
   /** Hora de inicio HH:MM */

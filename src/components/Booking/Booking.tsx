@@ -1,12 +1,30 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { bookingServices, defaultSlotIndex, timeSlots } from '../../data/booking'
-import { addMonths, compareMonths, startOfDay, toISODate, type YearMonth } from '../../lib/calendar'
-import { submitBooking } from '../../lib/submit'
+import { addMonths, compareMonths, dayLabel, startOfDay, toISODate, type YearMonth } from '../../lib/calendar'
+import { submitBooking, type BookingContact } from '../../lib/submit'
 import { Eyebrow } from '../shared/Eyebrow'
 import { GoldText } from '../shared/GoldText'
+import { BookingModal } from './BookingModal'
 import { Calendar } from './Calendar'
+import { RockAlien } from './RockAlien'
 import { SessionPanel, type SubmitStatus } from './SessionPanel'
 import './Booking.css'
+
+const EMPTY_CONTACT: BookingContact = {
+  project: '',
+  representativeType: 'integrante',
+  representativeName: '',
+  phone: '',
+  email: '',
+}
+
+const trimmed = (c: BookingContact): BookingContact => ({
+  ...c,
+  project: c.project.trim(),
+  representativeName: c.representativeName.trim(),
+  phone: c.phone.trim(),
+  email: c.email.trim(),
+})
 
 export function Booking() {
   const [today] = useState(() => startOfDay(new Date()))
@@ -17,18 +35,33 @@ export function Booking() {
   const [slot, setSlot] = useState(defaultSlotIndex)
   const [service, setService] = useState<string>(bookingServices[0])
   const [status, setStatus] = useState<SubmitStatus>('idle')
+  const [contact, setContact] = useState<BookingContact>(EMPTY_CONTACT)
+  // Copia de lo enviado para el resumen del modal
+  const [sent, setSent] = useState<{ session: string; project: string; contact: string } | null>(null)
 
   const touch = () => status !== 'sending' && setStatus('idle')
 
   const handleSubmit = async () => {
     setStatus('sending')
     try {
-      await submitBooking({ date: toISODate(selected), time: timeSlots[slot], service })
+      const data = { date: toISODate(selected), time: timeSlots[slot], service, ...trimmed(contact) }
+      await submitBooking(data)
       setStatus('sent')
+      setSent({
+        session: `${dayLabel(selected)} · ${data.time} h · ${service}`,
+        project: data.project,
+        contact: `${data.representativeName} (${data.representativeType}) · ${data.phone}`,
+      })
+      setContact(EMPTY_CONTACT)
     } catch {
       setStatus('error')
     }
   }
+
+  const closeModal = useCallback(() => {
+    setSent(null)
+    setStatus('idle')
+  }, [])
 
   return (
     <section id="reservar" className="hf-booking hf-container" aria-labelledby="reservar-title">
@@ -51,12 +84,14 @@ export function Booking() {
             touch()
           }}
         />
+        <RockAlien />
       </div>
 
       <SessionPanel
         date={selected}
         slot={slot}
         service={service}
+        contact={contact}
         status={status}
         onSlot={(i) => {
           setSlot(i)
@@ -66,8 +101,14 @@ export function Booking() {
           setService(s)
           touch()
         }}
+        onContact={(patch) => {
+          setContact((c) => ({ ...c, ...patch }))
+          touch()
+        }}
         onSubmit={handleSubmit}
       />
+
+      {sent && <BookingModal {...sent} onClose={closeModal} />}
     </section>
   )
 }

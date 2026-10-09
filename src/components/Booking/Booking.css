@@ -181,6 +181,66 @@
 .hf-select:focus { outline: none; border-color: var(--c-gold); }
 .hf-select:focus-visible { outline: 2px solid var(--c-gold); outline-offset: 2px; }
 
+.hf-input {
+  height: 52px;
+  width: 100%;
+  background: #000;
+  border: 1px solid var(--c-line-2);
+  border-radius: var(--radius-pill);
+  padding: 0 20px;
+  color: var(--c-text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 400;
+  transition: border-color .2s;
+}
+
+.hf-input::placeholder { color: #777; }
+.hf-input:focus { outline: none; border-color: var(--c-gold); }
+.hf-input:focus-visible { outline: 2px solid var(--c-gold); outline-offset: 2px; }
+
+/* Encabezado "Tus datos" */
+.hf-session__section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 24px;
+  border-top: 1px solid var(--c-line-3);
+}
+
+.hf-session__hint {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--c-text-2);
+}
+
+/* Representante: tipo (integrante / externo) + nombre */
+fieldset.hf-session__field {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.hf-session__legend {
+  padding: 0;
+  margin-bottom: 10px;
+}
+
+.hf-session__reps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.hf-session__reps .hf-slot { font-size: 15px; }
+
+.hf-session__help {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--c-text-3);
+}
+
 .hf-session__slots legend {
   padding: 0;
   margin-bottom: 12px;
@@ -208,13 +268,6 @@
   border-color: var(--c-gold);
   background: rgba(242,201,76,0.12);
   color: var(--c-gold);
-}
-
-.hf-session__note {
-  color: var(--c-text-2);
-  font-size: 15px;
-  font-weight: 400;
-  line-height: 1.6;
 }
 
 .hf-session__submit {
@@ -306,13 +359,17 @@
 
   .hf-session__field { gap: 8px; }
 
-  .hf-select { padding: 0 18px; }
+  .hf-select,
+  .hf-input { padding: 0 18px; }
+
+  .hf-session__section { padding-top: 20px; }
+  .hf-session__reps { gap: 8px; }
+  .hf-session__reps .hf-slot { font-size: 14px; }
 
   .hf-session__slots legend { margin-bottom: 10px; }
 
   .hf-session__grid { gap: 8px; }
 
-  .hf-session__note { font-size: 14px; }
 
   .hf-session__submit { margin-top: 0; }
 }

@@ -1,0 +1,340 @@
+/* Easter egg de Reservar · extraterrestre rockero (G2 · Contorno dorado) */
+.hf-ra {
+  position: relative;
+  height: 340px;
+  pointer-events: none;
+}
+
+/* Del borde izquierdo de la pantalla hasta el borde derecho de la columna del calendario */
+.hf-ra__stage {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+}
+
+.hf-ra__floor {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 300px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(242,201,76,0), rgba(242,201,76,0.5) 40%, rgba(242,201,76,0.5) 70%, rgba(242,201,76,0));
+}
+
+.hf-ra__spot {
+  position: absolute;
+  top: 0;
+  width: 360px;
+  height: 300px;
+  clip-path: polygon(42% 0, 58% 0, 100% 100%, 0 100%);
+  background: linear-gradient(180deg, rgba(242,201,76,0.22), rgba(242,201,76,0.04));
+  animation: hf-ra-fade .5s ease-out both;
+}
+
+/* ---------- Luces de escenario ---------- */
+.hf-ra__truss {
+  position: absolute;
+  top: 6px;
+  height: 4px;
+  border-top: 1px solid #444;
+  border-bottom: 1px solid #444;
+  background: repeating-linear-gradient(90deg, transparent 0 8px, #333 8px 9px);
+}
+
+.hf-ra__lamp {
+  position: absolute;
+  top: 10px;
+  width: 18px;
+  height: 12px;
+  border: 1px solid #555;
+  border-radius: 2px 2px 8px 8px;
+  background: #111;
+  transition: background-color .3s, box-shadow .3s, border-color .3s;
+}
+
+.hf-ra__lamp.is-on {
+  border-color: var(--c-gold);
+  background: var(--c-gold);
+  box-shadow: 0 0 14px rgba(242,201,76,0.8);
+}
+
+/* Haz que barre de lado a lado desde su lámpara */
+.hf-ra__beam {
+  position: absolute;
+  top: 20px;
+  width: 180px;
+  height: 300px;
+  clip-path: polygon(46% 0, 54% 0, 100% 100%, 0 100%);
+  background: linear-gradient(180deg, var(--beam), transparent 95%);
+  transform-origin: 50% 0;
+  animation:
+    hf-ra-fade .4s ease-out both,
+    hf-ra-sweep var(--dur) ease-in-out var(--delay) infinite alternate;
+  mix-blend-mode: screen;
+}
+
+/* En el headbanging las luces van más rápido y parpadean al ritmo */
+.hf-ra__beam.is-rock {
+  animation:
+    hf-ra-sweep calc(var(--dur) / 3) ease-in-out var(--delay) infinite alternate,
+    hf-ra-strobe .36s steps(2) infinite;
+}
+
+@keyframes hf-ra-sweep {
+  from { transform: rotate(-22deg); }
+  to { transform: rotate(22deg); }
+}
+
+@keyframes hf-ra-strobe {
+  from { opacity: 1; }
+  to { opacity: .45; }
+}
+
+/* ---------- Amplificador (estilo stack, sin logo de marca) ---------- */
+
+/* Pozo hasta el piso: el amplificador sube desde abajo de la línea */
+.hf-ra__ampwell {
+  position: absolute;
+  top: 140px;
+  width: 140px;
+  height: 160px;
+  overflow: hidden;
+}
+
+.hf-ra__amp {
+  display: flex;
+  flex-direction: column;
+  transform: translateY(105%);
+  transition: transform 1s cubic-bezier(.2,.8,.2,1);
+}
+
+.hf-ra__amp.is-up {
+  transform: none;
+  animation: hf-ra-rise 1.1s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.hf-ra__amp-head {
+  height: 44px;
+  padding: 0 10px;
+  border: 2px solid var(--c-gold-2);
+  border-radius: 4px 4px 0 0;
+  background: #0d0d0d;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hf-ra__amp-name {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--c-gold);
+}
+
+.hf-ra__amp-knobs { display: flex; gap: 5px; }
+
+.hf-ra__amp-knobs span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c-gold);
+}
+
+.hf-ra__amp-cab {
+  position: relative;
+  height: 116px;
+  border: 2px solid var(--c-gold-2);
+  border-top: 0;
+  border-radius: 0 0 4px 4px;
+  background: repeating-linear-gradient(45deg, #1a1a1a 0 3px, #0c0c0c 3px 6px);
+}
+
+.hf-ra__amp-badge {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  color: var(--c-gold-2);
+}
+
+.hf-ra__ring {
+  position: absolute;
+  left: 30px;
+  top: 18px;
+  width: 76px;
+  height: 76px;
+  border: 1.5px solid var(--c-gold);
+  border-radius: 50%;
+  animation: hf-ra-ring 1.1s ease-out infinite;
+}
+
+.hf-ra__ring + .hf-ra__ring { animation-delay: .55s; }
+
+/* Brillo en el piso mientras sube */
+.hf-ra__dust {
+  position: absolute;
+  top: 296px;
+  width: 140px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(242,201,76,0.6), rgba(242,201,76,0));
+  animation: hf-ra-dust 1.2s ease-out both;
+}
+
+/* ---------- Cosas que salen volando ---------- */
+.hf-ra__item {
+  position: absolute;
+  top: 200px;
+  width: 40px;
+  height: 40px;
+  opacity: 0;
+}
+
+/* Arco: `left` sale rápido y `top` sube antes de caer (bezier con y negativa) */
+.hf-ra__item.is-thrown {
+  top: 266px;
+  opacity: 1;
+  transition:
+    left 1.1s cubic-bezier(.15,.6,.35,1) var(--delay),
+    top 1.1s cubic-bezier(.45,-0.9,.75,1) var(--delay),
+    transform 1.1s linear var(--delay),
+    opacity .15s linear var(--delay);
+}
+
+.hf-ra__item.is-gone {
+  opacity: 0;
+  transition: opacity .6s ease;
+}
+
+/* ---------- Extraterrestre ---------- */
+.hf-ra__who {
+  position: absolute;
+  top: 60px;
+  width: 144px;
+  height: 240px;
+}
+
+.hf-ra__lean {
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 98%;
+  transition: transform .45s ease;
+}
+
+.hf-ra__alien {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 0 8px rgba(242,201,76,0.35));
+}
+
+.hf-ra__alien g,
+.hf-ra__alien path { transform-box: view-box; }
+
+.hf-ra__legL { transform-origin: 55px 146px; }
+.hf-ra__legR { transform-origin: 65px 146px; }
+.hf-ra__armL, .hf-ra__horns { transform-origin: 48px 108px; }
+.hf-ra__armR, .hf-ra__strum { transform-origin: 72px 108px; }
+.hf-ra__head { transform-origin: 60px 98px; }
+.hf-ra__hair { transform-origin: 60px 30px; }
+
+.is-walk .hf-ra__legL, .is-walk .hf-ra__armL { animation: hf-ra-swing .6s ease-in-out infinite; }
+.is-walk .hf-ra__legR, .is-walk .hf-ra__armR { animation: hf-ra-swing .6s ease-in-out -.3s infinite; }
+.is-walk .hf-ra__bob { animation: hf-ra-bob .3s ease-in-out infinite alternate; }
+
+.is-run .hf-ra__legL, .is-run .hf-ra__armL { animation: hf-ra-swing-run .3s ease-in-out infinite; }
+.is-run .hf-ra__legR, .is-run .hf-ra__armR { animation: hf-ra-swing-run .3s ease-in-out -.15s infinite; }
+.is-run .hf-ra__bob { animation: hf-ra-bob .15s ease-in-out infinite alternate; }
+
+.is-peek .hf-ra__head { animation: hf-ra-peek 2s ease-in-out both; }
+.is-look .hf-ra__head { animation: hf-ra-look 1.2s ease-in-out both; }
+
+.is-play .hf-ra__strum,
+.is-rock .hf-ra__strum { animation: hf-ra-strum .22s ease-in-out infinite alternate; }
+.is-play .hf-ra__head { animation: hf-ra-nod .44s ease-in-out infinite alternate; }
+.is-play .hf-ra__bob { animation: hf-ra-bob .44s ease-in-out infinite alternate; }
+
+.is-rock .hf-ra__head { animation: hf-ra-bang .36s cubic-bezier(.5,0,.5,1) infinite alternate; }
+.is-rock .hf-ra__hair { animation: hf-ra-hair .36s cubic-bezier(.5,0,.5,1) infinite alternate; }
+.is-rock .hf-ra__horns { animation: hf-ra-horns .36s ease-in-out infinite alternate; }
+.is-rock .hf-ra__bob { animation: hf-ra-bob .18s ease-in-out infinite alternate; }
+
+@keyframes hf-ra-rise {
+  0% { transform: translateY(105%); }
+  80% { transform: translateY(-4%); }
+  100% { transform: none; }
+}
+
+@keyframes hf-ra-dust {
+  from { opacity: 1; transform: scaleX(.4); }
+  to { opacity: 0; transform: scaleX(1.4); }
+}
+
+@keyframes hf-ra-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes hf-ra-ring {
+  from { transform: scale(.6); opacity: .7; }
+  to { transform: scale(1.8); opacity: 0; }
+}
+
+@keyframes hf-ra-swing {
+  0%, 100% { transform: rotate(-20deg); }
+  50% { transform: rotate(20deg); }
+}
+
+@keyframes hf-ra-swing-run {
+  0%, 100% { transform: rotate(-38deg); }
+  50% { transform: rotate(38deg); }
+}
+
+@keyframes hf-ra-bob {
+  from { transform: translateY(0); }
+  to { transform: translateY(-3px); }
+}
+
+@keyframes hf-ra-peek {
+  0% { transform: rotate(0); }
+  35% { transform: rotate(-10deg); }
+  70% { transform: rotate(8deg); }
+  100% { transform: rotate(0); }
+}
+
+@keyframes hf-ra-look {
+  0% { transform: rotate(0); }
+  30% { transform: rotate(-12deg); }
+  65% { transform: rotate(10deg); }
+  100% { transform: rotate(4deg); }
+}
+
+@keyframes hf-ra-strum {
+  from { transform: rotate(0); }
+  to { transform: rotate(-16deg); }
+}
+
+@keyframes hf-ra-nod {
+  from { transform: rotate(-2deg); }
+  to { transform: rotate(9deg); }
+}
+
+@keyframes hf-ra-bang {
+  from { transform: rotate(-14deg); }
+  to { transform: rotate(32deg); }
+}
+
+@keyframes hf-ra-hair {
+  from { transform: rotate(-10deg); }
+  to { transform: rotate(16deg); }
+}
+
+@keyframes hf-ra-horns {
+  from { transform: rotate(-4deg); }
+  to { transform: rotate(5deg); }
+}
