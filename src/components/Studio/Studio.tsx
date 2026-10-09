@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react'
-import { studioGear, studioRooms, studioTourInterval, studioVideo, studioVisit } from '../../data/studio'
+import { stats } from '../../data/stats'
+import { studioAbout, studioGear, studioMap, studioRooms, studioTourInterval, studioValues, studioVideo, studioVisit } from '../../data/studio'
 import type { StudioVideoService } from '../../data/types'
 import { useMediaQuery } from '../../lib/useMediaQuery'
 import { Button } from '../shared/Button'
@@ -8,6 +9,10 @@ import { GoldText } from '../shared/GoldText'
 import './Studio.css'
 
 const total = studioRooms.length
+
+const { lat, lng, zoom } = studioMap
+const mapEmbed = `https://maps.google.com/maps?q=${lat},${lng}&z=${zoom}&hl=es&output=embed`
+const mapDirections = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
 const pad = (n: number) => String(n).padStart(2, '0')
 
 /** Foto o, mientras no la haya, un marcador con anillos */
@@ -97,7 +102,7 @@ function PlayIcon() {
 /**
  * Estudio (diseño E2 · Tour con galería): tour por los espacios que avanza solo
  * (se pausa con el mouse encima, con foco dentro, con el botón de pausa o con reduced-motion),
- * videos y live sessions, equipo en pestañas y datos de visita.
+ * quiénes somos, videos y live sessions, equipo en pestañas y datos de visita.
  */
 export function Studio() {
   const [room, setRoom] = useState(0)
@@ -202,6 +207,44 @@ export function Studio() {
         </div>
       </section>
 
+      {/* Nosotros */}
+      <section className="hf-about hf-container" aria-labelledby="nosotros-title">
+        <div className="hf-about__intro">
+          <Eyebrow>Nosotros</Eyebrow>
+          <h2 id="nosotros-title" className="hf-h2 hf-studio__h2">
+            Pensado por músicos, <GoldText>para músicos.</GoldText>
+          </h2>
+          {studioAbout.map((p) => (
+            <p key={p} className="hf-about__text">
+              {p}
+            </p>
+          ))}
+        </div>
+        <div className="hf-about__side">
+          <ol className="hf-about__values">
+            {studioValues.map((v, i) => (
+              <li key={v.title}>
+                <span className="hf-about__n" aria-hidden="true">
+                  {pad(i + 1)}
+                </span>
+                <div>
+                  <h3>{v.title}</h3>
+                  <p>{v.description}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+          <dl className="hf-about__stats">
+            {stats.map((s) => (
+              <div key={s.label}>
+                <dt>{s.label}</dt>
+                <dd>{s.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+
       {/* Videos musicales y live sessions */}
       <section className="hf-vid hf-container" aria-labelledby="video-title">
         <div className="hf-vid__head">
@@ -280,14 +323,31 @@ export function Studio() {
             <Button variant="ghost" to="/contacto">Agendar visita</Button>
           </div>
         </div>
-        <dl className="hf-visit__info">
-          {studioVisit.map((v) => (
-            <div key={v.label}>
-              <dt>{v.label}</dt>
-              <dd>{v.value}</dd>
-            </div>
-          ))}
-        </dl>
+        <div className="hf-visit__body">
+          <div className="hf-visit__map">
+            <iframe
+              src={mapEmbed}
+              title="Mapa con la ubicación del estudio"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+            {studioMap.example && <span className="hf-visit__example">Ubicación de ejemplo</span>}
+          </div>
+          <div className="hf-visit__side">
+            <dl className="hf-visit__info">
+              {studioVisit.map((v) => (
+                <div key={v.label}>
+                  <dt>{v.label}</dt>
+                  <dd>{v.value}</dd>
+                </div>
+              ))}
+            </dl>
+            <a className="hf-visit__directions" href={mapDirections} target="_blank" rel="noopener noreferrer">
+              Cómo llegar <span aria-hidden="true">→</span>
+              <span className="sr-only"> (abre Google Maps en otra pestaña)</span>
+            </a>
+          </div>
+        </div>
       </section>
     </div>
   )

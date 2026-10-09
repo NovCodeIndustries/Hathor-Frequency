@@ -207,6 +207,100 @@
   to { transform: scaleX(1); }
 }
 
+/* ---------- Nosotros ---------- */
+.hf-about {
+  padding: 88px var(--pad-x) 80px;
+  border-bottom: 1px solid var(--c-line-3);
+  display: grid;
+  grid-template-columns: 6fr 5fr;
+  gap: 80px;
+  align-items: start;
+}
+
+.hf-about__intro {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.hf-about__intro .hf-h2 { margin-bottom: 6px; }
+
+.hf-about__text {
+  max-width: 620px;
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--c-text-2);
+}
+
+.hf-about__side {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.hf-about__values {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.hf-about__values li {
+  display: flex;
+  gap: 20px;
+  padding: 20px 0;
+  border-top: 1px solid var(--c-line);
+}
+
+.hf-about__values li:last-child { border-bottom: 1px solid var(--c-line); }
+
+.hf-about__n {
+  font-family: var(--font-display);
+  font-size: 14px;
+  line-height: 1.9;
+  color: var(--c-gold);
+}
+
+.hf-about__values h3 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 22px;
+}
+
+.hf-about__values p {
+  margin-top: 6px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--c-text-2);
+}
+
+/* Cifras (las mismas del hero): número grande dorado arriba de la etiqueta */
+.hf-about__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.hf-about__stats div {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 6px;
+}
+
+.hf-about__stats dd {
+  font-family: var(--font-display);
+  font-size: 44px;
+  line-height: 1;
+  color: var(--c-gold);
+  text-shadow: var(--glow-text);
+}
+
+.hf-about__stats dt {
+  font-size: 12px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--c-text-3);
+}
+
 /* ---------- Videos musicales y live sessions ---------- */
 .hf-vid {
   padding: 88px var(--pad-x) 80px;
@@ -502,10 +596,80 @@ button.hf-vid__play:hover { background: var(--c-gold); color: #000; }
   flex-wrap: wrap;
 }
 
+/* Mapa (8/12) + datos de la visita (4/12) */
+.hf-visit__body {
+  display: grid;
+  grid-template-columns: 8fr 4fr;
+  gap: 24px;
+  align-items: stretch;
+}
+
+.hf-visit__map {
+  position: relative;
+  min-height: 420px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  background: var(--c-surface);
+}
+
+/* Google Maps en tonos oscuros: se invierte y se regresa el tono (el pin queda rojo) */
+.hf-visit__map iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  filter: invert(0.92) hue-rotate(180deg) grayscale(0.35) contrast(0.95);
+}
+
+.hf-visit__example {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  padding: 6px 12px;
+  border: 1px solid var(--c-gold);
+  border-radius: var(--radius-pill);
+  background: rgba(0,0,0,0.8);
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--c-gold);
+  pointer-events: none;
+}
+
+.hf-visit__side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .hf-visit__info {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 16px;
+}
+
+.hf-visit__directions {
+  margin-top: auto;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--c-gold);
+  border-radius: var(--radius-pill);
+  color: var(--c-gold);
+  font-size: 14px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  transition: background-color .25s, color .25s, box-shadow .25s;
+}
+
+.hf-visit__directions:hover {
+  background: var(--c-gold);
+  color: #000;
+  box-shadow: var(--glow-btn);
 }
 
 .hf-visit__info div {
@@ -527,9 +691,12 @@ button.hf-vid__play:hover { background: var(--c-gold); color: #000; }
 .hf-visit__info dd { font-size: 16px; }
 
 @media (max-width: 1100px) and (min-width: 768px) {
+  .hf-about { grid-template-columns: 1fr; gap: 48px; }
   .hf-vid__head { grid-template-columns: 1fr; gap: 16px; }
   .hf-vid__grid { grid-template-columns: 1fr; }
   .hf-gear { grid-template-columns: 1fr; gap: 40px; }
+  .hf-visit__body { grid-template-columns: 1fr; }
+  .hf-visit__info { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .hf-tour__thumb-label span { display: none; }
 }
 
@@ -572,6 +739,16 @@ button.hf-vid__play:hover { background: var(--c-gold); color: #000; }
 
   .hf-tour__thumb-label span { display: none; }
 
+  .hf-about {
+    padding: 56px 16px;
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+
+  .hf-about__text { font-size: 16px; }
+  .hf-about__values h3 { font-size: 20px; }
+  .hf-about__stats dd { font-size: 34px; }
+
   .hf-vid {
     padding: 56px 16px;
     gap: 28px;
@@ -607,6 +784,8 @@ button.hf-vid__play:hover { background: var(--c-gold); color: #000; }
   .hf-visit { padding: 48px 16px 56px; }
   .hf-visit__actions { width: 100%; }
   .hf-visit__actions .hf-btn { flex: 1; }
+  .hf-visit__body { grid-template-columns: 1fr; gap: 16px; }
+  .hf-visit__map { min-height: 300px; }
   .hf-visit__info { grid-template-columns: 1fr; gap: 12px; }
 }
 
