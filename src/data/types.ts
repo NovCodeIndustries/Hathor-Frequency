@@ -79,6 +79,8 @@ export interface Package {
 }
 
 export interface Faq {
+  /** Grupo en la lista (las preguntas de un mismo grupo van juntas) */
+  category: string
   q: string
   a: string
 }
@@ -98,6 +100,11 @@ export interface StudioGear {
   label: string
   value: string
   src?: string
+}
+
+export interface StudioValue {
+  title: string
+  description: string
 }
 
 export interface StudioVideoService {

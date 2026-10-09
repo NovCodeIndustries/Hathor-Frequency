@@ -20,8 +20,23 @@
   align-items: start;
 }
 
-/* Lista de preguntas */
+/* Lista de preguntas, agrupada por categoría */
 .hf-faq__list {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.hf-faq__cat {
+  margin-bottom: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--c-gold);
+}
+
+.hf-faq__group ol {
   list-style: none;
   border-top: 1px solid var(--c-line);
 }
@@ -239,6 +254,8 @@
 
   .hf-faq__question { font-size: 24px; }
   .hf-faq__text { font-size: 16px; }
+
+  .hf-faq__list { gap: 28px; }
 
   .hf-faq__q {
     padding: 16px 4px;

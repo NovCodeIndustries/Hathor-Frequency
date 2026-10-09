@@ -8,11 +8,22 @@ import './Faq.css'
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
+/** Preguntas agrupadas por categoría, conservando el orden de faq.ts y el índice global */
+const groups = faqs.reduce<{ category: string; items: { faq: (typeof faqs)[number]; index: number }[] }[]>(
+  (acc, faq, index) => {
+    const last = acc[acc.length - 1]
+    if (last?.category === faq.category) last.items.push({ faq, index })
+    else acc.push({ category: faq.category, items: [{ faq, index }] })
+    return acc
+  },
+  [],
+)
+
 /** Grooves del disco */
 const GROOVES = [250, 222, 194, 166, 138]
 
 /**
- * Preguntas frecuentes, estilo Q3 · Vinilo: lista a la izquierda y la respuesta
+ * Preguntas frecuentes, estilo Q3 · Vinilo: lista agrupada por categoría a la izquierda y la respuesta
  * en un panel sobre el disco, que gira al cambiar de pregunta.
  */
 export function Faq() {
@@ -39,23 +50,32 @@ export function Faq() {
       </div>
 
       <div className="hf-faq__body">
-        <ol className="hf-faq__list" aria-label="Preguntas">
-          {faqs.map((f, i) => (
-            <li key={f.q}>
-              <button
-                type="button"
-                className="hf-faq__q"
-                aria-pressed={i === current}
-                aria-controls="hf-faq-answer"
-                onClick={() => pick(i)}
-              >
-                <span className="hf-faq__n">{pad(i + 1)}</span>
-                <span>{f.q}</span>
-                <span className="hf-faq__arrow" aria-hidden="true">→</span>
-              </button>
-            </li>
+        <div className="hf-faq__list">
+          {groups.map((g, gi) => (
+            <div key={g.category} className="hf-faq__group">
+              <h2 id={`hf-faq-cat-${gi}`} className="hf-faq__cat">
+                {g.category}
+              </h2>
+              <ol aria-labelledby={`hf-faq-cat-${gi}`}>
+                {g.items.map(({ faq: f, index: i }) => (
+                  <li key={f.q}>
+                    <button
+                      type="button"
+                      className="hf-faq__q"
+                      aria-pressed={i === current}
+                      aria-controls="hf-faq-answer"
+                      onClick={() => pick(i)}
+                    >
+                      <span className="hf-faq__n">{pad(i + 1)}</span>
+                      <span>{f.q}</span>
+                      <span className="hf-faq__arrow" aria-hidden="true">→</span>
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            </div>
           ))}
-        </ol>
+        </div>
 
         <div className="hf-faq__player">
           <div className="hf-faq__deck" aria-hidden="true">
@@ -83,7 +103,7 @@ export function Faq() {
           </div>
 
           <div ref={answerRef} id="hf-faq-answer" className="hf-faq__answer" aria-live="polite">
-            <span className="hf-faq__track">Track {pad(current + 1)}</span>
+            <span className="hf-faq__track">Track {pad(current + 1)} · {faq.category}</span>
             <h2 className="hf-faq__question">{faq.q}</h2>
             <p className="hf-faq__text">{faq.a}</p>
             <div className="hf-faq__foot">
