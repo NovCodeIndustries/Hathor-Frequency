@@ -109,7 +109,12 @@ text-shadow: 0 0 24px rgba(242,201,76,0.25); /* hero: 0 0 28px rgba(...,0.3) */
 - **Rutas**:
   - `/` → Hero;
   - `/servicios`, `/artistas`, `/reservar`, `/contacto`;
-  - `/estudio` → página provisional "Muy pronto", porque Estudio aún no tiene diseño.
+  - `/estudio` → página provisional "Muy pronto", porque Estudio aún no tiene diseño;
+  - `/faq` → Preguntas frecuentes (§7.1); en el nav aparece como **FAQs**, después del botón Reservar.
+- **Nav con FAQs** (cambio del 2026-10-09):
+  - ≥ 1440px: el diseño original con FAQs al final de la derecha (link igual que los demás).
+  - 1200–1439px: los links bajan a 13px, tracking 0.12em y gap de 20px; el botón usa padding de 0 20px.
+  - < 1200px: ya no caben los 4 elementos de la derecha junto al logo centrado, así que se usa el nav móvil (logo a la izquierda, Reservar y hamburguesa). El menú desplegado lista Servicios, Artistas, Estudio, Contacto y FAQs (01–05), con padding lateral `--pad-x`.
 - **Títulos**: el título principal de cada página es su `h1`.
 - **Link activo**: el link del nav de la página actual se muestra en dorado (`aria-current="page"`).
 
@@ -391,6 +396,26 @@ Las miniaturas tienen fondo `#0a0a0a`, borde `#333` y trazos dorados con `stroke
   4. flecha.
 - En táctil, `:active` aplica el fondo dorado al 8%.
 
+**Cambios del 2026-10-08:**
+- **El disco gira**: un `<g>` interno del SVG rota 360° cada 6s, lineal e infinito; sin animación con `prefers-reduced-motion`. Se rota el `<g>` y no el `<svg>`, porque rotar el `<svg>` agranda su caja y genera scroll horizontal.
+- **Panel del artista** (estilo **V6 · Combinada** del canvas https://claude.ai/artifact/9z7ye3aqYqZ3ZQuqYeabYQ): las filas A1, A2 y B1 son `<button>` que abren el mismo panel lateral que los paquetes (`shared/Drawer.tsx`, ver §4.1 Detalle). La fila B2 "Tu banda" sigue siendo un link a `/reservar`.
+  - **Panel derecho** (`ArtistDrawer.tsx`):
+    - etiqueta "A1 · Lado A" y botón cerrar;
+    - cabecera con un mini vinilo de 88px (64px en móvil) que gira cada 4s, y a su derecha el nombre (Cinzel 44px) y el género (Cinzel 22px dorado);
+    - bio, cita (si tiene; Sofía M. usa el testimonio);
+    - **Redes**: íconos redondos de 48px (Instagram, Spotify, YouTube, TikTok), borde `#444`, hover dorado; abren en otra pestaña;
+    - **Galería**: dos pills de 56px, "▶ Ver videos" y "Ver fotos"; la activa queda en dorado (`aria-pressed`);
+    - botón "Reserva tu sesión" (a `/reservar`) al fondo.
+  - **Panel izquierdo** (`MediaPanel.tsx`): aparece solo al tocar Ver videos / Ver fotos.
+    - Ocupa el espacio a la izquierda del panel derecho (`right: min(600px, 100%)`), fondo `#050505`, entra desde la izquierda; por debajo de 1200px cubre la pantalla completa sobre el panel derecho.
+    - Cabecera: nombre del artista (kicker dorado), "Videos" o "Fotos" (Cinzel 34px) y botón "Cerrar galería".
+    - **Carrusel**: pieza central de `min(400px, 60%)` cuadrada con borde dorado y glow; las vecinas a ±75% del ancho, escala 0.7 y opacidad 0.35; las demás ocultas. Transición de 0.55s.
+    - Controles (estilo **A2 · Controles de transporte**, canvas https://claude.ai/artifact/EkLvHkrq9ZjXCCVh5fQYh3): botones redondos de 56px, fondo `#0a0a0a`, borde `#444`, sombra interior, con íconos ⏮ ⏭ dorados; en hover se rellenan de dorado (ícono negro, glow) y al presionar escalan a 0.95. Al centro el título, el detalle (duración o crédito) y "n / total" (`aria-live`).
+    - **Tira de negativo** (detalle de V4) abajo: perforaciones arriba y abajo, cuadros numerados 1A, 2A… que también seleccionan; el elegido lleva una marca dorada tipo lápiz graso.
+    - Videos: con `embed`, el play de la pieza central carga el iframe; sin `embed` se muestra un marcador. Fotos: con `src` se muestra la imagen; sin `src`, un marcador con el título.
+    - Escape cierra primero la galería y devuelve el foco al botón que la abrió; un segundo Escape cierra el panel.
+  - Datos en `src/data/artists.ts`: `bio`, `quote`, `socials` (`platform` + `href`), `videos` y `photos` (`MediaItem`: `title`, `detail`, `src?`, `embed?`). Hoy los links apuntan a la página principal de cada red y la galería son marcadores `[..]`.
+
 ---
 
 ## 6. Vista 5 — Reservar · "Calendario" (`05-Reservar.dc.html`, `id="reservar"`) — interactiva
@@ -486,6 +511,20 @@ Las miniaturas tienen fondo `#0a0a0a`, borde `#333` y trazos dorados con `stroke
 
 ---
 
+## 7.1 Preguntas frecuentes · "Q3 · Vinilo" (`/faq`, canvas https://claude.ai/artifact/1rUT6F1qKzszW1N5jpsLr9)
+
+- **Encabezado** centrado: eyebrow con línea a ambos lados "Preguntas frecuentes" y h1 "Pon la aguja *en tu duda.*" (cierre dorado).
+- **Cuerpo** en grid 5fr / 7fr con gap de 72px:
+  - **Izquierda**: lista de 8 preguntas (`<ol>` con bordes `#333`). Cada una es un `<button aria-pressed>` con número (Cinzel 14px dorado), pregunta (17px) y una flecha dorada que solo se ve en la activa. La activa va en dorado, fondo `#0a0a0a` y padding izquierdo de 18px.
+  - **Derecha**: tocadiscos y respuesta.
+    - Disco de `min(560px, 100%)`, alineado a la derecha: surcos dorados al 25%, arco de reflejo y etiqueta dorada de r100 con "Pregunta / 04 / de 08". Al cambiar de pregunta el disco gira a `n × 72°` en 0.9s (`cubic-bezier(.3,.7,.2,1)`).
+    - Brazo del tocadiscos arriba a la derecha (34% del ancho del disco).
+    - Panel de respuesta (`aria-live="polite"`) que se monta 160px sobre el disco, con margen derecho de 120px: borde dorado, fondo `#050505` y glow. Lleva "Track 04", la pregunta (Cinzel 32px), la respuesta (17px, #bbb) y un pie con "¿Otra duda? Escríbenos →" (a `/contacto`) y el botón pill "Siguiente pregunta →".
+- **Móvil**: el tocadiscos (260px) y la respuesta van primero y la lista debajo; al tocar una pregunta, la página se desplaza hasta la respuesta. El botón "Siguiente" ocupa todo el ancho.
+- **Datos**: `src/data/faq.ts`. Las respuestas tienen marcadores `[..]` (tiempos, pagos, anticipo, cancelaciones).
+
+---
+
 ## 8. Vista 7 — Footer (`07-Footer.dc.html`)
 
 ### Desktop (1440 × 140)
@@ -535,5 +574,7 @@ Las miniaturas tienen fondo `#0a0a0a`, borde `#333` y trazos dorados con `stroke
 - **Envíos**: falta definir a dónde van el formulario de contacto y la reserva (backend o servicio).
 - **Calendario**: la disponibilidad y la navegación entre meses son estáticas en el diseño.
 - **Redes**: Contacto repite los links que también aparecen en el Footer (decisión abierta).
+- **Artistas y FAQ**: faltan las bios, redes (links), videos y fotos reales de los artistas, y los datos de las respuestas de FAQ (marcadores `[..]`).
+- **Nav**: el rango 768–1199px usa el nav móvil (hamburguesa) porque con FAQs no cabe el nav completo; no hay diseño específico de tablet.
 - **Tablet**: no hay diseño para 768–1200px; se usa el layout desktop fluido.
 - **Paquetes**: faltan los paquetes reales (nombres, contenido, precios, IVA, tiempos de entrega y sesiones); hoy son una propuesta con marcadores `[..]`. "Reservar este paquete" lleva a `/reservar` sin preseleccionar el paquete.

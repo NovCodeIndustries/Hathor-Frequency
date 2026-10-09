@@ -36,13 +36,18 @@
 .hf-nav__logo--mobile,
 .hf-nav__mobile-actions { display: none; }
 
-/* Entre 768 y ~1100px los links necesitan menos aire */
-@media (max-width: 1100px) and (min-width: 768px) {
-  .hf-nav__links { gap: 24px; letter-spacing: 0.15em; }
-  .hf-nav__links--right .hf-btn { padding: 0 18px; }
+/* Entre 1200 y 1439px los links necesitan menos aire (a la derecha van 4 elementos) */
+@media (max-width: 1439px) and (min-width: 1200px) {
+  .hf-nav__links {
+    gap: 20px;
+    font-size: 13px;
+    letter-spacing: 0.12em;
+  }
+  .hf-nav__links--right .hf-btn { padding: 0 20px; }
 }
 
-@media (max-width: 767px) {
+/* Por debajo de 1200px no cabe el nav completo: se usa el de móvil (logo + Reservar + menú) */
+@media (max-width: 1199px) {
   .hf-nav__bar {
     height: 72px;
     display: flex;
@@ -80,7 +85,7 @@
   right: 0;
   background: var(--c-bg);
   border-bottom: 1px solid var(--c-line);
-  padding: 16px 16px 32px;
+  padding: 16px var(--pad-x) 32px;
   display: flex;
   flex-direction: column;
 }
@@ -112,6 +117,6 @@
   font-size: 16px;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1200px) {
   .hf-mmenu { display: none; }
 }

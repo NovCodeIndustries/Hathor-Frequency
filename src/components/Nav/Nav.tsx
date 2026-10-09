@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router'
-import { bookingCta, navLeft, navRight } from '../../data/site'
+import { bookingCta, navAfterCta, navLeft, navRight } from '../../data/site'
 import { Button } from '../shared/Button'
 import { Logo } from '../shared/Logo'
 import { MobileMenu } from './MobileMenu'
@@ -56,6 +56,9 @@ export function Nav() {
             ))}
           </nav>
           <Button variant="outline-gold" to={bookingCta.href}>{bookingCta.label}</Button>
+          {navAfterCta.map((l) => (
+            <NavLink key={l.href} to={l.href}>{l.label}</NavLink>
+          ))}
         </div>
 
         {/* Móvil */}

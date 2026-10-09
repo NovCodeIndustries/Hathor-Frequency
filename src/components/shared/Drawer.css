@@ -1,3 +1,4 @@
+/* Panel lateral de detalle (paquetes, artistas) */
 .hf-drawer {
   position: fixed;
   inset: 0;
@@ -132,10 +133,113 @@
   color: #ddd;
 }
 
-.hf-drawer__list li span {
+.hf-drawer__list li > span:first-child {
   font-family: var(--font-display);
   font-size: 13px;
   color: var(--c-gold);
+}
+
+/* Cabecera con elemento a la izquierda (mini vinilo del artista) */
+.hf-drawer__head {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.hf-drawer__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.hf-drawer__head .hf-drawer__title { font-size: 44px; }
+
+.hf-drawer__disc {
+  flex: none;
+  width: 88px;
+  height: 88px;
+}
+
+.hf-drawer__disc-spin {
+  transform-origin: 220px 220px;
+  animation: hf-drawer-spin 4s linear infinite;
+}
+
+@keyframes hf-drawer-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Redes: íconos redondos */
+.hf-drawer__socials {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.hf-drawer__socials a {
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--c-line-2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--c-text);
+  transition: border-color .25s, color .25s;
+}
+
+.hf-drawer__socials a:hover {
+  border-color: var(--c-gold);
+  color: var(--c-gold);
+}
+
+/* Galería: "Ver videos" / "Ver fotos" */
+.hf-drawer__gallery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.hf-drawer__gallery button {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid var(--c-line-2);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--c-text);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color .25s, color .25s;
+}
+
+.hf-drawer__gallery button:hover,
+.hf-drawer__gallery button[aria-pressed="true"] {
+  border-color: var(--c-gold);
+  color: var(--c-gold);
+}
+
+.hf-drawer__sub {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--c-gold);
+}
+
+.hf-drawer__quote {
+  padding-left: 20px;
+  border-left: 1px solid var(--c-gold);
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--c-text);
 }
 
 .hf-drawer__meta {
@@ -161,12 +265,16 @@
     border-left: 0;
   }
 
-  .hf-drawer__title { font-size: 38px; }
+  .hf-drawer__title,
+  .hf-drawer__head .hf-drawer__title { font-size: 34px; }
+  .hf-drawer__disc { width: 64px; height: 64px; }
+  .hf-drawer__head { gap: 14px; }
   .hf-drawer__price span { font-size: 28px; }
   .hf-drawer__desc { font-size: 15px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .hf-drawer__panel,
-  .hf-drawer__backdrop { animation: none; }
+  .hf-drawer__backdrop,
+  .hf-drawer__disc-spin { animation: none; }
 }

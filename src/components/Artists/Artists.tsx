@@ -1,11 +1,27 @@
+import { useCallback, useRef, useState } from 'react'
 import { artists, artistsIntro, sides } from '../../data/artists'
+import type { Artist } from '../../data/types'
 import { Eyebrow } from '../shared/Eyebrow'
 import { GoldText } from '../shared/GoldText'
+import { ArtistDrawer } from './ArtistDrawer'
 import { TrackRow } from './TrackRow'
 import { Vinyl } from './Vinyl'
 import './Artists.css'
 
 export function Artists() {
+  const [selected, setSelected] = useState<Artist | null>(null)
+  const trigger = useRef<HTMLButtonElement | null>(null)
+
+  const select = (artist: Artist, button: HTMLButtonElement) => {
+    trigger.current = button
+    setSelected(artist)
+  }
+
+  const close = useCallback(() => {
+    setSelected(null)
+    trigger.current?.focus()
+  }, [])
+
   return (
     <section id="artistas" className="hf-artists hf-container" aria-labelledby="artistas-title">
       <div className="hf-artists__left">
@@ -31,12 +47,14 @@ export function Artists() {
               {artists
                 .filter((a) => a.side === side)
                 .map((a) => (
-                  <TrackRow key={a.code} artist={a} />
+                  <TrackRow key={a.code} artist={a} onSelect={select} />
                 ))}
             </ul>
           </div>
         ))}
       </div>
+
+      {selected && <ArtistDrawer artist={selected} onClose={close} />}
     </section>
   )
 }

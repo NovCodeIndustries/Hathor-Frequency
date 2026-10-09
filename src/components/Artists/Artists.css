@@ -56,8 +56,29 @@
   letter-spacing: 0.1em;
 }
 
-/* Fila de track */
+/* El disco gira (33⅓ como referencia, más lento para que se lea la etiqueta) */
+.hf-artists__vinyl .hf-vinyl__spin {
+  transform-origin: 220px 220px;
+  animation: hf-vinyl-spin 6s linear infinite;
+}
+
+@keyframes hf-vinyl-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hf-artists__vinyl .hf-vinyl__spin { animation: none; }
+}
+
+/* Fila de track (button que abre el panel, o link en la fila CTA) */
 .hf-track {
+  width: 100%;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
   display: grid;
   grid-template-columns: 48px 72px 1fr 24px;
   gap: 24px;

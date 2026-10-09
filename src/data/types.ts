@@ -21,6 +21,29 @@ export interface Artist {
   href: string
   /** Fila de llamada a la acción ("Tu banda") */
   cta?: boolean
+  /** Panel de detalle (no aplica a la fila CTA) */
+  bio?: string
+  quote?: string
+  socials?: ArtistSocial[]
+  videos?: MediaItem[]
+  photos?: MediaItem[]
+}
+
+export type SocialPlatform = 'instagram' | 'spotify' | 'youtube' | 'tiktok'
+
+export interface ArtistSocial {
+  platform: SocialPlatform
+  href: string
+}
+
+export interface MediaItem {
+  title: string
+  /** Duración (video) o crédito (foto) */
+  detail: string
+  /** Foto: URL de la imagen */
+  src?: string
+  /** Video: URL de embed (p. ej. https://www.youtube-nocookie.com/embed/<id>) */
+  embed?: string
 }
 
 export interface Stat {
@@ -53,4 +76,9 @@ export interface Package {
   /** Tiempo de entrega y número de sesiones */
   delivery: string
   sessions: string
+}
+
+export interface Faq {
+  q: string
+  a: string
 }

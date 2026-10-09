@@ -1,6 +1,7 @@
 import { Artists } from '../components/Artists/Artists'
 import { Booking } from '../components/Booking/Booking'
 import { Contact } from '../components/Contact/Contact'
+import { Faq } from '../components/Faq/Faq'
 import { Hero } from '../components/Hero/Hero'
 import { Services } from '../components/Services/Services'
 import { ComingSoon } from './ComingSoon'
@@ -50,6 +51,15 @@ export function ContactPage() {
     <>
       <title>{`Contacto · ${SITE}`}</title>
       <Contact />
+    </>
+  )
+}
+
+export function FaqPage() {
+  return (
+    <>
+      <title>{`Preguntas frecuentes · ${SITE}`}</title>
+      <Faq />
     </>
   )
 }

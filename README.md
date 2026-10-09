@@ -85,7 +85,8 @@ Todo el texto y los datos están en `src/data/`:
 
 - `services.ts`: los 5 servicios (canales de la consola).
 - `packages.ts`: los paquetes con precio (vista Paquetes de `/servicios`).
-- `artists.ts`: el tracklist.
+- `artists.ts`: el tracklist, con la bio, redes, videos y fotos de cada artista (panel de detalle).
+- `faq.ts`: las preguntas frecuentes.
 - `stats.ts`: las cifras del hero.
 - `booking.ts`: los horarios y servicios del calendario.
 - `site.ts`: links del nav, redes, eslogan, testimonio y copyright.

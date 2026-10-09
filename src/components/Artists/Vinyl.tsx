@@ -28,6 +28,8 @@ export function Vinyl({ compact = false, className }: VinylProps) {
           <stop offset="1" stopColor="#B8860B" />
         </linearGradient>
       </defs>
+      {/* Gira el <g> (no el <svg>) para no agrandar su caja de layout */}
+      <g className="hf-vinyl__spin">
       <circle cx="220" cy="220" r="216" fill="#0a0a0a" stroke="#333" />
       <g fill="none" stroke="#F2C94C" strokeOpacity="0.18">
         {grooves.map((r) => (
@@ -49,6 +51,7 @@ export function Vinyl({ compact = false, className }: VinylProps) {
         FREQUENCY
       </text>
       <circle cx="220" cy="220" r="5" fill="#000" />
+      </g>
     </svg>
   )
 }
