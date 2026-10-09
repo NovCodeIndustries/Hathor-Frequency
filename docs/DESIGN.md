@@ -314,6 +314,31 @@ Datos (`src/data`): la descripción corta de cada uno de los 5 servicios. **No i
      - cap **vertical** de 14×30px con degradado horizontal dorado y glow, en el `left` de la tabla.
   3. `<h3>` de 22px y descripción de 15px con lh 1.55.
 
+### 4.1 Paquetes (misma página, estilo **P6 · Combinada** del canvas https://claude.ai/artifact/KQB17eYb4oPVx9379izoru)
+
+Cambio del 2026-10-08. `/servicios` tiene dos vistas, Servicios (la consola) y Paquetes, que se alternan sin cambiar de ruta.
+- **Interruptor** (botones de P1), en la columna derecha del encabezado, encima del párrafo, alineado a la derecha:
+  - pill con borde `#444` y padding de 4px; dos botones de 44px de alto ("Servicios" / "Paquetes"), 13px, 600, tracking 0.15em, mayúsculas;
+  - el activo va relleno dorado con texto negro (`aria-pressed="true"`), el otro transparente.
+  - En móvil ocupa todo el ancho (botones `flex: 1`) y el párrafo va alineado a la izquierda.
+- **Encabezado:** la vista Paquetes cambia el eyebrow a "Paquetes", el h1 a "Elige tu disco, *nosotros lo prensamos.*" (cierre dorado) y el párrafo a `packagesIntro`.
+- **Transición** (ondas de P2, `WaveTransition.tsx`):
+  - overlay fijo a pantalla completa (z-index 90, sobre el nav), con 8 anillos concéntricos centrados en la pantalla, de `150vmax` a `38vmax` (−16vmax cada uno);
+  - los pares van rellenos de dorado (degradado #F2C94C → #B8860B, glow) y los impares en negro; el más grande es dorado liso;
+  - **cubrir**: cada anillo escala de 0 a 1 en 1.05s (`cubic-bezier(.65,0,.35,1)`), con 45ms de retraso entre anillos; a los 0.6s aparece al centro el nombre de la vista destino (Cinzel, dorado, tracking 0.3em);
+  - a los 1350ms, con la página cubierta, se cambia la vista y se vuelve arriba del todo;
+  - **recoger**: los anillos vuelven a 0 en 0.9s, del más pequeño al más grande (40ms entre anillos), y se quita el overlay a los 2550ms.
+  - Con `prefers-reduced-motion` no hay ondas: la vista cambia directamente.
+- **Cards** (portada de disco, de P2): grid de 4 columnas (2 entre 768 y 1200px, 1 en móvil) con gap de 20px; cada card es un `<button>`:
+  - arte de 230px (210px en móvil): funda de 150px con el número (Cinzel 36px, dorado) y la etiqueta; detrás, un disco de 210px que al hacer hover sale de la funda (`translateX(38px) rotate(40deg)`); estampa dorada redonda de 92px girada −8° con "Desde / precio / MXN";
+  - cuerpo: nombre (Cinzel 28px), descripción corta (15px, #bbb) y "Ver contenido →" dorado.
+  - Debajo del grid, la nota de precios (`packagesNote`).
+- **Detalle** (`PackageDrawer.tsx`): panel que entra desde la derecha (`min(600px, 100%)`, borde izquierdo dorado), con fondo oscurecido:
+  - etiqueta "Paquete 0X · tag", botón cerrar redondo, nombre (Cinzel 48px), precio (Cinzel 34px dorado + "MXN · [IVA]"), descripción completa;
+  - lista "Lado A · Incluye" (A1, A2…), entrega y sesiones, y el botón "Reservar este paquete" (a `/reservar`) al fondo;
+  - se cierra con la X, clic fuera o Escape; bloquea el scroll del body, enfoca el botón cerrar y devuelve el foco a la card.
+- **Datos:** `src/data/packages.ts` (`Package` en `types.ts`). Precios, IVA, tiempos y cantidades son marcadores `[..]` hasta tener los reales.
+
 ---
 
 ## 5. Vista 4 — Artistas · "Tracklist" (`04-Artistas.dc.html`, `id="artistas"`)
@@ -511,3 +536,4 @@ Las miniaturas tienen fondo `#0a0a0a`, borde `#333` y trazos dorados con `stroke
 - **Calendario**: la disponibilidad y la navegación entre meses son estáticas en el diseño.
 - **Redes**: Contacto repite los links que también aparecen en el Footer (decisión abierta).
 - **Tablet**: no hay diseño para 768–1200px; se usa el layout desktop fluido.
+- **Paquetes**: faltan los paquetes reales (nombres, contenido, precios, IVA, tiempos de entrega y sesiones); hoy son una propuesta con marcadores `[..]`. "Reservar este paquete" lleva a `/reservar` sin preseleccionar el paquete.

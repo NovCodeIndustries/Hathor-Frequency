@@ -37,3 +37,20 @@ export interface SocialLink {
   label: string
   href: string
 }
+
+export interface Package {
+  n: string
+  name: string
+  /** Etiqueta corta en la portada ("Para empezar") */
+  tag: string
+  /** Precio en MXN, ya formateado ("$4,500") */
+  price: string
+  /** Una línea para la card */
+  short: string
+  /** Descripción completa (panel de detalle) */
+  description: string
+  includes: string[]
+  /** Tiempo de entrega y número de sesiones */
+  delivery: string
+  sessions: string
+}

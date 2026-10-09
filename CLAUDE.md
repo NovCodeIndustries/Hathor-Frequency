@@ -10,6 +10,7 @@ La landing está construida (React + TypeScript + Vite) siguiendo `docs/DESIGN.m
   - `src/components/Layout/` contiene Nav sticky + `<Outlet>` + Ticker + Footer;
   - las páginas están en `src/pages/`;
   - rutas: `/`, `/servicios`, `/artistas`, `/reservar`, `/contacto` y `/estudio` (provisional).
+  - `/servicios` alterna dos vistas sin cambiar de ruta, Servicios (consola) y Paquetes (`src/data/packages.ts`), con la transición de ondas de `WaveTransition.tsx` (DESIGN §4.1).
   - En producción, el hosting debe redirigir toda ruta a `index.html` (SPA fallback).
 - Componentes en `src/components/<Seccion>/` (un `.tsx` + `.css` por componente) y compartidos en `src/components/shared/`.
 - Estilos: CSS plano con prefijo `hf-`, tokens en `src/styles/tokens.css`. Breakpoint único: `@media (max-width: 767px)`.

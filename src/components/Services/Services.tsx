@@ -1,9 +1,14 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { packages, packagesIntro, packagesNote } from '../../data/packages'
 import { services, servicesIntro } from '../../data/services'
+import { useMediaQuery } from '../../lib/useMediaQuery'
 import { Eyebrow } from '../shared/Eyebrow'
 import { GoldText } from '../shared/GoldText'
 import { AlienSignal } from './AlienSignal'
 import { ChannelStrip } from './ChannelStrip'
+import { PackageCard } from './PackageCard'
+import { PackageDrawer } from './PackageDrawer'
+import { WaveTransition, type WavePhase } from './WaveTransition'
 import './Services.css'
 
 /**
@@ -18,9 +23,23 @@ const inZone = (level: number, zone: Zone) =>
 
 const matchesSecret = (levels: number[]) => SECRET.every((zone, i) => inZone(levels[i], zone))
 
+type View = 'servicios' | 'paquetes'
+
+/** Duración de las ondas: cubrir la página y luego recogerse (ver WaveTransition.css) */
+const COVER_MS = 1350
+const REVEAL_MS = 1200
+
 export function Services() {
   const [levels, setLevels] = useState(() => services.map((s) => s.level))
   const [signal, setSignal] = useState(false)
+  const [view, setView] = useState<View>('servicios')
+  const [wave, setWave] = useState<{ phase: WavePhase; target: View } | null>(null)
+  const [openIndex, setOpenIndex] = useState<number | null>(null)
+  const trigger = useRef<HTMLButtonElement | null>(null)
+  const timers = useRef<number[]>([])
+  const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
+
+  useEffect(() => () => timers.current.forEach(window.clearTimeout), [])
 
   const setLevel = (index: number, value: number) => {
     const next = levels.map((l, i) => (i === index ? value : l))
@@ -29,24 +48,95 @@ export function Services() {
     setLevels(next)
   }
 
+  const switchTo = (target: View) => {
+    if (wave || target === view) return
+    if (reducedMotion) {
+      setView(target)
+      return
+    }
+    setWave({ phase: 'cover', target })
+    timers.current.push(
+      window.setTimeout(() => {
+        // Con la página cubierta: cambia la vista y vuelve arriba
+        setView(target)
+        window.scrollTo({ top: 0, behavior: 'instant' })
+        setWave({ phase: 'reveal', target })
+      }, COVER_MS),
+      window.setTimeout(() => setWave(null), COVER_MS + REVEAL_MS),
+    )
+  }
+
+  const openPackage = (index: number, button: HTMLButtonElement) => {
+    trigger.current = button
+    setOpenIndex(index)
+  }
+
+  const closePackage = useCallback(() => {
+    setOpenIndex(null)
+    trigger.current?.focus()
+  }, [])
+
+  const isPackages = view === 'paquetes'
+
   return (
     <section id="servicios" className="hf-services hf-container" aria-labelledby="servicios-title">
       <div className="hf-services__head">
         <div className="hf-services__title">
-          <Eyebrow>Servicios</Eyebrow>
+          <Eyebrow>{isPackages ? 'Paquetes' : 'Servicios'}</Eyebrow>
           <h1 id="servicios-title" className="hf-h2">
-            Cinco canales, <GoldText>una sola mezcla.</GoldText>
+            {isPackages ? (
+              <>
+                Elige tu disco, <GoldText>nosotros lo prensamos.</GoldText>
+              </>
+            ) : (
+              <>
+                Cinco canales, <GoldText>una sola mezcla.</GoldText>
+              </>
+            )}
           </h1>
         </div>
-        <p className="hf-lead">{servicesIntro}</p>
+        <div className="hf-services__side">
+          <div className="hf-switch" role="group" aria-label="Cambiar vista">
+            <button
+              type="button"
+              className="hf-switch__btn"
+              aria-pressed={!isPackages}
+              onClick={() => switchTo('servicios')}
+            >
+              Servicios
+            </button>
+            <button
+              type="button"
+              className="hf-switch__btn"
+              aria-pressed={isPackages}
+              onClick={() => switchTo('paquetes')}
+            >
+              Paquetes
+            </button>
+          </div>
+          <p className="hf-lead">{isPackages ? packagesIntro : servicesIntro}</p>
+        </div>
       </div>
 
-      <div className="hf-console">
-        {services.map((s, i) => (
-          <ChannelStrip key={s.ch} service={s} level={levels[i]} onLevel={(v) => setLevel(i, v)} />
-        ))}
-      </div>
+      {isPackages ? (
+        <div className="hf-packages">
+          <div className="hf-packages__grid">
+            {packages.map((p, i) => (
+              <PackageCard key={p.n} pkg={p} onOpen={(button) => openPackage(i, button)} />
+            ))}
+          </div>
+          <p className="hf-packages__note">{packagesNote}</p>
+        </div>
+      ) : (
+        <div className="hf-console">
+          {services.map((s, i) => (
+            <ChannelStrip key={s.ch} service={s} level={levels[i]} onLevel={(v) => setLevel(i, v)} />
+          ))}
+        </div>
+      )}
 
+      {wave && <WaveTransition phase={wave.phase} label={wave.target === 'paquetes' ? 'Paquetes' : 'Servicios'} />}
+      {openIndex !== null && <PackageDrawer pkg={packages[openIndex]} onClose={closePackage} />}
       {signal && <AlienSignal onClose={() => setSignal(false)} />}
     </section>
   )

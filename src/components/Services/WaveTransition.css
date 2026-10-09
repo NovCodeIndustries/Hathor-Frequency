@@ -1,0 +1,67 @@
+.hf-wave {
+  position: fixed;
+  inset: 0;
+  z-index: 90; /* sobre el nav (10), bajo el easter egg (100) */
+  overflow: hidden;
+  /* bloquea clics mientras dura la transición */
+  pointer-events: auto;
+}
+
+.hf-wave__ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--size);
+  height: var(--size);
+  margin: calc(var(--size) / -2) 0 0 calc(var(--size) / -2);
+  border-radius: 50%;
+  background: #000;
+  transform: scale(0);
+}
+
+.hf-wave__ring--gold {
+  background: linear-gradient(135deg, var(--c-gold), var(--c-gold-2));
+  box-shadow: 0 0 60px rgba(242,201,76,0.5);
+}
+
+.hf-wave__ring:first-child { background: var(--c-gold); }
+
+.hf-wave--cover .hf-wave__ring {
+  animation: hf-wave-in 1.05s cubic-bezier(.65,0,.35,1) calc(var(--i) * 45ms) both;
+}
+
+.hf-wave--reveal .hf-wave__ring {
+  transform: scale(1);
+  animation: hf-wave-out .9s cubic-bezier(.65,0,.35,1) calc((7 - var(--i)) * 40ms) both;
+}
+
+@keyframes hf-wave-in {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+
+@keyframes hf-wave-out {
+  from { transform: scale(1); }
+  to { transform: scale(0); }
+}
+
+.hf-wave__label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.6vw, 36px);
+  letter-spacing: 0.3em;
+  color: var(--c-gold);
+  opacity: 0;
+}
+
+.hf-wave--cover .hf-wave__label { animation: hf-wave-label .35s .6s both; }
+
+@keyframes hf-wave-label {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

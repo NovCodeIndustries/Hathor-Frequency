@@ -7,6 +7,8 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  /* evita el salto de layout al bloquear el scroll (panel de paquetes, bienvenida) */
+  scrollbar-gutter: stable;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -84,6 +84,7 @@ docker/entrypoint.sh     arranque del contenedor app
 Todo el texto y los datos están en `src/data/`:
 
 - `services.ts`: los 5 servicios (canales de la consola).
+- `packages.ts`: los paquetes con precio (vista Paquetes de `/servicios`).
 - `artists.ts`: el tracklist.
 - `stats.ts`: las cifras del hero.
 - `booking.ts`: los horarios y servicios del calendario.
