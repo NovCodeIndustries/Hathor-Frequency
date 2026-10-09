@@ -1,0 +1,536 @@
+/* Platillo volador que explora el sitio. Capa fija sobre la ventana, debajo del nav (z-index 10) */
+.hf-ufo {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* El recorrido lo anima Ufo.tsx (Web Animations) con posiciones en px de la ventana */
+.hf-ufo__path {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 160px;
+  height: 90px;
+}
+
+/* U6: el platillo sigue la onda; su centro va sobre la línea */
+.hf-ufo--onda .hf-ufo__path {
+  offset-rotate: 0deg;
+  offset-anchor: 80px 48px;
+}
+
+.hf-ufo__bob { animation: hf-ufo-bob 1.6s ease-in-out infinite alternate; }
+
+.hf-ufo__saucer {
+  display: block;
+  width: 160px;
+  height: 90px;
+  overflow: visible;
+  filter: drop-shadow(0 0 12px rgba(242,201,76,0.45));
+}
+
+.hf-ufo__light { animation: hf-ufo-blink .9s steps(2) infinite; }
+.hf-ufo--zigzag .hf-ufo__light { animation-duration: .25s; }
+
+@keyframes hf-ufo-bob {
+  from { transform: translateY(-4px) rotate(-3deg); }
+  to { transform: translateY(4px) rotate(3deg); }
+}
+
+@keyframes hf-ufo-blink {
+  from { opacity: 1; }
+  to { opacity: .25; }
+}
+
+/* Punto de referencia de los efectos (lo calcula Ufo.tsx) */
+.hf-ufo__fx {
+  position: absolute;
+  left: var(--fx-x);
+  top: var(--fx-y);
+}
+
+/* ---------- Rayo (U2, U4, U5) ---------- */
+.hf-ufo__beam {
+  position: absolute;
+  top: 58px;
+  clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%);
+  /* En temporada el rayo toma su color (--ufo-beam) */
+  background: linear-gradient(180deg, var(--ufo-beam, rgba(242,201,76,0.35)), rgba(242,201,76,0.03));
+  transform-origin: 50% 0;
+}
+
+.hf-ufo--escucha .hf-ufo__beam {
+  left: -70px;
+  width: 300px;
+  height: 420px;
+  animation: hf-ufo-beam-escucha 12s linear both;
+}
+
+.hf-ufo--scratch .hf-ufo__beam {
+  left: 30px;
+  top: 60px;
+  width: 100px;
+  height: 120px;
+  clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%);
+  background: linear-gradient(180deg, rgba(242,201,76,0.5), rgba(242,201,76,0.05));
+  animation: hf-ufo-beam-scratch 12s linear both;
+}
+
+.hf-ufo--letra .hf-ufo__beam {
+  left: -10px;
+  width: 180px;
+  height: 300px;
+  animation: hf-ufo-beam-letra 13s linear both;
+}
+
+@keyframes hf-ufo-beam-escucha {
+  0%, 15% { opacity: 0; transform: scaleY(0); }
+  19%, 50% { opacity: 1; transform: scaleY(1); }
+  54%, 100% { opacity: 0; transform: scaleY(0); }
+}
+
+@keyframes hf-ufo-beam-scratch {
+  0%, 17% { opacity: 0; transform: scaleY(0); }
+  20%, 45% { opacity: 1; transform: scaleY(1); }
+  48%, 100% { opacity: 0; transform: scaleY(0); }
+}
+
+/* Se abre para llevarse la letra y otra vez para devolverla */
+@keyframes hf-ufo-beam-letra {
+  0%, 16% { opacity: 0; transform: scaleY(0); }
+  19%, 34% { opacity: 1; transform: scaleY(1); }
+  37%, 43% { opacity: 0; transform: scaleY(0); }
+  46%, 56% { opacity: 1; transform: scaleY(1); }
+  59%, 100% { opacity: 0; transform: scaleY(0); }
+}
+
+/* Rayo de las acciones de página: una vez (single) o dos, para llevarse algo y devolverlo (double) */
+.hf-ufo__beam--single { animation: hf-ufo-beam-single linear both; }
+.hf-ufo__beam--double { animation: hf-ufo-beam-letra linear both; }
+
+@keyframes hf-ufo-beam-single {
+  0%, 15% { opacity: 0; transform: scaleY(0); }
+  18%, 52% { opacity: 1; transform: scaleY(1); }
+  55%, 100% { opacity: 0; transform: scaleY(0); }
+}
+
+/* ---------- Acciones de página: elementos propios encima de la página ---------- */
+.hf-ufo__overlay {
+  position: absolute;
+  inset: 0;
+}
+
+.hf-ufo__overlay > * { position: absolute; }
+
+/* P2 · sello de platillo y etiqueta en el día */
+.hf-ufo__stamp {
+  width: 24px;
+  height: 14px;
+  opacity: 0;
+  animation: hf-ufo-stamp linear both;
+}
+
+.hf-ufo__tip {
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 6px 12px;
+  border: 1px solid var(--c-gold);
+  border-radius: var(--radius-pill);
+  background: #000;
+  color: var(--c-gold);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  opacity: 0;
+  animation: hf-ufo-stamp linear both;
+}
+
+@keyframes hf-ufo-stamp {
+  0%, 28% { opacity: 0; }
+  32%, 54% { opacity: 1; }
+  60%, 100% { opacity: 0; }
+}
+
+/* P3 · hueco que deja el track mientras no está */
+.hf-ufo__gap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border-bottom: 1px dashed var(--c-line-2);
+  font-size: 13px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--c-gold);
+  opacity: 0;
+  animation: hf-ufo-gap linear both;
+}
+
+@keyframes hf-ufo-gap {
+  0%, 26% { opacity: 0; }
+  30%, 46% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+/* P4 · texto escrito en el campo de correo */
+.hf-contact__input.hf-ufo-typing::placeholder { color: transparent; }
+
+.hf-ufo__typing {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.hf-ufo__typed {
+  color: var(--c-gold);
+  clip-path: inset(0 100% 0 0);
+  animation: hf-ufo-type linear both;
+}
+
+.hf-ufo__caret {
+  width: 2px;
+  height: 1.2em;
+  margin-left: 2px;
+  background: var(--c-gold);
+  opacity: 0;
+  animation: hf-ufo-caret linear both;
+}
+
+@keyframes hf-ufo-type {
+  0%, 22% { clip-path: inset(0 100% 0 0); animation-timing-function: steps(21); }
+  38%, 50% { clip-path: inset(0 0 0 0); animation-timing-function: steps(21); }
+  58%, 100% { clip-path: inset(0 100% 0 0); }
+}
+
+@keyframes hf-ufo-caret {
+  0%, 21% { opacity: 0; }
+  22%, 23%, 25%, 27%, 29%, 31%, 33%, 35%, 37%, 39%, 41%, 43%, 45%, 47%, 49%, 51%, 53%, 55%, 57% { opacity: 1; }
+  24%, 26%, 28%, 30%, 32%, 34%, 36%, 38%, 40%, 42%, 44%, 46%, 48%, 50%, 52%, 54%, 56% { opacity: .2; }
+  58%, 100% { opacity: 0; }
+}
+
+/* P5 · contador que rueda y etiqueta que cambia */
+.hf-ufo__roll {
+  overflow: hidden;
+  text-align: center;
+}
+
+.hf-ufo__roll-col {
+  display: flex;
+  flex-direction: column;
+  animation: hf-ufo-roll ease-in-out both;
+}
+
+.hf-ufo__roll-next { text-shadow: 0 0 14px rgba(242,201,76,0.8); }
+
+@keyframes hf-ufo-roll {
+  0%, 24% { transform: translateY(0); }
+  30%, 54% { transform: translateY(-50%); }
+  60%, 100% { transform: translateY(0); }
+}
+
+.hf-ufo__label {
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.hf-ufo__label > span {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  animation: hf-ufo-label-a ease both;
+}
+
+.hf-ufo__label .hf-ufo__label-b {
+  color: var(--c-gold);
+  opacity: 0;
+  animation-name: hf-ufo-label-b;
+}
+
+@keyframes hf-ufo-label-a {
+  0%, 26% { opacity: 1; }
+  30%, 54% { opacity: 0; }
+  58%, 100% { opacity: 1; }
+}
+
+@keyframes hf-ufo-label-b {
+  0%, 26% { opacity: 0; }
+  30%, 54% { opacity: 1; }
+  58%, 100% { opacity: 0; }
+}
+
+/* ---------- Temporadas (seasonFlights.tsx): efectos encima de la página ---------- */
+.hf-ufo__pop { opacity: 0; animation: hf-ufo-pop linear both; }
+.hf-ufo__in { opacity: 0; animation: hf-ufo-in linear both; }
+.hf-ufo__drop { opacity: 0; animation: hf-ufo-drop linear both; }
+.hf-ufo__rise { opacity: 0; animation: hf-ufo-rise ease-out both; }
+.hf-ufo__fall { opacity: 0; animation: hf-ufo-fall linear both; }
+.hf-ufo__burst { opacity: 0; animation: hf-ufo-burst ease-out both; }
+.hf-ufo__batfly { opacity: 0; animation: hf-ufo-batfly ease-out both; }
+.hf-ufo__pulse { animation: hf-ufo-pulse .8s ease-in-out infinite alternate; }
+.hf-ufo__flame-sm { animation: hf-ufo-blink .18s steps(2) infinite; }
+.hf-ufo__propeller { transform-box: fill-box; transform-origin: center; animation: hf-ufo-prop .4s linear infinite; }
+
+.hf-ufo__bubble {
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 6px 14px;
+  border-radius: 16px;
+  background: #f4f4f4;
+  color: #000;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16px;
+  opacity: 0;
+  animation: hf-ufo-in linear both;
+}
+
+.hf-ufo__note-text {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.hf-ufo__swap {
+  transform: translateX(-50%);
+  white-space: nowrap;
+  opacity: 0;
+  animation: hf-ufo-in linear both;
+}
+
+.hf-ufo__petals {
+  stroke-dasharray: 2 12;
+  animation: hf-ufo-petals linear both;
+}
+
+@keyframes hf-ufo-pop {
+  0%, 25% { opacity: 0; transform: scale(.3); }
+  31%, 56% { opacity: 1; transform: scale(1); }
+  62%, 100% { opacity: 0; transform: scale(.3); }
+}
+
+@keyframes hf-ufo-in {
+  0%, 25% { opacity: 0; }
+  30%, 56% { opacity: 1; }
+  62%, 100% { opacity: 0; }
+}
+
+@keyframes hf-ufo-drop {
+  0%, 22% { opacity: 0; transform: translateY(-140px) rotate(-20deg); }
+  24% { opacity: 1; }
+  32% { transform: translateY(6px) rotate(4deg); }
+  35%, 56% { opacity: 1; transform: none; }
+  62%, 100% { opacity: 0; transform: none; }
+}
+
+@keyframes hf-ufo-rise {
+  0%, 24% { opacity: 0; transform: translateY(0) scale(.6); }
+  28% { opacity: 1; }
+  52%, 100% { opacity: 0; transform: translateY(-160px) scale(1.1); }
+}
+
+@keyframes hf-ufo-fall {
+  0%, 24% { opacity: 0; transform: translateY(0) rotate(0); }
+  27% { opacity: 1; }
+  58% { opacity: 1; transform: translateY(280px) rotate(320deg); }
+  60%, 100% { opacity: 0; transform: translateY(280px); }
+}
+
+@keyframes hf-ufo-burst {
+  0%, 26% { opacity: 0; transform: scale(.2); }
+  30% { opacity: 1; }
+  44%, 100% { opacity: 0; transform: scale(1.4); }
+}
+
+@keyframes hf-ufo-batfly {
+  0%, 26% { opacity: 0; transform: translate(0, 0) scale(.4); }
+  30% { opacity: 1; }
+  54% { opacity: 1; transform: translate(var(--bx), -180px) scale(1); }
+  58%, 100% { opacity: 0; transform: translate(var(--bx), -180px); }
+}
+
+@keyframes hf-ufo-pulse { from { transform: scale(.92); } to { transform: scale(1.08); } }
+@keyframes hf-ufo-prop { to { transform: rotate(360deg); } }
+
+/* Camino de pétalos de la orilla al vinilo: aparece con el rayo y se desvanece */
+@keyframes hf-ufo-petals {
+  0%, 20% { opacity: 0; }
+  24%, 56% { opacity: 1; }
+  64%, 100% { opacity: 0; }
+}
+
+/* ---------- U2 · Escucha ---------- */
+.hf-ufo__streak {
+  position: absolute;
+  left: 70px;
+  top: 30px;
+  width: 260px;
+  height: 3px;
+  background: linear-gradient(90deg, #F2C94C, rgba(242,201,76,0));
+  transform: rotate(12deg);
+  transform-origin: 0 50%;
+  animation: hf-ufo-streak 12s linear both;
+}
+
+@keyframes hf-ufo-streak {
+  0%, 57% { opacity: 0; }
+  59% { opacity: 1; }
+  64%, 100% { opacity: 0; }
+}
+
+.hf-ufo__note {
+  position: absolute;
+  font-family: var(--font-display);
+  color: var(--c-gold);
+  text-shadow: 0 0 10px rgba(242,201,76,0.8);
+  opacity: 0;
+  animation: hf-ufo-note 12s ease-in both;
+}
+
+@keyframes hf-ufo-note {
+  0%, 20% { opacity: 0; transform: translate(0, 0) scale(1); }
+  22% { opacity: 1; }
+  34% { opacity: 1; transform: translate(var(--tx), -250px) scale(.4); }
+  35%, 100% { opacity: 0; transform: translate(var(--tx), -250px) scale(.4); }
+}
+
+/* ---------- U3 · Zigzag: destello y anillo al desaparecer ---------- */
+.hf-ufo__flash {
+  position: absolute;
+  left: -60px;
+  top: -60px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, #fff8dd, rgba(242,201,76,0.6) 40%, rgba(242,201,76,0));
+  animation: hf-ufo-flash 10s linear both;
+}
+
+.hf-ufo__ring {
+  position: absolute;
+  left: -40px;
+  top: -40px;
+  width: 80px;
+  height: 80px;
+  border: 2px solid var(--c-gold);
+  border-radius: 50%;
+  animation: hf-ufo-ring 10s ease-out both;
+}
+
+@keyframes hf-ufo-flash {
+  0%, 55% { opacity: 0; transform: scale(.2); }
+  56% { opacity: 1; transform: scale(.6); }
+  62%, 100% { opacity: 0; transform: scale(2.4); }
+}
+
+@keyframes hf-ufo-ring {
+  0%, 55% { opacity: 0; transform: scale(.2); }
+  57% { opacity: 1; }
+  70%, 100% { opacity: 0; transform: scale(3.2); }
+}
+
+/* ---------- U4 · Scratch: ondas junto al vinilo ---------- */
+.hf-ufo__waves {
+  margin: -110px 0 0 -150px;
+  overflow: visible;
+}
+
+.hf-ufo__waves path {
+  fill: none;
+  stroke: var(--c-gold);
+  stroke-width: 2;
+  opacity: 0;
+  transform-origin: 150px 110px;
+  animation: hf-ufo-wave 12s ease-out both;
+}
+
+.hf-ufo__waves path:nth-child(2) { animation-delay: .9s; }
+.hf-ufo__waves path:nth-child(3) { animation-delay: 1.8s; }
+.hf-ufo__waves path:nth-child(4) { animation-delay: 2.7s; }
+
+@keyframes hf-ufo-wave {
+  0%, 21% { opacity: 0; transform: scale(.6); }
+  23% { opacity: .9; }
+  28% { opacity: 0; transform: scale(1.4); }
+  29%, 100% { opacity: 0; }
+}
+
+/* ---------- U5 · Letra: copia de la palabra encima de la original ---------- */
+.hf-ufo-word {
+  position: fixed;
+  z-index: 9;
+  display: inline-block;
+  white-space: pre;
+  pointer-events: none;
+}
+
+.hf-ufo-letter { display: inline-block; }
+
+/* ---------- U6 · Onda: estela que se dibuja detrás del platillo ---------- */
+.hf-ufo__trail {
+  position: absolute;
+  inset: 0;
+}
+
+.hf-ufo__trail-line {
+  fill: none;
+  stroke: var(--c-gold);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 1000;
+  filter: drop-shadow(0 0 6px rgba(242,201,76,0.8));
+  animation: hf-ufo-trail 11s linear both;
+}
+
+.hf-ufo__trail-dots {
+  fill: none;
+  stroke: #fff3c4;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 1 14;
+  transform: translateY(16px);
+  animation: hf-ufo-dots 11s linear both;
+}
+
+@keyframes hf-ufo-trail {
+  0% { stroke-dashoffset: 1000; opacity: 1; }
+  55% { stroke-dashoffset: 0; opacity: 1; }
+  62% { stroke-dashoffset: 0; opacity: 1; stroke-width: 4; }
+  80%, 100% { stroke-dashoffset: 0; opacity: 0; stroke-width: 2; }
+}
+
+@keyframes hf-ufo-dots {
+  0%, 55% { opacity: 0; }
+  60% { opacity: .8; }
+  80%, 100% { opacity: 0; }
+}
+
+/* ---------- Móvil: platillo y efectos más chicos (las posiciones no cambian: escala desde su centro) ---------- */
+@media (max-width: 767px) {
+  .hf-ufo__saucer { scale: .65; }
+
+  .hf-ufo--escucha .hf-ufo__beam {
+    left: -20px;
+    width: 200px;
+    height: 300px;
+  }
+
+  .hf-ufo--letra .hf-ufo__beam {
+    left: 20px;
+    width: 120px;
+    height: 200px;
+  }
+
+  .hf-ufo__streak { width: 160px; }
+
+  /* Notas y ondas al 60% alrededor de su punto */
+  .hf-ufo--escucha .hf-ufo__fx,
+  .hf-ufo__waves,
+  .hf-ufo--zigzag .hf-ufo__fx { scale: .6; }
+
+  .hf-ufo--escucha .hf-ufo__fx { top: calc(var(--fx-y) - 110px); }
+}

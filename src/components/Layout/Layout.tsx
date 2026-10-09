@@ -3,6 +3,7 @@ import { Outlet, ScrollRestoration } from 'react-router'
 import { Footer } from '../Footer/Footer'
 import { Nav } from '../Nav/Nav'
 import { Ticker } from '../Ticker/Ticker'
+import { Ufo } from '../Ufo/Ufo'
 import { Welcome } from '../Welcome/Welcome'
 import './Layout.css'
 
@@ -21,6 +22,8 @@ export function Layout() {
       <Ticker />
       <Footer />
       <ScrollRestoration />
+      {/* El platillo explora todas las vistas; sigue su horario al navegar entre páginas */}
+      <Ufo />
       {welcome && <Welcome onDone={closeWelcome} />}
     </div>
   )

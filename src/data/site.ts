@@ -50,3 +50,14 @@ export const testimonial = {
 export const copyright = '© 2026 Hathor Frequency · MX'
 
 export const tickerItems = ['Grabación', 'Mezcla', 'Masterización', 'Video', 'Live Sessions']
+
+/**
+ * Platillo volador que explora todo el sitio: en cada vista hace una de sus acciones
+ * (U2 escucha, U3 zigzag, U4 scratch, U5 se lleva una letra, U6 onda en el cielo), en orden al azar,
+ * con una espera al azar entre `minSeconds` y `maxSeconds` desde que termina la anterior,
+ * solo con la pestaña visible. Con `?ovni=1` en la URL la primera sale al cargar (para probarlo).
+ */
+export const ufoSchedule = {
+  minSeconds: 30,
+  maxSeconds: 60,
+}
