@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { packages, packagesIntro, packagesNote } from '../../data/packages'
 import { services, servicesIntro } from '../../data/services'
 import { useMediaQuery } from '../../lib/useMediaQuery'
@@ -36,7 +37,10 @@ export function Services() {
   // Solo cuentan los faders que el usuario movió (algunos arrancan dentro de su zona)
   const [touched, setTouched] = useState(() => services.map(() => false))
   const [signal, setSignal] = useState(false)
-  const [view, setView] = useState<View>('servicios')
+  // La vista vive en la URL (/servicios?vista=paquetes) para poder enlazarla desde otras páginas
+  const [params, setParams] = useSearchParams()
+  const view: View = params.get('vista') === 'paquetes' ? 'paquetes' : 'servicios'
+  const setView = (next: View) => setParams(next === 'paquetes' ? { vista: 'paquetes' } : {}, { replace: true })
   const [wave, setWave] = useState<{ phase: WavePhase; target: View } | null>(null)
   const [openIndex, setOpenIndex] = useState<number | null>(null)
   const trigger = useRef<HTMLButtonElement | null>(null)

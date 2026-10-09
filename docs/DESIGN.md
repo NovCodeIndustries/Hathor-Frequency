@@ -333,7 +333,7 @@ Datos (`src/data`): la descripción corta de cada uno de los 5 servicios. **No i
 
 ### 4.1 Paquetes (misma página, estilo **P6 · Combinada** del canvas https://claude.ai/artifact/KQB17eYb4oPVx9379izoru)
 
-Cambio del 2026-10-08. `/servicios` tiene dos vistas, Servicios (la consola) y Paquetes, que se alternan sin cambiar de ruta.
+Cambio del 2026-10-08. `/servicios` tiene dos vistas, Servicios (la consola) y Paquetes, que se alternan sin cambiar de ruta. La vista activa vive en la URL: `/servicios?vista=paquetes` abre directo los paquetes (lo usa "Cotizar un video" de Estudio) y al cambiar con el interruptor se actualiza el parámetro sin agregar historial.
 - **Interruptor** (botones de P1), en la columna derecha del encabezado, encima del párrafo, alineado a la derecha:
   - pill con borde `#444` y padding de 4px; dos botones de 44px de alto ("Servicios" / "Paquetes"), 13px, 600, tracking 0.15em, mayúsculas;
   - el activo va relleno dorado con texto negro (`aria-pressed="true"`), el otro transparente.
@@ -563,7 +563,7 @@ Cambio del 2026-10-09. Componente `Studio.tsx`, datos en `src/data/studio.ts`.
 - **Video y live sessions** (agregado el 2026-10-09, entre el tour y el equipo): eyebrow "Video y live sessions", h2 "Tu música *también se ve.*" y un párrafo a la derecha. Dos tarjetas (Videos musicales · Live Sessions; una columna en tablet y móvil):
   - pantalla 16:9 con la muestra de video (sin `embed`, marcador "[VIDEO DE MUESTRA: …]"), etiqueta pill dorada ("Videoclip" / "En vivo") y el botón de play P2 con ondas; con `embed`, el play carga el iframe;
   - título (Cinzel 30px), descripción, proceso en 5 pasos con línea dorada arriba (3 columnas en móvil) y lista "incluye" con ◆.
-  - Botones al final: "Cotizar un video" (a `/reservar`) y "Ver paquetes" (a `/servicios`).
+  - Botones al final: "Cotizar un video" (a `/servicios?vista=paquetes`, la vista de paquetes) y "Reservar sesión" (a `/reservar`).
   - Datos en `studioVideo` (`src/data/studio.ts`).
 - **Equipo**: grid 4fr / 8fr. A la izquierda, eyebrow, "Todo conectado, *listo para tocar.*" y la nota "Si prefieres tu propio equipo, tráelo…". A la derecha, pestañas (`role="tablist"`, flechas ← → para moverse; activa en dorado con subrayado) para Micrófonos, Preamps y consola, Monitores, Backline, Software y Video; el panel muestra foto (240×180) y la descripción. En móvil las pestañas hacen scroll horizontal.
 - **Visita**: "Ven a *escucharlo.*" con los botones "Reservar sesión" (a `/reservar`) y "Agendar visita" (a `/contacto`), y 3 tarjetas: Ubicación, Horario y Llegada.
@@ -622,4 +622,4 @@ Cambio del 2026-10-09. Componente `Studio.tsx`, datos en `src/data/studio.ts`.
 - **Artistas y FAQ**: faltan las bios, redes (links), videos y fotos reales de los artistas, y los datos de las respuestas de FAQ (marcadores `[..]`).
 - **Nav**: el rango 768–1199px usa el nav móvil (hamburguesa) porque con FAQs no cabe el nav completo; no hay diseño específico de tablet.
 - **Tablet**: no hay diseño para 768–1200px; se usa el layout desktop fluido.
-- **Paquetes**: faltan los paquetes reales (nombres, contenido, precios, IVA, tiempos de entrega y sesiones); hoy son una propuesta con marcadores `[..]`. "Reservar este paquete" lleva a `/reservar` sin preseleccionar el paquete.
+- **Paquetes**: faltan los paquetes reales (nombres, contenido, precios, IVA, tiempos de entrega y sesiones); hoy son una propuesta con marcadores `[..]`. "Reservar este paquete" lleva a `/reservar` sin preseleccionar el paquete. (Ya existe el enlace directo `/servicios?vista=paquetes`.)

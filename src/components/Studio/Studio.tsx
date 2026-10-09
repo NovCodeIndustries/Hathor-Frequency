@@ -222,8 +222,8 @@ export function Studio() {
           ))}
         </div>
         <div className="hf-vid__actions">
-          <Button variant="primary" to="/reservar">Cotizar un video</Button>
-          <Button variant="ghost" to="/servicios">Ver paquetes</Button>
+          <Button variant="primary" to="/servicios?vista=paquetes">Cotizar un video</Button>
+          <Button variant="ghost" to="/reservar">Reservar sesión</Button>
         </div>
       </section>
 
