@@ -7,6 +7,7 @@ import { GoldText } from '../shared/GoldText'
 import { BookingModal } from './BookingModal'
 import { Calendar } from './Calendar'
 import { RockAlien } from './RockAlien'
+import { RockAlienMini } from './RockAlienMini'
 import { SessionPanel, type SubmitStatus } from './SessionPanel'
 import './Booking.css'
 
@@ -85,6 +86,7 @@ export function Booking() {
           }}
         />
         <RockAlien />
+        <RockAlienMini />
       </div>
 
       <SessionPanel

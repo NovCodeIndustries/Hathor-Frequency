@@ -158,6 +158,138 @@ function Alien({ guitar, horns }: { guitar: boolean; horns: boolean }) {
   )
 }
 
+/** Público: extraterrestres más chicos del lado izquierdo, con los brazos arriba o haciendo los cuernos */
+type Pose = 'horns' | 'up' | 'sign'
+
+function Fan({ pose }: { pose: Pose }) {
+  return (
+    <svg className="hf-ra__fan-svg" viewBox="0 0 80 140" focusable="false">
+      <path d="M37 102 L35 124 L29 126" fill="none" stroke={OUT} strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M37 102 L35 124 L29 126" fill="none" stroke={SKIN} strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M43 102 L45 124 L51 126" fill="none" stroke={OUT} strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M43 102 L45 124 L51 126" fill="none" stroke={SKIN} strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M31 70 C28 82 30 96 34 104 L46 104 C50 96 52 82 49 70 C45 66 35 66 31 70Z" fill={SKIN} stroke={OUT} strokeWidth="1.5" />
+      <path d="M36 62 L36 70 L44 70 L44 62Z" fill={SKIN} />
+      <g className="hf-ra__fan-arms">
+        {pose === 'sign' ? (
+          <>
+            {/* Los dos brazos arriba sosteniendo el cartel */}
+            <Limb d="M32 74 L25 56 L27 40" w={4.5} />
+            <Limb d="M48 74 L55 56 L53 40" w={4.5} />
+            <circle cx="27" cy="37" r="3.5" fill={SKIN} stroke={OUT} strokeWidth="1.5" />
+            <circle cx="53" cy="37" r="3.5" fill={SKIN} stroke={OUT} strokeWidth="1.5" />
+          </>
+        ) : pose === 'horns' ? (
+          <>
+            <Limb d="M32 74 L26 92 L25 104" w={4.5} />
+            <Limb d="M48 74 L58 54 L60 36" w={4.5} />
+            <path d="M57 30 L55 20 M63 30 L65 20" fill="none" stroke={OUT} strokeWidth="4.5" strokeLinecap="round" />
+            <path d="M57 30 L55 20 M63 30 L65 20" fill="none" stroke={SKIN} strokeWidth="2.5" strokeLinecap="round" />
+            <circle cx="60" cy="33" r="4" fill={SKIN} stroke={OUT} strokeWidth="1.5" />
+          </>
+        ) : (
+          <>
+            <Limb d="M32 74 L22 56 L18 38" w={4.5} />
+            <Limb d="M48 74 L58 56 L62 38" w={4.5} />
+            <circle cx="18" cy="35" r="3.5" fill={SKIN} stroke={OUT} strokeWidth="1.5" />
+            <circle cx="62" cy="35" r="3.5" fill={SKIN} stroke={OUT} strokeWidth="1.5" />
+          </>
+        )}
+      </g>
+      <path d="M40 4 C59 4 68 19 66 34 C65 49 51 64 40 66 C29 64 15 49 14 34 C12 19 21 4 40 4Z" fill={SKIN} stroke={OUT} strokeWidth="1.5" />
+      <path d="M20 33 C24 25 36 28 37 38 C32 43 23 42 20 33Z" fill="#000" stroke={OUT} strokeWidth="1.2" />
+      <path d="M60 33 C56 25 44 28 43 38 C48 43 57 42 60 33Z" fill="#000" stroke={OUT} strokeWidth="1.2" />
+    </svg>
+  )
+}
+
+/** Lugares del público entre el borde de la pantalla y el músico: fila de atrás más chica, fila de adelante más grande */
+/** Textos de los carteles; en cada función se reparten al azar */
+const SIGNS = [
+  '¡Otra!',
+  'Venimos en paz',
+  'Toca algo de Marte',
+  'Hathor ♥',
+  'Saludos a Andrómeda',
+  '¿Y el bajista?',
+  '1·2·3·2·1',
+  'Sube el volumen',
+  'Rock de otro planeta',
+  'Llévame contigo',
+  '432 Hz o nada',
+  'Mi primer concierto terrícola',
+  '¡Hazme un hijo híbrido!!!',
+]
+
+const MAX_FANS = 16
+
+/** Filas del público, de atrás hacia adelante: tamaño, opacidad y cuánto más arriba van */
+const ROWS = [
+  { scale: 0.54, opacity: 0.5, lift: 14 },
+  { scale: 0.66, opacity: 0.75, lift: 7 },
+  { scale: 0.8, opacity: 1, lift: 0 },
+]
+
+interface Seat {
+  /** Pose si no le toca cartel */
+  pose: Exclude<Pose, 'sign'>
+  /** Orden al azar para repartir los carteles */
+  rank: number
+  /** Inclinación del cartel */
+  tilt: number
+}
+
+interface Lineup {
+  seats: Seat[]
+  /** 2 o 3 carteles por función */
+  signs: number
+  texts: string[]
+}
+
+/** Reparte poses y carteles al azar para una función */
+function lineup(): Lineup {
+  return {
+    seats: Array.from({ length: MAX_FANS }, () => ({
+      pose: Math.random() < 0.6 ? 'up' : 'horns',
+      rank: Math.random(),
+      tilt: Math.round((Math.random() * 2 - 1) * 7),
+    })),
+    signs: Math.random() < 0.5 ? 2 : 3,
+    texts: [...SIGNS].sort(() => Math.random() - 0.5),
+  }
+}
+
+/** Lugares del público entre el borde de la pantalla y el músico, en 3 filas intercaladas */
+function crowdSpots(stageX: number, crowd: Lineup) {
+  const space = stageX - 30
+  const count = Math.max(0, Math.min(MAX_FANS, Math.floor(space / 24)))
+  const seats = crowd.seats.slice(0, count)
+  // Los carteles van con los 2–3 de menor `rank` entre los que caben
+  const holders = seats
+    .map((seat, i) => ({ i, rank: seat.rank }))
+    .sort((a, b) => a.rank - b.rank)
+    .slice(0, crowd.signs)
+    .map((h) => h.i)
+  return seats
+    .map((seat, i) => {
+      const row = ROWS[[2, 0, 1][i % 3]]
+      const signIndex = holders.indexOf(i)
+      return {
+        x: 8 + (space / count) * i,
+        w: 80 * row.scale,
+        h: 140 * row.scale,
+        row,
+        tilt: seat.tilt,
+        pose: (signIndex >= 0 ? 'sign' : seat.pose) as Pose,
+        sign: signIndex >= 0 ? crowd.texts[signIndex] : null,
+        // Desfase de cada uno para que no brinquen al mismo tiempo
+        beat: `${-((i * 0.13) % 0.44).toFixed(2)}s`,
+        enter: `${i * 60}ms`,
+      }
+    })
+    .sort((a, b) => a.row.scale - b.row.scale) // los de atrás se dibujan primero
+}
+
 export function RockAlien() {
   const wide = useMediaQuery('(min-width: 1100px)')
   const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
@@ -176,12 +308,20 @@ export function RockAlien() {
 
   const running = useRef(false)
 
+  const [crowd, setCrowd] = useState<Lineup>(lineup)
+
   const play = useCallback((onEnd: () => void) => {
     clear()
     running.current = true
     let at = 0
     PHASES.forEach((p, i) => {
-      timers.current.push(window.setTimeout(() => setPhase(i), at))
+      timers.current.push(
+        window.setTimeout(() => {
+          // Público nuevo en cada función
+          if (i === 0) setCrowd(lineup())
+          setPhase(i)
+        }, at),
+      )
       at += p.ms
     })
     timers.current.push(
@@ -239,10 +379,25 @@ export function RockAlien() {
   const thrown = phase >= SEARCH
   const ampUp = phase < EXIT
   const live = phase >= LIVE && phase < EXIT
+  // El público entra corriendo cuando empieza a tocar y se va con él
+  const fans = phase >= WITH_GUITAR ? crowdSpots(stageX, crowd) : []
+  // Torres de fuego entre el público: 2 o 3 según el espacio, repartidas a lo ancho
+  const crowdSpace = stageX - 30
+  const pyroCount = crowdSpace > 260 ? 3 : crowdSpace > 120 ? 2 : 0
+  // Pantalla LED sobre el público
+  const ledW = Math.min(360, crowdSpace - 20)
+  const led = ledW >= 160 ? { x: 8 + (crowdSpace - ledW) / 2, w: ledW } : null
+  const pyros = Array.from({ length: pyroCount }, (_, k) => ({
+    x: 8 + (crowdSpace * (k + 0.5)) / pyroCount,
+    delay: `${-(k * 0.35).toFixed(2)}s`,
+  }))
 
   return (
     <div ref={anchorRef} className="hf-ra" aria-hidden="true">
-      <div className="hf-ra__stage" style={{ marginLeft: -box.offset, width: box.offset + box.width }}>
+      <div
+        className={`hf-ra__stage ${live ? 'is-live' : ''} ${phase === ROCK ? 'is-rock' : ''}`}
+        style={{ marginLeft: -box.offset, width: box.offset + box.width }}
+      >
         <span className="hf-ra__floor" />
 
         {/* Rack de luces arriba: apagado al inicio, se enciende cuando empieza a tocar */}
@@ -288,6 +443,81 @@ export function RockAlien() {
           </div>
         </div>
         {phase === 0 && <span className="hf-ra__dust" style={{ left: center + 36 }} />}
+
+        {/* Pantalla LED arriba del público: se enciende cuando empieza a tocar */}
+        {live && led && (
+          <div className="hf-ra__led" style={{ left: led.x, width: led.w }}>
+            <div className="hf-ra__led-screen">
+              <div className="hf-ra__slide hf-ra__slide--logo">
+                <span className="hf-ra__led-hathor">HATHOR</span>
+                <span className="hf-ra__led-freq">Frequency</span>
+              </div>
+              <div className="hf-ra__slide hf-ra__slide--vinyl">
+                <svg viewBox="0 0 100 100" focusable="false">
+                  {[46, 38, 30, 22].map((r) => (
+                    <circle key={r} cx="50" cy="50" r={r} fill="none" stroke="#F2C94C" strokeOpacity={r === 46 ? 1 : 0.5} />
+                  ))}
+                  <path d="M50 4a46 46 0 0 1 40 23" fill="none" stroke="#fff" strokeOpacity=".7" strokeWidth="2" />
+                  <circle cx="50" cy="50" r="14" fill="#F2C94C" />
+                  <text x="50" y="54" textAnchor="middle" fontSize="11" fontFamily="Cinzel, serif" fill="#000">HF</text>
+                </svg>
+                <span>Hathor Frequency</span>
+              </div>
+              <div className="hf-ra__slide hf-ra__slide--eq">
+                <span className="hf-ra__led-live">● Live</span>
+                <span className="hf-ra__eq">
+                  {Array.from({ length: 12 }, (_, b) => (
+                    <span key={b} style={{ animationDelay: `${-((b * 0.17) % 0.6).toFixed(2)}s` }} />
+                  ))}
+                </span>
+              </div>
+              <div className="hf-ra__slide hf-ra__slide--slogan">
+                <span>Por músicos,</span>
+                <span className="hf-ra__led-gold">para músicos.</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Torres de fuego: salen del piso entre el público mientras toca */}
+        {live &&
+          pyros.map((py) => (
+            <span key={py.x} className="hf-ra__pyro" style={{ left: py.x - 23, '--delay': py.delay } as CSSProperties}>
+              <span className="hf-ra__flame" />
+              <span className="hf-ra__flame hf-ra__flame--core" />
+              <span className="hf-ra__pyro-base" />
+            </span>
+          ))}
+
+        {fans.map((f) => (
+          <div
+            key={f.x}
+            className="hf-ra__fan"
+            style={
+              {
+                left: live ? f.x : -90,
+                top: 300 - f.h - f.row.lift,
+                opacity: f.row.opacity,
+                width: f.w,
+                height: f.h,
+                '--beat': f.beat,
+                '--enter': f.enter,
+              } as CSSProperties
+            }
+          >
+            <div className="hf-ra__fan-body">
+              {f.sign && (
+                <span
+                  className={`hf-ra__sign ${f.row.scale < 0.8 ? 'is-back' : ''}`}
+                  style={{ bottom: f.h - 40 * (f.w / 80), transform: `translateX(-50%) rotate(${f.tilt}deg)` }}
+                >
+                  {f.sign}
+                </span>
+              )}
+              <Fan pose={f.pose} />
+            </div>
+          </div>
+        ))}
 
         {ITEMS.map((it, i) => (
           <svg
