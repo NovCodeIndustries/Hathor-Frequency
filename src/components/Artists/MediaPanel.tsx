@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import type { MediaItem } from '../../data/types'
 import './MediaPanel.css'
 
@@ -76,13 +76,17 @@ export function MediaPanel({ artistName, kind, items, index, onIndex, onClose }:
                     allowFullScreen
                   />
                 ) : m.embed && off === 0 ? (
-                  <button type="button" className="hf-media__play" aria-label={`Reproducir ${m.title}`} onClick={() => setPlaying(i)}>
-                    <PlayIcon />
-                  </button>
+                  <PlayRings>
+                    <button type="button" className="hf-media__play" aria-label={`Reproducir ${m.title}`} onClick={() => setPlaying(i)}>
+                      <PlayIcon />
+                    </button>
+                  </PlayRings>
                 ) : (
-                  <span className="hf-media__play" aria-hidden="true">
-                    <PlayIcon />
-                  </span>
+                  <PlayRings>
+                    <span className="hf-media__play" aria-hidden="true">
+                      <PlayIcon />
+                    </span>
+                  </PlayRings>
                 )
               ) : m.src ? (
                 <img src={m.src} alt={m.title} loading="lazy" />
@@ -134,6 +138,17 @@ export function MediaPanel({ artistName, kind, items, index, onIndex, onClose }:
         <span className="hf-media__holes" aria-hidden="true" />
       </div>
     </div>
+  )
+}
+
+/** Botón de play P2: anillo dorado con dos ondas que salen de él */
+function PlayRings({ children }: { children: ReactNode }) {
+  return (
+    <span className="hf-media__playwrap">
+      <span className="hf-media__ripple" aria-hidden="true" />
+      <span className="hf-media__ripple" aria-hidden="true" />
+      {children}
+    </span>
   )
 }
 

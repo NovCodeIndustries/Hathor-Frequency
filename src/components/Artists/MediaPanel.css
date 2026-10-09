@@ -107,20 +107,54 @@
   border: 0;
 }
 
-.hf-media__play {
-  width: 84px;
-  height: 84px;
-  border: 0;
-  border-radius: 50%;
-  background: var(--c-gold);
-  color: #000;
+.hf-media__playwrap {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 40px rgba(242,201,76,0.45);
+}
+
+/* Botón de play (P2): anillo de línea dorada; dos ondas salen de él */
+.hf-media__play {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  padding-left: 3px;
+  border: 1.5px solid var(--c-gold);
+  border-radius: 50%;
+  background: rgba(0,0,0,0.6);
+  color: var(--c-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color .25s, color .25s;
 }
 
 button.hf-media__play { cursor: pointer; }
+
+button.hf-media__play:hover {
+  background: var(--c-gold);
+  color: #000;
+}
+
+.hf-media__ripple {
+  position: absolute;
+  width: 84px;
+  height: 84px;
+  border: 1px solid var(--c-gold);
+  border-radius: 50%;
+  animation: hf-media-ripple 2.2s ease-out infinite;
+}
+
+.hf-media__ripple + .hf-media__ripple { animation-delay: 1.1s; }
+
+/* Las ondas solo se mueven en la pieza central */
+.hf-media__slide:not(.is-current) .hf-media__ripple { animation: none; opacity: 0; }
+
+@keyframes hf-media-ripple {
+  from { transform: scale(1); opacity: .7; }
+  to { transform: scale(1.9); opacity: 0; }
+}
 
 .hf-media__ph {
   position: absolute;
@@ -231,14 +265,35 @@ button.hf-media__play { cursor: pointer; }
   color: var(--c-gold);
 }
 
-/* Marca de lápiz graso sobre el cuadro elegido */
+/* Cuadro elegido (M1 · visor de cámara): cuatro esquinas doradas y un punto encendido */
 .hf-media__frame[aria-pressed="true"]::after {
+  --c: var(--c-gold);
   content: '';
   position: absolute;
-  inset: -4px;
-  border: 2px solid var(--c-gold);
-  border-radius: 45% 55% 50% 48%;
-  transform: rotate(-3deg);
+  inset: -6px;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--c), var(--c)) top left / 14px 2px,
+    linear-gradient(var(--c), var(--c)) top left / 2px 14px,
+    linear-gradient(var(--c), var(--c)) top right / 14px 2px,
+    linear-gradient(var(--c), var(--c)) top right / 2px 14px,
+    linear-gradient(var(--c), var(--c)) bottom left / 14px 2px,
+    linear-gradient(var(--c), var(--c)) bottom left / 2px 14px,
+    linear-gradient(var(--c), var(--c)) bottom right / 14px 2px,
+    linear-gradient(var(--c), var(--c)) bottom right / 2px 14px;
+  background-repeat: no-repeat;
+}
+
+.hf-media__frame[aria-pressed="true"]::before {
+  content: '';
+  position: absolute;
+  right: 6px;
+  top: 5px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--c-gold);
+  box-shadow: 0 0 8px var(--c-gold);
 }
 
 /* Sin espacio a la izquierda del panel: la galería lo cubre a pantalla completa */
@@ -263,4 +318,5 @@ button.hf-media__play { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
   .hf-media { animation: none; }
   .hf-media__slide { transition: none; }
+  .hf-media__ripple { animation: none; opacity: 0; }
 }
