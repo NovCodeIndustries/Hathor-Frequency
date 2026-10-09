@@ -82,3 +82,31 @@ export interface Faq {
   q: string
   a: string
 }
+
+export interface StudioRoom {
+  n: string
+  name: string
+  /** "a la" / "al", para el titular "Entra a la Sala principal." */
+  article: 'a la' | 'al'
+  size: string
+  description: string
+  /** Foto del espacio; sin ella se muestra un marcador */
+  src?: string
+}
+
+export interface StudioGear {
+  label: string
+  value: string
+  src?: string
+}
+
+export interface StudioVideoService {
+  title: string
+  /** Etiqueta corta ("Videoclip", "En vivo") */
+  tag: string
+  description: string
+  steps: string[]
+  includes: string[]
+  /** Video de muestra: URL de embed (p. ej. https://www.youtube-nocookie.com/embed/<id>) */
+  embed?: string
+}

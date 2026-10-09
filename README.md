@@ -87,6 +87,7 @@ Todo el texto y los datos están en `src/data/`:
 - `packages.ts`: los paquetes con precio (vista Paquetes de `/servicios`).
 - `artists.ts`: el tracklist, con la bio, redes, videos y fotos de cada artista (panel de detalle).
 - `faq.ts`: las preguntas frecuentes.
+- `studio.ts`: los espacios, videoclips y live sessions, el equipo y los datos de visita de `/estudio`.
 - `stats.ts`: las cifras del hero.
 - `booking.ts`: los horarios y servicios del calendario.
 - `site.ts`: links del nav, redes, eslogan, testimonio y copyright.

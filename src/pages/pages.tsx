@@ -4,6 +4,7 @@ import { Contact } from '../components/Contact/Contact'
 import { Faq } from '../components/Faq/Faq'
 import { Hero } from '../components/Hero/Hero'
 import { Services } from '../components/Services/Services'
+import { Studio } from '../components/Studio/Studio'
 import { ComingSoon } from './ComingSoon'
 
 const SITE = 'Hathor Frequency'
@@ -68,7 +69,7 @@ export function StudioPage() {
   return (
     <>
       <title>{`Estudio · ${SITE}`}</title>
-      <ComingSoon eyebrow="Estudio" title="Muy pronto" />
+      <Studio />
     </>
   )
 }

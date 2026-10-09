@@ -9,7 +9,7 @@ La landing está construida (React + TypeScript + Vite) siguiendo `docs/DESIGN.m
 - Multipágina con `react-router`, definido en `src/App.tsx`:
   - `src/components/Layout/` contiene Nav sticky + `<Outlet>` + Ticker + Footer;
   - las páginas están en `src/pages/`;
-  - rutas: `/`, `/servicios`, `/artistas`, `/reservar`, `/contacto`, `/faq` (FAQs en el nav, después de Reservar) y `/estudio` (provisional).
+  - rutas: `/`, `/servicios`, `/artistas`, `/reservar`, `/contacto`, `/faq` (FAQs en el nav, después de Reservar) y `/estudio` (tour de los espacios, `src/data/studio.ts`).
   - `/servicios` alterna dos vistas sin cambiar de ruta, Servicios (consola) y Paquetes (`src/data/packages.ts`), con la transición de ondas de `WaveTransition.tsx` (DESIGN §4.1).
   - En producción, el hosting debe redirigir toda ruta a `index.html` (SPA fallback).
 - El panel lateral de detalle (paquetes y artistas) es `src/components/shared/Drawer.tsx`; la galería del artista (`Artists/MediaPanel.tsx`) se monta a su izquierda.

@@ -109,7 +109,7 @@ text-shadow: 0 0 24px rgba(242,201,76,0.25); /* hero: 0 0 28px rgba(...,0.3) */
 - **Rutas**:
   - `/` → Hero;
   - `/servicios`, `/artistas`, `/reservar`, `/contacto`;
-  - `/estudio` → página provisional "Muy pronto", porque Estudio aún no tiene diseño;
+  - `/estudio` → Estudio (§7.2);
   - `/faq` → Preguntas frecuentes (§7.1); en el nav aparece como **FAQs**, después del botón Reservar.
 - **Nav con FAQs** (cambio del 2026-10-09):
   - ≥ 1440px: el diseño original con FAQs al final de la derecha (link igual que los demás).
@@ -153,6 +153,11 @@ Canvas de propuestas: https://claude.ai/artifact/Da2u8EXGAkktnoC22uBh7y
 ---
 
 ## 2. Vista 1 — Nav + Hero (`Main.dc.html`)
+
+> **Hero reemplazado (2026-10-09) por "I1 · Vinilo gigante"** (canvas https://claude.ai/artifact/DexdEVMp8wnzBScWZ7GAu5). El Nav de esta sección sigue vigente; la descripción del hero que viene abajo queda como referencia histórica.
+> - Sección de mínimo 760px, contenido centrado (máx. 1200px). Detrás, un vinilo de 980px (640px en móvil) centrado al 58% del alto, con opacidad 0.55, que gira cada 24s (un `<g>` interno; sin giro con `prefers-reduced-motion`), cubierto por una viñeta radial negra.
+> - Eyebrow con línea a ambos lados "Sello discográfico independiente"; h1 "Donde la música / *toma forma.*" (Cinzel 92px, lh 0.95; 72px en tablet, 44px en móvil; la segunda línea en dorado con glow); subtítulo (20px, #bbb) y eslogan (cursiva dorada); botones "Comenzar proyecto" (a `/reservar`) y "Ver portafolio" (a `/artistas`), apilados a todo el ancho en móvil.
+> - Cifras en una fila con ◆ dorados entre ellas: número en Cinzel 40px dorado (30px en móvil) y etiqueta en mayúsculas de 12px. Ya no hay columna derecha ni frase de impacto.
 
 ### Desktop (1440 × 900)
 Contenedor de columna: un header de 96px y el hero ocupando el resto (804px).
@@ -539,6 +544,25 @@ Las miniaturas tienen fondo `#0a0a0a`, borde `#333` y trazos dorados con `stroke
 
 ---
 
+## 7.2 Estudio · "E2 · Tour con galería" (`/estudio`, canvas https://claude.ai/artifact/M88wr13gMQBEyreXax6dms)
+
+Cambio del 2026-10-09. Componente `Studio.tsx`, datos en `src/data/studio.ts`.
+- **Tour** (640px de alto; 600px en móvil), a todo el ancho con borde inferior `#333`:
+  - foto de cada espacio a pantalla completa (sin `src`, un marcador con anillos y la etiqueta arriba a la derecha); al cambiar, las fotos se funden en 0.9s con un leve zoom de salida;
+  - degradado negro de izquierda a derecha (en móvil, de arriba abajo) para leer el texto;
+  - texto (máx. 620px): eyebrow "Estudio · Tour", h1 "Entra a la *Sala principal.*" (Cinzel 64px; 40px en móvil; el nombre en dorado), descripción y "Espacio 01 de 04 · [m²]";
+  - controles abajo: ⏮ y ⏭ redondos de 56px (los mismos de la galería de artistas), 4 miniaturas con nombre ("01 · Sala principal"; en tablet y móvil solo el número) con las esquinas de visor M1 en la activa, y un botón de pausa/reanudar de 44px. En móvil las miniaturas van en su propia fila y los botones debajo.
+  - **Avanza solo** cada 6s (`studioTourInterval`), con una barra dorada de 2px que se llena en la miniatura activa. Se pausa con el mouse encima, con el foco dentro, con el botón de pausa y siempre con `prefers-reduced-motion` (ahí tampoco aparece el botón). Mientras corre, el texto no se anuncia (`aria-live="off"`); en pausa sí.
+- **Video y live sessions** (agregado el 2026-10-09, entre el tour y el equipo): eyebrow "Video y live sessions", h2 "Tu música *también se ve.*" y un párrafo a la derecha. Dos tarjetas (Videos musicales · Live Sessions; una columna en tablet y móvil):
+  - pantalla 16:9 con la muestra de video (sin `embed`, marcador "[VIDEO DE MUESTRA: …]"), etiqueta pill dorada ("Videoclip" / "En vivo") y el botón de play P2 con ondas; con `embed`, el play carga el iframe;
+  - título (Cinzel 30px), descripción, proceso en 5 pasos con línea dorada arriba (3 columnas en móvil) y lista "incluye" con ◆.
+  - Botones al final: "Cotizar un video" (a `/reservar`) y "Ver paquetes" (a `/servicios`).
+  - Datos en `studioVideo` (`src/data/studio.ts`).
+- **Equipo**: grid 4fr / 8fr. A la izquierda, eyebrow, "Todo conectado, *listo para tocar.*" y la nota "Si prefieres tu propio equipo, tráelo…". A la derecha, pestañas (`role="tablist"`, flechas ← → para moverse; activa en dorado con subrayado) para Micrófonos, Preamps y consola, Monitores, Backline, Software y Video; el panel muestra foto (240×180) y la descripción. En móvil las pestañas hacen scroll horizontal.
+- **Visita**: "Ven a *escucharlo.*" con los botones "Reservar sesión" (a `/reservar`) y "Agendar visita" (a `/contacto`), y 3 tarjetas: Ubicación, Horario y Llegada.
+
+---
+
 ## 8. Vista 7 — Footer (`07-Footer.dc.html`)
 
 ### Desktop (1440 × 140)
@@ -584,7 +608,7 @@ Las miniaturas tienen fondo `#0a0a0a`, borde `#333` y trazos dorados con `stroke
 
 - **Testimonio**: el texto de Sofía M. es provisional.
 - **Placeholder**: falta reemplazar `[TIEMPO DE RESPUESTA]`.
-- **Navegación**: "Estudio" (`/estudio`) muestra una página provisional hasta que tenga diseño.
+- **Estudio**: faltan las fotos de los espacios y del equipo, videos de muestra (`embed`), medidas, modelos y datos de visita (marcadores `[..]` en `src/data/studio.ts`). "Agendar visita" lleva a `/contacto` mientras no haya un flujo propio.
 - **Envíos**: falta definir a dónde van el formulario de contacto y la reserva (backend o servicio).
 - **Calendario**: la disponibilidad y la navegación entre meses son estáticas en el diseño.
 - **Redes**: Contacto repite los links que también aparecen en el Footer (decisión abierta).
