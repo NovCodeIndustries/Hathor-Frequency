@@ -26,6 +26,13 @@ export const socials: SocialLink[] = [
   { label: 'YouTube', href: 'https://youtube.com/' },
 ]
 
+// TODO: número real. `number` en formato internacional solo con dígitos (52 + 10 dígitos) para el link de wa.me;
+// mientras esté vacío, se muestra el número sin link.
+export const whatsapp = {
+  display: '[NÚMERO DE WHATSAPP]',
+  number: '',
+}
+
 export const socialLabels: Record<SocialPlatform, string> = {
   instagram: 'Instagram',
   spotify: 'Spotify',

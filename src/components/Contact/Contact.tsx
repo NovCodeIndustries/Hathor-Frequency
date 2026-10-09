@@ -1,9 +1,11 @@
 import { useId, useState, type FormEvent } from 'react'
-import { socials, testimonial } from '../../data/site'
+import { Link } from 'react-router'
+import { socials, testimonial, whatsapp } from '../../data/site'
 import { submitContact } from '../../lib/submit'
 import { Button } from '../shared/Button'
 import { Eyebrow } from '../shared/Eyebrow'
 import { GoldText } from '../shared/GoldText'
+import { WhatsAppIcon } from '../shared/SocialIcon'
 import { VinylRings } from '../shared/VinylRings'
 import './Contact.css'
 
@@ -53,6 +55,18 @@ export function Contact() {
       </h1>
       <p className="hf-lead">Escríbenos y la ponemos a girar.</p>
 
+      {/* Aviso: este formulario es para pedir información (Reservar es para apartar fecha) */}
+      <div className="hf-contact__info">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="9.5" />
+          <path d="M12 11v6M12 7.5v.01" />
+        </svg>
+        <p>
+          Este formulario es para <strong>pedir información</strong>. Déjanos tu correo y un asesor se pondrá en
+          contacto contigo.
+        </p>
+      </div>
+
       <form className="hf-contact__form" onSubmit={handleSubmit}>
         <label htmlFor={emailId} className="sr-only">Tu correo</label>
         <div className="hf-contact__pill">
@@ -74,11 +88,35 @@ export function Contact() {
             {status === 'sending' ? 'Enviando…' : 'Contactar'}
           </Button>
         </div>
+        <Link to="/reservar" className="hf-contact__book">
+          ¿Ya quieres apartar fecha? <span>Reserva aquí →</span>
+        </Link>
         <p className="hf-contact__status" role="status">
           {status === 'sent' && 'Recibido. Te escribimos pronto.'}
           {status === 'error' && 'No pudimos enviar tu correo. Intenta de nuevo.'}
         </p>
       </form>
+
+      {/* WhatsApp: ícono + número (link a wa.me cuando haya número) */}
+      {whatsapp.number ? (
+        <a
+          className="hf-contact__wa"
+          href={`https://wa.me/${whatsapp.number}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`Escríbenos por WhatsApp al ${whatsapp.display}`}
+        >
+          <WhatsAppIcon />
+          <span className="hf-contact__wa-label">WhatsApp</span>
+          <span className="hf-contact__wa-number">{whatsapp.display}</span>
+        </a>
+      ) : (
+        <p className="hf-contact__wa">
+          <WhatsAppIcon />
+          <span className="hf-contact__wa-label">WhatsApp</span>
+          <span className="hf-contact__wa-number">{whatsapp.display}</span>
+        </p>
+      )}
 
       <figure className="hf-contact__quote">
         <blockquote>{testimonial.quote}</blockquote>
