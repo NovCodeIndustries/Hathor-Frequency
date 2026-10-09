@@ -282,10 +282,13 @@ Datos (`src/data`): la descripción corta de cada uno de los 5 servicios. **No i
 - **Pantalla del osciloscopio:**
   - ancho `min(1040px, 100%)`, proporción 2:1 (como máximo 58vh de alto), borde #333, radius de 6px, fondo #050505 y glow interior dorado;
   - cuadrícula de 52px al 8%, más los ejes centrales al 18%;
-  - onda punteada (6/6) que se desplaza;
   - barrido dorado que cruza la pantalla cada 2.4s;
   - lecturas en las esquinas (12px, tracking 0.2em): "CH 01–05", "Freq 432 Hz", LED + "Señal 100%" y "Origen · desconocido".
-- **Rostro:** relleno con un patrón de ondas senoidales doradas, contorno dorado de 2px y glow. Los ojos son negros con borde dorado, sin pupilas, y el rostro no tiene boca (cambio del 2026-10-09). Ocupa el 69% del alto de la pantalla, centrado.
+- **Vinil girando** (**X5** del canvas https://claude.ai/artifact/9EySKjX5Xhx9H9txrSBHYd, 2026-10-09; reemplaza al rostro grande y a la onda punteada):
+  - disco negro (#0a0a0a) con borde #B8860B, al 88.5% del alto de la pantalla y centrado; 15 surcos dorados al 16% con dos bandas lisas, y dos reflejos opuestos al 10%;
+  - gira a 33⅓ RPM (una vuelta cada 1.8s) junto con la etiqueta: negra, borde dorado, anillo interior al 40% y el texto "HATHOR FREQUENCY · LADO A · 33⅓ RPM" en Cinzel 12px sobre un círculo;
+  - en el centro, el rostro **fijo** (no gira): relleno de ondas senoidales, contorno dorado, ojos negros con borde dorado, sin pupilas ni boca; su glow late cada 2.4s;
+  - brazo de tornamesa a la derecha: pivote dorado arriba y la aguja sobre los surcos de afuera.
 - **Texto:** grid de 2 columnas con gap de 64px.
   - Izquierda: H2 Cinzel 56px "Contacto **establecido.**", con la segunda palabra en degradado dorado.
   - Derecha: log de 14px en mayúsculas, tracking 0.15em, con "›" dorados:
@@ -294,9 +297,10 @@ Datos (`src/data`): la descripción corta de cada uno de los 5 servicios. **No i
     - "Mensaje: “Suena increíble desde aquí.”" (en blanco);
     - la nota "Se cierra en 10 s · clic o Esc para cerrar" (12px, #888).
 - **Cuenta regresiva:** barra dorada de 3px abajo que se vacía en 10s.
-- **Móvil:** pantalla en proporción 4:5 (como máximo 52vh), rostro al 62%, lecturas de 10px (sin "Freq"), texto apilado y H2 de 34px.
+- **Móvil:** pantalla en proporción 4:5 (como máximo 52vh), el disco al 86% del ancho con el brazo entrando desde el borde derecho, lecturas de 10px (sin "Freq"), texto apilado y H2 de 34px.
 - **Cierre:** se quita sola a los **10 s**, o antes con clic o Escape.
-- **Movimiento:** con reduced-motion se desactivan las animaciones y el barrido.
+- **Regreso de los faders** (**R2 · Escalonado** del canvas https://claude.ai/artifact/ShmXaiYdDdhChAVh7n6qv3): **1 s** después de cerrar la señal, los faders vuelven a su nivel inicial (`src/data/services.ts`), de CH1 a CH5, cada uno 110ms después del anterior. Cada fader tarda 650ms y se asienta con un pequeño rebote (easeOutBack suave). Mientras regresan no se pueden mover. Al arrancar el regreso se apagan las ondas de los caps y el easter egg queda listo para repetirse. Con reduced-motion saltan directo a su posición.
+- **Movimiento:** con reduced-motion el disco no gira y se desactivan el glow del rostro, las animaciones y el barrido.
 
 ### Desktop (1440 × 900)
 - Sección con padding 96px 80px, flex en columna y gap de 56px.

@@ -5,12 +5,15 @@ import './AlienSignal.css'
 
 const DURATION = 10_000
 
+/** Radios de los surcos del vinil (con dos bandas lisas entre pistas) */
+const GROOVES = [124, 130, 136, 142, 148, 154, 166, 172, 178, 184, 190, 196, 208, 214, 220]
+
 interface AlienSignalProps {
   onClose: () => void
 }
 
 /**
- * Easter egg "Contacto establecido" (estilo A3 · Osciloscopio).
+ * Easter egg "Contacto establecido" (estilo A3 · Osciloscopio, rostro X5 · Vinil girando).
  * Pantalla completa; se quita sola a los 10 s (o con clic / Escape).
  */
 export function AlienSignal({ onClose }: AlienSignalProps) {
@@ -54,31 +57,55 @@ export function AlienSignal({ onClose }: AlienSignalProps) {
           <line x1="50%" y1="0" x2="50%" y2="100%" stroke="#F2C94C" strokeOpacity="0.18" />
         </svg>
 
-        <svg className="hf-scope__wave" viewBox="0 0 1040 520" preserveAspectRatio="none" aria-hidden="true">
-          <path
-            d="M0 400C40 400 60 360 100 360S160 440 200 440 260 330 300 330 360 470 400 470 460 300 520 300 580 470 640 470 700 330 740 330 800 440 840 440 900 360 940 360 1000 400 1040 400"
-            fill="none"
-            stroke="#F2C94C"
-            strokeOpacity="0.5"
-            strokeWidth="2"
-            vectorEffect="non-scaling-stroke"
-          />
-        </svg>
-
-        <svg className="hf-scope__face" viewBox="0 0 200 240" role="img" aria-label="Rostro de un extraterrestre trazado con ondas doradas">
+        {/* Vinil girando (X5) con el rostro fijo en la etiqueta y el brazo de la tornamesa */}
+        <svg
+          className="hf-scope__vinyl"
+          viewBox="0 0 570 460"
+          role="img"
+          aria-label="Disco de vinil girando con el rostro de un extraterrestre dorado en la etiqueta central"
+        >
           <defs>
+            <path id="hf-vinyl-label" d="M230 230m-100 0a100 100 0 1 1 200 0a100 100 0 1 1 -200 0" />
             <pattern id="hf-scope-sine" width="20" height="7" patternUnits="userSpaceOnUse">
               <path d="M0 3.5Q5 0 10 3.5T20 3.5" fill="none" stroke="#F2C94C" strokeWidth="1" />
             </pattern>
           </defs>
-          <path
-            d="M100 8C162 8 192 58 187 110C182 162 140 216 100 232C60 216 18 162 13 110C8 58 38 8 100 8Z"
-            fill="url(#hf-scope-sine)"
-            stroke="#F2C94C"
-            strokeWidth="2"
-          />
-          <path d="M40 112C50 88 86 94 92 124C80 142 46 140 40 112Z" fill="#050505" stroke="#F2C94C" strokeWidth="2" />
-          <path d="M160 112C150 88 114 94 108 124C120 142 154 140 160 112Z" fill="#050505" stroke="#F2C94C" strokeWidth="2" />
+
+          <circle cx="230" cy="230" r="228" fill="#0a0a0a" stroke="#B8860B" strokeWidth="1.5" />
+
+          <g className="hf-scope__spin">
+            <g fill="none" stroke="#F2C94C" strokeOpacity="0.16" strokeWidth="0.8">
+              {GROOVES.map((r) => (
+                <circle key={r} cx="230" cy="230" r={r} />
+              ))}
+            </g>
+            <path d="M230 230L206 4L254 4Z" fill="#F2C94C" fillOpacity="0.1" />
+            <path d="M230 230L206 456L254 456Z" fill="#F2C94C" fillOpacity="0.1" />
+            <circle cx="230" cy="230" r="114" fill="#050505" stroke="#F2C94C" strokeWidth="1.5" />
+            <circle cx="230" cy="230" r="88" fill="none" stroke="#F2C94C" strokeOpacity="0.4" strokeWidth="0.8" />
+            <text className="hf-scope__label" fill="#F2C94C">
+              <textPath href="#hf-vinyl-label" textLength="610" lengthAdjust="spacing">
+                HATHOR FREQUENCY · LADO A · 33⅓ RPM · HATHOR FREQUENCY · LADO A · 33⅓ RPM ·
+              </textPath>
+            </text>
+          </g>
+
+          <g className="hf-scope__face" transform="translate(167.5 155) scale(0.625)">
+            <path
+              d="M100 8C162 8 192 58 187 110C182 162 140 216 100 232C60 216 18 162 13 110C8 58 38 8 100 8Z"
+              fill="url(#hf-scope-sine)"
+              stroke="#F2C94C"
+              strokeWidth="3"
+            />
+            <path d="M40 112C50 88 86 94 92 124C80 142 46 140 40 112Z" fill="#050505" stroke="#F2C94C" strokeWidth="3" />
+            <path d="M160 112C150 88 114 94 108 124C120 142 154 140 160 112Z" fill="#050505" stroke="#F2C94C" strokeWidth="3" />
+          </g>
+
+          {/* Brazo: pivote arriba a la derecha, aguja sobre los surcos de afuera */}
+          <circle cx="540" cy="50" r="22" fill="#0a0a0a" stroke="#B8860B" strokeWidth="1.5" />
+          <circle cx="540" cy="50" r="7" fill="#F2C94C" />
+          <path d="M540 50L510 220L426 284" fill="none" stroke="#bbb" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+          <rect x="406" y="272" width="30" height="16" rx="2" fill="#F2C94C" transform="rotate(-37 421 280)" />
         </svg>
 
         <span className="hf-scope__sweep" aria-hidden="true" />
