@@ -485,8 +485,25 @@ Las miniaturas tienen fondo `#0a0a0a`, borde `#333` y trazos dorados con `stroke
   1. "Tu sesión" (13px, tracking 0.3em, dorado) y debajo la fecha en Cinzel de 30px.
   2. Label "Servicio" y `<select>` en forma de pill: 52px de alto, fondo negro, borde `#444` y radius de 40px.
   3. `<fieldset>` con `<legend>` "Hora de inicio" y los horarios en grid de 3 columnas con gap de 10px (pills de 48px).
-  4. Nota de 15px en #bbb: "Te confirmamos disponibilidad por correo en menos de [TIEMPO DE RESPUESTA]."
+  4. **Tus datos** (diseño **RA · Datos en el panel** del canvas https://claude.ai/artifact/VuPzsH4vpZaQc3XDpAXBzL, 2026-10-09; reemplaza la nota de tiempo de respuesta):
+     - encabezado con borde superior `#222` y padding-top de 24px: "Tus datos" (como "Tu sesión") y "Para confirmar la sesión y darte seguimiento." (14px, #bbb);
+     - "Banda o proyecto": input pill de 52px (mismo estilo que el select, clase `hf-input`);
+     - `<fieldset>` "Representante": dos pills de 48px en 2 columnas, "Integrante de la banda" / "Externo" (`aria-pressed`, mismo estilo que los horarios), el input del nombre (placeholder según el tipo) y una ayuda de 13px #888 que cambia: "La persona de la banda a la que contactaremos." / "Alguien fuera de la banda que coordina la sesión: mánager, productor o similar.";
+     - "Número de contacto" (`type="tel"`, mínimo 8 dígitos) y "Correo" (`type="email"`).
+     - Los cuatro datos son obligatorios (validación nativa del navegador). Textos en `representativeTypes` de `src/data/booking.ts`.
   5. Botón primario a todo el ancho, de 56px de alto y con `margin-top: auto`: "Reservar 15:00 h".
+  6. **Modal de confirmación** (`BookingModal.tsx`) al enviar con éxito, sobre un fondo negro al 80%:
+     - tarjeta de `min(560px, 100%)`, borde dorado, fondo `#050505`, glow, padding 48px 44px 40px y anillos dorados en la esquina superior derecha; ✕ redonda de 44px arriba a la derecha;
+     - palomita en círculo dorado de 56px, "Solicitud enviada" (12px, tracking 0.3em, dorado), H2 Cinzel 36px "Tu sesión *está en camino.*" y "Un asesor se pondrá en contacto contigo para continuar con los siguientes pasos." (17px);
+     - resumen (`dl`, líneas `#222` arriba y abajo): Sesión (día · hora · servicio), Proyecto y Contacto (representante, tipo y teléfono);
+     - botón primario "Entendido" de 52px. Se cierra también con la ✕, clic fuera o Escape; enfoca "Entendido", bloquea el scroll y devuelve el foco al cerrar. Al cerrar, el formulario queda limpio.
+     - Móvil: padding 40px 20px 24px, H2 de 28px y el resumen apilado.
+- **Easter egg · extraterrestre rockero** (`RockAlien.tsx`, estilo **G2 · Contorno dorado** del canvas https://claude.ai/artifact/1JGW3LSBYg1RTnKuqMzJUu, 2026-10-09):
+  - **Cuándo** (cambio del 2026-10-09): cada 30 s (`rockAlienSchedule.intervalSeconds` en `src/data/booking.ts`) mientras `/reservar` está abierta y la pestaña visible: la primera vez a los 30 s de entrar y luego 30 s después de que termina la escena anterior. Si la pestaña se oculta, la espera se pausa y vuelve a empezar al regresar. Con `?alien=1` la primera sale al cargar. Solo en pantallas ≥ 1100px y nunca con `prefers-reduced-motion`. Es decorativo (`aria-hidden`).
+  - **Escenario:** 340px de alto debajo del calendario, desde el borde izquierdo de la pantalla hasta el borde derecho de la columna; piso dorado tenue a 300px. Solo existe mientras corre la escena.
+  - **Luces de escenario** (2026-10-09): rack arriba del escenario (680px, centrado) con 5 lámparas, apagadas hasta que empieza a tocar; entonces se encienden en dorado y salen 5 haces (dorado, blanco cálido y dorado oscuro, baja opacidad, `mix-blend-mode: screen`) que barren ±22° a ritmos distintos (2.6–3.6s), además del reflector central. En el headbanging los haces barren 3 veces más rápido y parpadean al ritmo (0.36s). Se apagan cuando el extraterrestre se va.
+  - **Personaje G2:** gris muy oscuro (#2a2d31) con contorno dorado, ojos negros con borde dorado y brillo, y un glow dorado suave.
+  - **Escena (~24 s):** 1) el amplificador estilo stack (cabezal con "Hathor" en cursiva y 4 perillas, bocina con rejilla y borde dorado oscuro; sin logo de marca) **sube desde el piso** con un brillo en el suelo; 2) el extraterrestre se asoma por la izquierda, inclinado, y mira; 3) camina al centro (3s); 4) mira el amplificador; 5) sale corriendo a la izquierda, volteado; 6) salen volando hacia el centro en arco una baqueta, una púa, un platillo, un calcetín, un cable y una partitura; 7) regresa corriendo con guitarra eléctrica dorada y peluca larga; 8) toca (rasgueo y cabeceo) con reflector y ondas en el amplificador; 9) **cuernos y headbanging**: solo dos brazos, el de los cuernos en alto y el que rasguea (el del mástil se oculta), con la peluca siguiendo la cabeza; 10) sigue tocando; 11) se va corriendo a la izquierda, las cosas se desvanecen y el amplificador baja al piso.
 
 ### Móvil (390 × ~1380)
 - Apilado, con padding 56px 16px y gap de 28px:
@@ -499,7 +516,7 @@ Las miniaturas tienen fondo `#0a0a0a`, borde `#333` y trazos dorados con `stroke
      - fecha en Cinzel de 24px;
      - select de 52px;
      - horarios en 3 columnas con gap de 8px y 48px de alto;
-     - nota de 14px;
+     - tus datos con inputs de 52px (padding 0 18px) y pills de representante de 14px;
      - botón a todo el ancho de 56px.
 
 ---
@@ -521,9 +538,12 @@ Las miniaturas tienen fondo `#0a0a0a`, borde `#333` y trazos dorados con `stroke
      - `input type="email"`: placeholder "Tu correo", 48px de alto, sin borde, 17px;
      - botón primario "Contactar" de 48px de alto y padding 0 28px.
      - `:focus-within` del contenedor: `box-shadow: 0 0 0 1px #F2C94C, 0 0 30px rgba(242,201,76,0.25)`.
+  4b. **WhatsApp** (agregado el 2026-10-09), debajo del formulario: pill outline de 48px de alto (padding 0 24px, borde `#444`, fondo `rgba(0,0,0,0.6)`) con el ícono de WhatsApp de línea en dorado (22px), la etiqueta "WhatsApp" (12px, tracking 0.25em, mayúsculas, #888) y el número (16px). Con número es un link a `https://wa.me/<número>` (nueva pestaña) con hover dorado y glow; sin número se muestra como texto. Datos en `whatsapp` de `src/data/site.ts` (hoy el marcador `[NÚMERO DE WHATSAPP]`).
   5. `<figure>` con margin-top de 32px, max-width de 620px y gap de 12px:
      - `<blockquote>` en Cinzel de 20px, lh 1.45: "“Llegamos con un demo grabado en el celular y salimos con un disco que suena como siempre lo imaginamos.”" (**texto provisional**, reemplazar por el testimonio real);
      - `<figcaption>`: "— Sofía M., artista", 14px, tracking 0.2em, mayúsculas, dorado.
+  3b. **Aviso** (agregado el 2026-10-09) bajo el párrafo: caja de máx. 560px, borde `#333`, radius 6px, fondo `rgba(0,0,0,0.75)`, padding 16px 22px, con un ícono de información dorado y el texto de 15px "Este formulario es para **pedir información**. Déjanos tu correo y un asesor se pondrá en contacto contigo." ("pedir información" en dorado).
+  4c. Bajo la pill del correo: link "¿Ya quieres apartar fecha? **Reserva aquí →**" (14px, #bbb; la parte final en dorado) a `/reservar`.
   6. `<nav aria-label="Redes">`: Instagram, Spotify y YouTube, con gap de 32px, 14px, tracking 0.2em, mayúsculas, #bbb y hover en dorado.
 
 ### Móvil (390 × ~880)
@@ -545,13 +565,13 @@ Las miniaturas tienen fondo `#0a0a0a`, borde `#333` y trazos dorados con `stroke
 
 - **Encabezado** centrado: eyebrow con línea a ambos lados "Preguntas frecuentes" y h1 "Pon la aguja *en tu duda.*" (cierre dorado).
 - **Cuerpo** en grid 5fr / 7fr con gap de 72px:
-  - **Izquierda**: lista de 8 preguntas (`<ol>` con bordes `#333`). Cada una es un `<button aria-pressed>` con número (Cinzel 14px dorado), pregunta (17px) y una flecha dorada que solo se ve en la activa. La activa va en dorado, fondo `#0a0a0a` y padding izquierdo de 18px.
+  - **Izquierda**: 13 preguntas agrupadas en 4 categorías (cambio del 2026-10-09): Reservas y tiempos, Preparación y desarrollo, Servicios y procesos, Equipamiento y comodidades. Cada grupo lleva su título (`h2`, 12px, 600, tracking 0.3em, mayúsculas, dorado) y su propio `<ol>` con bordes `#333`; gap de 36px entre grupos (28px en móvil). La numeración 01–13 es continua. Cada una es un `<button aria-pressed>` con número (Cinzel 14px dorado), pregunta (17px) y una flecha dorada que solo se ve en la activa. La activa va en dorado, fondo `#0a0a0a` y padding izquierdo de 18px.
   - **Derecha**: tocadiscos y respuesta.
     - Disco de `min(560px, 100%)`, alineado a la derecha: surcos dorados al 25%, arco de reflejo y etiqueta dorada de r100 con "Pregunta / 04 / de 08". Al cambiar de pregunta el disco gira a `n × 72°` en 0.9s (`cubic-bezier(.3,.7,.2,1)`).
     - Brazo del tocadiscos arriba a la derecha (34% del ancho del disco).
-    - Panel de respuesta (`aria-live="polite"`) que se monta 160px sobre el disco, con margen derecho de 120px: borde dorado, fondo `#050505` y glow. Lleva "Track 04", la pregunta (Cinzel 32px), la respuesta (17px, #bbb) y un pie con "¿Otra duda? Escríbenos →" (a `/contacto`) y el botón pill "Siguiente pregunta →".
+    - Panel de respuesta (`aria-live="polite"`) que se monta 160px sobre el disco, con margen derecho de 120px: borde dorado, fondo `#050505` y glow. Lleva "Track 04 · Reservas y tiempos" (número y categoría), la pregunta (Cinzel 32px), la respuesta (17px, #bbb) y un pie con "¿Otra duda? Escríbenos →" (a `/contacto`) y el botón pill "Siguiente pregunta →".
 - **Móvil**: el tocadiscos (260px) y la respuesta van primero y la lista debajo; al tocar una pregunta, la página se desplaza hasta la respuesta. El botón "Siguiente" ocupa todo el ancho.
-- **Datos**: `src/data/faq.ts`. Las respuestas tienen marcadores `[..]` (tiempos, pagos, anticipo, cancelaciones).
+- **Datos**: `src/data/faq.ts`, cada pregunta con su `category`; el orden del archivo define el de los grupos. Quedan marcadores `[..]` en "¿Cómo se paga?" (formas de pago, monto del anticipo) y "¿Cuánto tarda la entrega?" (días).
 
 ---
 
@@ -564,13 +584,19 @@ Cambio del 2026-10-09. Componente `Studio.tsx`, datos en `src/data/studio.ts`.
   - texto (máx. 620px): eyebrow "Estudio · Tour", h1 "Entra a la *Sala principal.*" (Cinzel 64px; 40px en móvil; el nombre en dorado), descripción y "Espacio 01 de 04 · [m²]";
   - controles abajo: ⏮ y ⏭ redondos de 56px (los mismos de la galería de artistas), 4 miniaturas con nombre ("01 · Sala principal"; en tablet y móvil solo el número) con las esquinas de visor M1 en la activa, y un botón de pausa/reanudar de 44px. En móvil las miniaturas van en su propia fila y los botones debajo.
   - **Avanza solo** cada 6s (`studioTourInterval`), con una barra dorada de 2px que se llena en la miniatura activa. Se pausa con el mouse encima, con el foco dentro, con el botón de pausa y siempre con `prefers-reduced-motion` (ahí tampoco aparece el botón). Mientras corre, el texto no se anuncia (`aria-live="off"`); en pausa sí.
+- **Nosotros** (agregado el 2026-10-09, entre el tour y el video): grid 6fr / 5fr con gap de 80px (una columna en tablet y móvil), borde inferior `#222`.
+  - Izquierda: eyebrow "Nosotros", h2 "Pensado por músicos, *para músicos.*" (del eslogan) y dos párrafos de 17px en #bbb (máx. 620px) sobre quiénes somos (`studioAbout`).
+  - Derecha: 3 principios numerados 01–03 (número Cinzel dorado, título Cinzel 22px y descripción de 15px), separados por líneas `#333` (`studioValues`). Debajo, las cifras del hero (`src/data/stats.ts`): número Cinzel 44px dorado con glow (34px en móvil) sobre su etiqueta en mayúsculas #888.
 - **Video y live sessions** (agregado el 2026-10-09, entre el tour y el equipo): eyebrow "Video y live sessions", h2 "Tu música *también se ve.*" y un párrafo a la derecha. Dos tarjetas (Videos musicales · Live Sessions; una columna en tablet y móvil):
   - pantalla 16:9 con la muestra de video (sin `embed`, marcador "[VIDEO DE MUESTRA: …]"), etiqueta pill dorada ("Videoclip" / "En vivo") y el botón de play P2 con ondas; con `embed`, el play carga el iframe;
   - título (Cinzel 30px), descripción, proceso en 5 pasos con línea dorada arriba (3 columnas en móvil) y lista "incluye" con ◆.
   - Botones al final: "Cotizar un video" (a `/servicios?vista=paquetes`, la vista de paquetes) y "Reservar sesión" (a `/reservar`).
   - Datos en `studioVideo` (`src/data/studio.ts`).
 - **Equipo**: grid 4fr / 8fr. A la izquierda, eyebrow, "Todo conectado, *listo para tocar.*" y la nota "Si prefieres tu propio equipo, tráelo…". A la derecha, pestañas (`role="tablist"`, flechas ← → para moverse; activa en dorado con subrayado) para Micrófonos, Preamps y consola, Monitores, Backline, Software y Video; el panel muestra foto (240×180) y la descripción. En móvil las pestañas hacen scroll horizontal.
-- **Visita**: "Ven a *escucharlo.*" con los botones "Reservar sesión" (a `/reservar`) y "Agendar visita" (a `/contacto`), y 3 tarjetas: Ubicación, Horario y Llegada.
+- **Visita**: "Ven a *escucharlo.*" con los botones "Reservar sesión" (a `/reservar`) y "Agendar visita" (a `/contacto`).
+  - Debajo, grid 8fr / 4fr con gap de 24px (una columna en tablet y móvil):
+    - **mapa** (agregado el 2026-10-09): Google Maps embebido (sin API key) con las coordenadas de `studioMap` (`src/data/studio.ts`), mín. 420px de alto (300px en móvil), borde `#333` y radius de 6px; en tonos oscuros con un filtro (`invert` + `hue-rotate(180deg)`, el pin sigue rojo). Mientras `example: true`, lleva la etiqueta pill dorada "Ubicación de ejemplo";
+    - a la derecha, las 3 tarjetas apiladas (Ubicación, Horario y Llegada; en 3 columnas en tablet) y el botón outline dorado "Cómo llegar →", que abre la ruta en Google Maps en otra pestaña.
 
 ---
 
@@ -618,12 +644,12 @@ Cambio del 2026-10-09. Componente `Studio.tsx`, datos en `src/data/studio.ts`.
 ## 12. Pendientes conocidos
 
 - **Testimonio**: el texto de Sofía M. es provisional.
-- **Placeholder**: falta reemplazar `[TIEMPO DE RESPUESTA]`.
-- **Estudio**: faltan las fotos de los espacios y del equipo, videos de muestra (`embed`), medidas, modelos y datos de visita (marcadores `[..]` en `src/data/studio.ts`). "Agendar visita" lleva a `/contacto` mientras no haya un flujo propio.
+- **Estudio · mapa**: las coordenadas de `studioMap` son un punto de ejemplo (Roma Norte, CDMX); faltan las reales y quitar `example`.
+- **Estudio**: el texto de Nosotros es un borrador hecho con el eslogan y las cifras; falta la historia real (fundadores, año, ciudad). Faltan también las fotos de los espacios y del equipo, videos de muestra (`embed`), medidas, modelos y datos de visita (marcadores `[..]` en `src/data/studio.ts`). "Agendar visita" lleva a `/contacto` mientras no haya un flujo propio.
 - **Envíos**: falta definir a dónde van el formulario de contacto y la reserva (backend o servicio).
 - **Calendario**: la disponibilidad y la navegación entre meses son estáticas en el diseño.
 - **Redes**: Contacto repite los links que también aparecen en el Footer (decisión abierta).
-- **Artistas y FAQ**: faltan las bios, redes (links), videos y fotos reales de los artistas, y los datos de las respuestas de FAQ (marcadores `[..]`).
+- **Artistas y FAQ**: faltan las bios, redes (links), videos y fotos reales de los artistas, y los datos que faltan en dos respuestas de FAQ (marcadores `[..]` de pago y tiempo de entrega).
 - **Nav**: el rango 768–1199px usa el nav móvil (hamburguesa) porque con FAQs no cabe el nav completo; no hay diseño específico de tablet.
 - **Tablet**: no hay diseño para 768–1200px; se usa el layout desktop fluido.
 - **Paquetes**: faltan los paquetes reales (nombres, contenido, precios, IVA, tiempos de entrega y sesiones); hoy son una propuesta con marcadores `[..]`. "Reservar este paquete" lleva a `/reservar` sin preseleccionar el paquete. (Ya existe el enlace directo `/servicios?vista=paquetes`.)
