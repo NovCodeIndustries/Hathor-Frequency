@@ -32,8 +32,20 @@ type View = 'servicios' | 'paquetes'
 const COVER_MS = 1350
 const REVEAL_MS = 1200
 
+/**
+ * Al cerrar la señal, tras una pausa, los faders vuelven a su nivel inicial (R2 · Escalonado):
+ * cada canal sale RETURN_STAGGER_MS después del anterior y se asienta con un pequeño rebote.
+ */
+const RETURN_DELAY_MS = 1000
+const RETURN_STAGGER_MS = 110
+const RETURN_MS = 650
+const HOME = services.map((s) => s.level)
+
+/** easeOutBack suave: pasa un poco del objetivo y regresa, como el motor del fader al frenar */
+const settle = (t: number) => 1 + 2.2 * (t - 1) ** 3 + 1.2 * (t - 1) ** 2
+
 export function Services() {
-  const [levels, setLevels] = useState(() => services.map((s) => s.level))
+  const [levels, setLevels] = useState(HOME)
   // Solo cuentan los faders que el usuario movió (algunos arrancan dentro de su zona)
   const [touched, setTouched] = useState(() => services.map(() => false))
   const [signal, setSignal] = useState(false)
@@ -47,9 +59,60 @@ export function Services() {
   const timers = useRef<number[]>([])
   const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
 
-  useEffect(() => () => timers.current.forEach(window.clearTimeout), [])
+  // Regreso de los faders: mientras corre, el usuario no puede moverlos
+  const returning = useRef(false)
+  const returnTimer = useRef(0)
+  const returnFrame = useRef(0)
+
+  useEffect(
+    () => () => {
+      timers.current.forEach(window.clearTimeout)
+      window.clearTimeout(returnTimer.current)
+      window.cancelAnimationFrame(returnFrame.current)
+    },
+    [],
+  )
+
+  const returnHome = useCallback((from: number[]) => {
+    // Al arrancar se apagan las ondas de los caps y el easter egg queda listo para repetirse
+    setTouched(services.map(() => false))
+    const finish = () => {
+      setLevels(HOME)
+      returning.current = false
+    }
+    if (reducedMotion) return finish()
+    const start = performance.now()
+    const total = RETURN_STAGGER_MS * (HOME.length - 1) + RETURN_MS
+    const step = (now: number) => {
+      const elapsed = now - start
+      if (elapsed >= total) return finish()
+      setLevels(
+        from.map((f, i) => {
+          const t = Math.min(1, Math.max(0, (elapsed - i * RETURN_STAGGER_MS) / RETURN_MS))
+          return f + (HOME[i] - f) * settle(t)
+        }),
+      )
+      returnFrame.current = window.requestAnimationFrame(step)
+    }
+    returnFrame.current = window.requestAnimationFrame(step)
+  }, [reducedMotion])
+
+  // Niveles vigentes para que el regreso arranque desde donde quedaron los faders
+  const levelsRef = useRef(levels)
+  useEffect(() => {
+    levelsRef.current = levels
+  }, [levels])
+
+  // Referencia estable: AlienSignal reinicia su temporizador de 10 s si cambia onClose
+  const closeSignal = useCallback(() => {
+    if (returning.current) return
+    returning.current = true
+    setSignal(false)
+    returnTimer.current = window.setTimeout(() => returnHome(levelsRef.current), RETURN_DELAY_MS)
+  }, [returnHome])
 
   const setLevel = (index: number, value: number) => {
+    if (returning.current) return
     const next = levels.map((l, i) => (i === index ? value : l))
     // Se dispara solo al entrar en la combinación (no se repite mientras se mantenga)
     if (matchesSecret(next) && !matchesSecret(levels)) setSignal(true)
@@ -153,7 +216,7 @@ export function Services() {
 
       {wave && <WaveTransition phase={wave.phase} label={wave.target === 'paquetes' ? 'Paquetes' : 'Servicios'} />}
       {openIndex !== null && <PackageDrawer pkg={packages[openIndex]} onClose={closePackage} />}
-      {signal && <AlienSignal onClose={() => setSignal(false)} />}
+      {signal && <AlienSignal onClose={closeSignal} />}
     </section>
   )
 }
