@@ -79,10 +79,6 @@ export function AlienSignal({ onClose }: AlienSignalProps) {
           />
           <path d="M40 112C50 88 86 94 92 124C80 142 46 140 40 112Z" fill="#050505" stroke="#F2C94C" strokeWidth="2" />
           <path d="M160 112C150 88 114 94 108 124C120 142 154 140 160 112Z" fill="#050505" stroke="#F2C94C" strokeWidth="2" />
-          <circle className="hf-scope__pupil" cx="64" cy="114" r="4" fill="#F2C94C" />
-          <circle className="hf-scope__pupil" cx="136" cy="114" r="4" fill="#F2C94C" />
-          <path d="M82 192Q100 202 118 192" fill="none" stroke="#050505" strokeWidth="5" strokeLinecap="round" />
-          <path d="M82 192Q100 202 118 192" fill="none" stroke="#F2C94C" strokeWidth="2" strokeLinecap="round" />
         </svg>
 
         <span className="hf-scope__sweep" aria-hidden="true" />

@@ -56,12 +56,6 @@
   filter: drop-shadow(0 0 16px rgba(242,201,76,0.6));
 }
 
-.hf-scope__pupil {
-  animation: hf-scope-blink 4s ease-in-out infinite;
-  transform-box: fill-box;
-  transform-origin: center;
-}
-
 .hf-scope__sweep {
   position: absolute;
   top: 0;
@@ -163,11 +157,6 @@
   to { left: 100%; }
 }
 
-@keyframes hf-scope-blink {
-  0%, 90%, 100% { transform: scaleY(1); }
-  94% { transform: scaleY(0.1); }
-}
-
 @keyframes hf-alien-timer {
   from { transform: scaleX(1); }
   to { transform: scaleX(0); }
@@ -232,7 +221,6 @@
 @media (prefers-reduced-motion: reduce) {
   .hf-alien,
   .hf-scope__wave path,
-  .hf-scope__pupil,
   .hf-scope__sweep { animation: none; }
   .hf-scope__sweep { display: none; }
 }

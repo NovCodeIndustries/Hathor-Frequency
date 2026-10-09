@@ -285,7 +285,7 @@ Datos (`src/data`): la descripción corta de cada uno de los 5 servicios. **No i
   - onda punteada (6/6) que se desplaza;
   - barrido dorado que cruza la pantalla cada 2.4s;
   - lecturas en las esquinas (12px, tracking 0.2em): "CH 01–05", "Freq 432 Hz", LED + "Señal 100%" y "Origen · desconocido".
-- **Rostro:** relleno con un patrón de ondas senoidales doradas, contorno dorado de 2px y glow. Los ojos son negros con borde dorado y pupilas doradas que parpadean. Ocupa el 69% del alto de la pantalla, centrado.
+- **Rostro:** relleno con un patrón de ondas senoidales doradas, contorno dorado de 2px y glow. Los ojos son negros con borde dorado, sin pupilas, y el rostro no tiene boca (cambio del 2026-10-09). Ocupa el 69% del alto de la pantalla, centrado.
 - **Texto:** grid de 2 columnas con gap de 64px.
   - Izquierda: H2 Cinzel 56px "Contacto **establecido.**", con la segunda palabra en degradado dorado.
   - Derecha: log de 14px en mayúsculas, tracking 0.15em, con "›" dorados:
