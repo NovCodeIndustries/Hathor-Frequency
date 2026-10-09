@@ -153,6 +153,26 @@ export function Glyph({ name, size = 24, color, className, style }: { name: Glyp
           <circle cx="40" cy="38" r="2.5" fill="#C8102E" />
         </svg>
       )
+    case 'cake':
+      return (
+        <svg {...common} width={size} height={size} viewBox="0 0 28 28">
+          <path d="M9 9 V5 M14 9 V4 M19 9 V5" stroke="#f4f4f4" strokeWidth="2" />
+          <path d="M9 3 C10 1 8 1 9 3Z M14 2 C15 0 13 0 14 2Z M19 3 C20 1 18 1 19 3Z" fill="#F2C94C" stroke="#F2C94C" />
+          <rect x="4" y="9" width="20" height="8" rx="2" fill="#f1e6c8" />
+          <path d="M4 12 Q7 15 10 12 T16 12 T22 12 L24 12" stroke="#E8577D" strokeWidth="2" fill="none" />
+          <rect x="2" y="17" width="24" height="9" rx="2" fill="#E8577D" />
+          <path d="M2 21 H26" stroke="#f1e6c8" strokeWidth="1.5" strokeDasharray="2 2" />
+        </svg>
+      )
+    case 'flag':
+      return (
+        <svg {...common} width={size} height={size} viewBox="0 0 30 30">
+          <rect x="0" y="6" width="10" height="18" fill="#1F8A4C" />
+          <rect x="10" y="6" width="10" height="18" fill="#f4f4f4" />
+          <rect x="20" y="6" width="10" height="18" fill="#C8102E" />
+          <circle cx="15" cy="15" r="3" fill="#8a5a2b" />
+        </svg>
+      )
     case 'papel': {
       const colors = ['#1F8A4C', '#f4f4f4', '#C8102E', '#1F8A4C', '#f4f4f4', '#C8102E']
       const w = size
@@ -236,6 +256,19 @@ export function SaucerCostume({ id }: { id: SeasonId }) {
               <circle cx="11" cy="11" r="3.5" fill="#c46a12" />
             </g>
           ))}
+        </g>
+      )
+    case 'cumpleMarzo':
+    case 'cumpleAbril':
+      // Gorro de fiesta y dos globos amarrados al borde
+      return (
+        <g>
+          <path d="M66 24 L80 -12 L94 24Z" fill="#E8577D" stroke="#F2C94C" strokeWidth="1.2" />
+          <path d="M70 14 L90 10 M68 20 L92 16" stroke="#F2C94C" strokeWidth="2" />
+          <circle cx="80" cy="-13" r="4" fill="#F2C94C" />
+          <path d="M12 50 C6 36 10 28 6 18 M148 50 C154 36 150 28 154 18" stroke="#bbb" fill="none" />
+          <ellipse cx="6" cy="10" rx="8" ry="9" fill="#3FA9F5" />
+          <ellipse cx="154" cy="10" rx="8" ry="9" fill="#F2C94C" />
         </g>
       )
     case 'navidad':
