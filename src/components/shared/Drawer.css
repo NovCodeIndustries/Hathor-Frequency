@@ -26,8 +26,9 @@
   gap: 22px;
   overflow: hidden auto;
   background: var(--c-surface-2);
-  border-left: 1px solid var(--c-gold);
-  box-shadow: -20px 0 60px rgba(242,201,76,0.12);
+  /* En temporada, borde y glow con el color del mes */
+  border-left: 1px solid var(--season-acc, var(--c-gold));
+  box-shadow: -20px 0 60px color-mix(in srgb, var(--season-acc, #F2C94C) 14%, transparent);
   animation: hf-drawer-in .45s cubic-bezier(.3,.7,.2,1) both;
 }
 
@@ -42,6 +43,7 @@
 }
 
 .hf-drawer__rings {
+  color: var(--season-acc, var(--c-gold));
   position: absolute;
   right: -200px;
   bottom: -200px;

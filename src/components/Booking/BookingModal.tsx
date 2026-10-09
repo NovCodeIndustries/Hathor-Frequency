@@ -1,5 +1,7 @@
 import { useEffect, useId, useRef } from 'react'
 import { createPortal } from 'react-dom'
+import { useSeason } from '../../lib/useSeason'
+import { SeasonBadge } from '../Season/SeasonBadge'
 import { GoldText } from '../shared/GoldText'
 import './BookingModal.css'
 
@@ -18,6 +20,7 @@ interface BookingModalProps {
  */
 export function BookingModal({ session, project, contact, onClose }: BookingModalProps) {
   const okRef = useRef<HTMLButtonElement>(null)
+  const season = useSeason()
   const titleId = useId()
   const descId = useId()
 
@@ -41,7 +44,7 @@ export function BookingModal({ session, project, contact, onClose }: BookingModa
       <div className="hf-bmodal__card" role="dialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={descId}>
         <svg className="hf-bmodal__rings" viewBox="0 0 300 300" fill="none" aria-hidden="true" focusable="false">
           {[145, 115, 85, 55].map((r) => (
-            <circle key={r} cx="150" cy="150" r={r} stroke="#F2C94C" />
+            <circle key={r} cx="150" cy="150" r={r} stroke="currentColor" />
           ))}
         </svg>
         <button type="button" className="hf-bmodal__close" aria-label="Cerrar" onClick={onClose}>
@@ -57,7 +60,9 @@ export function BookingModal({ session, project, contact, onClose }: BookingModa
         </span>
 
         <div className="hf-bmodal__text">
-          <span className="hf-bmodal__kicker">Solicitud enviada</span>
+          <span className="hf-bmodal__kicker">
+            Solicitud enviada <SeasonBadge size={16} />
+          </span>
           <h2 id={titleId} className="hf-bmodal__title">
             Tu sesión <GoldText strong>está en camino.</GoldText>
           </h2>
@@ -74,6 +79,8 @@ export function BookingModal({ session, project, contact, onClose }: BookingModa
           <dt>Contacto</dt>
           <dd>{contact}</dd>
         </dl>
+
+        {season && <p className="hf-bmodal__season">{season.page.footer}</p>}
 
         <button ref={okRef} type="button" className="hf-btn hf-btn--primary hf-bmodal__ok" onClick={onClose}>
           Entendido

@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import { SeasonBadge } from '../Season/SeasonBadge'
 import './Drawer.css'
 
 interface DrawerProps {
@@ -52,12 +53,14 @@ export function Drawer({ kicker, title, onClose, onEscape, lead, subtitle, aside
       <div className="hf-drawer__panel" role="dialog" aria-modal="true" aria-labelledby={titleId}>
         <svg className="hf-drawer__rings" viewBox="0 0 420 420" fill="none" aria-hidden="true" focusable="false">
           {[205, 180, 155, 130, 105, 80].map((r) => (
-            <circle key={r} cx="210" cy="210" r={r} stroke="#F2C94C" />
+            <circle key={r} cx="210" cy="210" r={r} stroke="currentColor" />
           ))}
         </svg>
 
         <div className="hf-drawer__top">
-          <span className="hf-drawer__kicker">{kicker}</span>
+          <span className="hf-drawer__kicker">
+            {kicker} <SeasonBadge size={14} />
+          </span>
           <button ref={closeRef} type="button" className="hf-drawer__close" aria-label="Cerrar" onClick={onClose}>
             <svg width="16" height="16" viewBox="0 0 16 16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
               <path d="M3 3l10 10M13 3L3 13" />

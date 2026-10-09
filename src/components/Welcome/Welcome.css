@@ -48,7 +48,7 @@
 .hf-welcome__tick--minor { height: 10px; }
 .hf-welcome__tick--mid { height: 18px; }
 .hf-welcome__tick--major { height: 32px; background: var(--c-text-2); }
-.hf-welcome__tick--hf { height: 48px; background: var(--c-gold); }
+.hf-welcome__tick--hf { height: 48px; background: var(--season-acc, var(--c-gold)); }
 
 .hf-welcome__needle {
   position: absolute;
@@ -70,7 +70,7 @@
   color: var(--c-text-3);
 }
 
-.hf-welcome__labels .is-hf { color: var(--c-gold); }
+.hf-welcome__labels .is-hf { color: var(--season-acc, var(--c-gold)); }
 
 /* Nombre */
 .hf-welcome__brand {
@@ -263,3 +263,41 @@
   .hf-welcome__bar { animation: none; }
   .hf-welcome.is-leaving { animation: none; opacity: 0; }
 }
+
+/* ---------- Temporada ---------- */
+.hf-welcome .hf-garland { top: 0; }
+
+.hf-welcome__main { position: relative; }
+
+.hf-welcome__badge {
+  position: absolute;
+  top: -22px;
+  right: -40px;
+  display: flex;
+}
+
+.hf-welcome__season {
+  margin-top: 6px;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  color: var(--season-acc, var(--c-gold));
+}
+
+/* El color del mes en la aguja, el LED, el ecualizador y la barra de progreso */
+[data-season] .hf-welcome__needle,
+[data-season] .hf-welcome__led,
+[data-season] .hf-welcome__fill { background: var(--season-acc); }
+
+[data-season] .hf-welcome__led { box-shadow: 0 0 10px var(--season-acc); }
+
+[data-season] .hf-welcome__bar {
+  background: linear-gradient(180deg, var(--season-acc), color-mix(in srgb, var(--season-acc) 45%, #000));
+}
+
+@media (max-width: 767px) {
+  .hf-welcome__badge { top: -16px; right: -28px; }
+  .hf-welcome__badge svg { scale: .75; }
+}
+
+/* El contenido queda por encima de las partículas de temporada */
+.hf-welcome > :not(.hf-season-particles):not(.hf-garland) { position: relative; }

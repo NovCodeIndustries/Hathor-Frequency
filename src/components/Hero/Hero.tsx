@@ -1,6 +1,9 @@
 import { Fragment } from 'react'
 import { slogan } from '../../data/site'
 import { stats } from '../../data/stats'
+import { useSeason } from '../../lib/useSeason'
+import { SeasonParticles } from '../Season/SeasonParticles'
+import { Glyph } from '../Ufo/seasonArt'
 import { Button } from '../shared/Button'
 import { Eyebrow } from '../shared/Eyebrow'
 import { GoldText } from '../shared/GoldText'
@@ -14,6 +17,7 @@ const GROOVES = Array.from({ length: 9 }, (_, i) => 200 - i * 12)
  * que gira despacio, con viñeta negra para leer el texto.
  */
 export function Hero() {
+  const season = useSeason()
   return (
     <section className="hf-hero" aria-labelledby="hero-title">
       <svg className="hf-hero__vinyl" viewBox="0 0 440 440" aria-hidden="true" focusable="false">
@@ -29,13 +33,19 @@ export function Hero() {
           <circle cx="220" cy="220" r="5" fill="#000" />
         </g>
       </svg>
+      {season && (
+        <div className="hf-hero__season-label" aria-hidden="true">
+          <Glyph name={season.page.label} size={150} />
+        </div>
+      )}
       <div className="hf-hero__vignette" aria-hidden="true" />
+      {season && <SeasonParticles season={season} />}
 
       <div className="hf-hero__content hf-container">
         <Eyebrow both>Sello discográfico independiente</Eyebrow>
         <h1 id="hero-title" className="hf-hero__title">
           Donde la música <br />
-          <GoldText strong>toma forma.</GoldText>
+          <GoldText strong>{season?.page.heroClose ?? 'toma forma.'}</GoldText>
         </h1>
         <div className="hf-hero__copy">
           <p className="hf-hero__subtitle">Producción musical, video y live sessions para bandas emergentes.</p>

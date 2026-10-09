@@ -3,6 +3,7 @@ import { stats } from '../../data/stats'
 import { studioAbout, studioGear, studioMap, studioRooms, studioTourInterval, studioValues, studioVideo, studioVisit } from '../../data/studio'
 import type { StudioVideoService } from '../../data/types'
 import { useMediaQuery } from '../../lib/useMediaQuery'
+import { useSeason } from '../../lib/useSeason'
 import { Button } from '../shared/Button'
 import { Eyebrow } from '../shared/Eyebrow'
 import { GoldText } from '../shared/GoldText'
@@ -105,6 +106,7 @@ function PlayIcon() {
  * quiénes somos, videos y live sessions, equipo en pestañas y datos de visita.
  */
 export function Studio() {
+  const season = useSeason()
   const [room, setRoom] = useState(0)
   const [paused, setPaused] = useState(false)
   const [hovered, setHovered] = useState(false)
@@ -145,7 +147,7 @@ export function Studio() {
         <div className="hf-tour__shade" aria-hidden="true" />
 
         <div className="hf-tour__text hf-container" aria-live={running ? 'off' : 'polite'}>
-          <Eyebrow>Estudio · Tour</Eyebrow>
+          <Eyebrow>{season?.page.eyebrow ?? 'Estudio · Tour'}</Eyebrow>
           <h1 id="estudio-title" className="hf-tour__title">
             Entra {current.article} <GoldText>{current.name}.</GoldText>
           </h1>

@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import { slogan } from '../../data/site'
+import { useSeason } from '../../lib/useSeason'
+import { SeasonGarland } from '../Season/SeasonGarland'
+import { SeasonParticles } from '../Season/SeasonParticles'
 import { GoldText } from '../shared/GoldText'
+import { Glyph } from '../Ufo/seasonArt'
 import './Welcome.css'
 
 /** Tiempo que tarda en "sintonizar" (0 → 100 %) antes de entrar sola */
@@ -32,6 +36,7 @@ interface WelcomeProps {
 /** Vista de bienvenida "Sintonizando" (B3), al cargar el sitio */
 export function Welcome({ onDone }: WelcomeProps) {
   const ref = useRef<HTMLDivElement>(null)
+  const season = useSeason()
   const [progress, setProgress] = useState(0)
   const [leaving, setLeaving] = useState(false)
 
@@ -82,6 +87,14 @@ export function Welcome({ onDone }: WelcomeProps) {
       tabIndex={-1}
       style={{ '--fade-ms': `${FADE_MS}ms`, '--tune-ms': `${TUNE_MS}ms` } as CSSProperties}
     >
+      {/* Temporada: adorno arriba y partículas detrás */}
+      {season && (
+        <>
+          <SeasonGarland season={season} top />
+          <SeasonParticles season={season} />
+        </>
+      )}
+
       {/* Dial */}
       <div className="hf-welcome__dial" aria-hidden="true">
         <div className="hf-welcome__scale">
@@ -103,15 +116,23 @@ export function Welcome({ onDone }: WelcomeProps) {
       <div className="hf-welcome__brand">
         <p className="hf-welcome__kicker">
           <span className="hf-welcome__led" aria-hidden="true" />
-          Estás sintonizando
+          {season ? `Estás sintonizando · ${season.name}` : 'Estás sintonizando'}
         </p>
         <h2 id="hf-welcome-title" className="hf-welcome__title">
-          <span className="hf-welcome__main">HATHOR</span>
+          <span className="hf-welcome__main">
+            HATHOR
+            {season && (
+              <span className="hf-welcome__badge" aria-hidden="true">
+                <Glyph name={season.page.logo} size={34} />
+              </span>
+            )}
+          </span>
           <span className="hf-welcome__sub">
             <GoldText strong>Frequency</GoldText>
           </span>
         </h2>
         <p className="hf-welcome__slogan">{slogan}</p>
+        {season && <p className="hf-welcome__season">{season.page.footer}</p>}
       </div>
 
       {/* Ecualizador + progreso */}

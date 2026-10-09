@@ -25,10 +25,11 @@
   max-height: 100%;
   overflow-y: auto;
   padding: 48px 44px 40px;
-  border: 1px solid var(--c-gold);
+  /* En temporada, borde y glow con el color del mes */
+  border: 1px solid var(--season-acc, var(--c-gold));
   border-radius: var(--radius-card);
   background: var(--c-surface-2);
-  box-shadow: 0 0 60px rgba(242,201,76,0.2);
+  box-shadow: 0 0 60px color-mix(in srgb, var(--season-acc, #F2C94C) 22%, transparent);
   display: flex;
   flex-direction: column;
   gap: 22px;
@@ -44,6 +45,7 @@
   width: 300px;
   height: 300px;
   opacity: .35;
+  color: var(--season-acc, var(--c-gold));
   pointer-events: none;
 }
 
@@ -72,9 +74,9 @@
 .hf-bmodal__check {
   width: 56px;
   height: 56px;
-  border: 1.5px solid var(--c-gold);
+  border: 1.5px solid var(--season-acc, var(--c-gold));
   border-radius: 50%;
-  color: var(--c-gold);
+  color: var(--season-acc, var(--c-gold));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -88,6 +90,9 @@
 }
 
 .hf-bmodal__kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 12px;
   letter-spacing: 0.3em;
   text-transform: uppercase;
@@ -127,6 +132,14 @@
 .hf-bmodal__summary dd { overflow-wrap: anywhere; }
 
 .hf-bmodal__ok { height: 52px; }
+
+/* Mensaje de la temporada */
+.hf-bmodal__season {
+  margin-top: -6px;
+  font-size: 14px;
+  font-style: italic;
+  color: var(--season-acc, var(--c-gold));
+}
 
 @keyframes hf-bmodal-in {
   from { opacity: 0; }

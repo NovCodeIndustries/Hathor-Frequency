@@ -35,11 +35,13 @@ interface ChannelStripProps {
   onLevel: (value: number) => void
   /** El fader está en su posición del easter egg (tras moverlo el usuario) */
   locked?: boolean
+  /** Color del cap durante una temporada */
+  capColor?: string
 }
 
-export function ChannelStrip({ service, level, onLevel, locked = false }: ChannelStripProps) {
+export function ChannelStrip({ service, level, onLevel, locked = false, capColor }: ChannelStripProps) {
   return (
-    <article className={`hf-strip ${locked ? 'is-locked' : ''}`} style={{ '--level': level } as CSSProperties}>
+    <article className={`hf-strip ${locked ? 'is-locked' : ''}`} style={{ '--level': level, ...(capColor ? { '--cap-season': capColor } : {}) } as CSSProperties}>
       <div className="hf-strip__top">
         <span className="hf-strip__ch">CH {service.ch}</span>
         <span className="hf-strip__led" aria-hidden="true" />

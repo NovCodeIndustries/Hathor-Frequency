@@ -125,6 +125,9 @@
 }
 
 .hf-ra__amp-name {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-family: var(--font-display);
   font-style: italic;
   font-size: 13px;
@@ -640,3 +643,22 @@
   from { transform: rotate(-4deg); }
   to { transform: rotate(5deg); }
 }
+
+/* ---------- Temporada ---------- */
+.hf-ra__slide--season {
+  flex-direction: row;
+  gap: 4cqw;
+}
+
+.hf-ra__slide--season svg {
+  width: 16cqw;
+  height: auto;
+}
+
+[data-season] .hf-ra__lamp.is-on {
+  border-color: var(--season-acc);
+  background: var(--season-acc);
+  box-shadow: 0 0 14px var(--season-acc);
+}
+
+[data-season] .hf-ra__led { box-shadow: 0 0 30px color-mix(in srgb, var(--season-acc) 30%, transparent); }

@@ -1,9 +1,11 @@
 import { Fragment } from 'react'
 import { copyright, socials } from '../../data/site'
+import { useSeason } from '../../lib/useSeason'
 import { Logo } from '../shared/Logo'
 import './Footer.css'
 
 export function Footer() {
+  const season = useSeason()
   return (
     <footer className="hf-footer">
       <div className="hf-footer__inner hf-container">
@@ -16,7 +18,10 @@ export function Footer() {
             </Fragment>
           ))}
         </nav>
-        <p className="hf-footer__copy">{copyright}</p>
+        <p className="hf-footer__copy">
+          {copyright}
+          {season && <span className="hf-footer__season">{season.page.footer}</span>}
+        </p>
       </div>
     </footer>
   )

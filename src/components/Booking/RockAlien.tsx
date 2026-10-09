@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { rockAlienSchedule } from '../../data/booking'
+import type { Season } from '../../data/seasons'
 import { useMediaQuery } from '../../lib/useMediaQuery'
+import { useSeason } from '../../lib/useSeason'
+import { Glyph } from '../Ufo/seasonArt'
 import './RockAlien.css'
 
 /**
@@ -246,8 +249,8 @@ interface Lineup {
   texts: string[]
 }
 
-/** Reparte poses y carteles al azar para una función */
-function lineup(): Lineup {
+/** Reparte poses y carteles al azar para una función; en temporada, un cartel lleva su palabra */
+function lineup(season: Season | null = null): Lineup {
   return {
     seats: Array.from({ length: MAX_FANS }, () => ({
       pose: Math.random() < 0.6 ? 'up' : 'horns',
@@ -255,7 +258,7 @@ function lineup(): Lineup {
       tilt: Math.round((Math.random() * 2 - 1) * 7),
     })),
     signs: Math.random() < 0.5 ? 2 : 3,
-    texts: [...SIGNS].sort(() => Math.random() - 0.5),
+    texts: [...(season ? [season.page.ticker] : []), ...[...SIGNS].sort(() => Math.random() - 0.5)],
   }
 }
 
@@ -291,6 +294,9 @@ function crowdSpots(stageX: number, crowd: Lineup) {
 }
 
 export function RockAlien() {
+  const season = useSeason()
+  // El reparto del público se arma dentro de un temporizador: lee la temporada de aquí
+  const seasonRef = useRef(season)
   const wide = useMediaQuery('(min-width: 1100px)')
   const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
   const enabled = wide && !reducedMotion
@@ -318,7 +324,7 @@ export function RockAlien() {
       timers.current.push(
         window.setTimeout(() => {
           // Público nuevo en cada función
-          if (i === 0) setCrowd(lineup())
+          if (i === 0) setCrowd(lineup(seasonRef.current))
           setPhase(i)
         }, at),
       )
@@ -406,14 +412,14 @@ export function RockAlien() {
           <span key={l.dx} className={`hf-ra__lamp ${live ? 'is-on' : ''}`} style={{ left: center + l.dx - 9 }} />
         ))}
         {live &&
-          LIGHTS.map((l) => (
+          LIGHTS.map((l, k) => (
             <span
               key={l.dx}
               className={`hf-ra__beam ${phase === ROCK ? 'is-rock' : ''}`}
               style={
                 {
                   left: center + l.dx - 90,
-                  '--beam': l.color,
+                  '--beam': season ? `color-mix(in srgb, ${season.page.caps[k % season.page.caps.length]} 22%, transparent)` : l.color,
                   '--dur': `${l.dur}s`,
                   '--delay': `${l.delay}s`,
                 } as CSSProperties
@@ -426,7 +432,10 @@ export function RockAlien() {
         <div className="hf-ra__ampwell" style={{ left: center + 36 }}>
           <div className={`hf-ra__amp ${ampUp ? 'is-up' : ''}`}>
             <div className="hf-ra__amp-head">
-              <span className="hf-ra__amp-name">Hathor</span>
+              <span className="hf-ra__amp-name">
+                Hathor
+                {season && <Glyph name={season.page.logo} size={14} />}
+              </span>
               <span className="hf-ra__amp-knobs">
                 <span /><span /><span /><span />
               </span>
@@ -471,10 +480,18 @@ export function RockAlien() {
                   ))}
                 </span>
               </div>
-              <div className="hf-ra__slide hf-ra__slide--slogan">
-                <span>Por músicos,</span>
-                <span className="hf-ra__led-gold">para músicos.</span>
-              </div>
+              {/* En temporada, la cuarta imagen es la de la temporada */}
+              {season ? (
+                <div className="hf-ra__slide hf-ra__slide--slogan hf-ra__slide--season">
+                  <Glyph name={season.page.label} size={44} />
+                  <span className="hf-ra__led-gold">{season.page.ticker}</span>
+                </div>
+              ) : (
+                <div className="hf-ra__slide hf-ra__slide--slogan">
+                  <span>Por músicos,</span>
+                  <span className="hf-ra__led-gold">para músicos.</span>
+                </div>
+              )}
             </div>
           </div>
         )}

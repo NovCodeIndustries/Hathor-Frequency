@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { rockAlienSchedule } from '../../data/booking'
 import { useMediaQuery } from '../../lib/useMediaQuery'
+import { SeasonBadge } from '../Season/SeasonBadge'
 import './RockAlienMini.css'
 
 /**
@@ -164,7 +165,9 @@ export function RockAlienMini() {
       <div className="hf-ram__inner">
         <div className="hf-ram__card">
           <div className="hf-ram__head-row">
-            <span className="hf-ram__live">● En vivo desde el estudio</span>
+            <span className="hf-ram__live">
+              ● En vivo desde el estudio <SeasonBadge size={14} />
+            </span>
             <button
               type="button"
               className="hf-ram__close"

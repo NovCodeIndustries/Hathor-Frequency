@@ -24,7 +24,8 @@
   width: min(1040px, 100%);
   aspect-ratio: 2 / 1;
   max-height: 58vh;
-  border: 1px solid var(--c-line);
+  /* En temporada, el borde toma el color del mes */
+  border: 1px solid var(--season-acc, var(--c-line));
   border-radius: var(--radius-card);
   overflow: hidden;
   background: var(--c-surface-2);
@@ -153,6 +154,29 @@
   box-shadow: var(--glow-cap);
   transform-origin: left;
   animation: hf-alien-timer var(--alien-duration) linear both;
+}
+
+/* ---------- Temporada ---------- */
+/* El texto de la etiqueta del vinil y las lecturas toman el color del mes */
+[data-season] .hf-scope__label { fill: var(--season-acc); }
+[data-season] .hf-scope__readout:not(.hf-scope__muted) { color: var(--season-acc); }
+[data-season] .hf-alien__timer { background: var(--season-acc); }
+
+/* Glifo sobre la cabeza del extraterrestre (centro del disco) */
+.hf-scope__season {
+  position: absolute;
+  left: 50%;
+  top: 31%;
+  translate: -50% -50%;
+  display: flex;
+  animation: hf-alien-season 1.4s ease-in-out infinite alternate;
+}
+
+.hf-alien__season { color: var(--season-acc, var(--c-gold)); }
+
+@keyframes hf-alien-season {
+  from { transform: translateY(0) rotate(-6deg); }
+  to { transform: translateY(-4px) rotate(6deg); }
 }
 
 @keyframes hf-alien-in {

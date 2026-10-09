@@ -1,3 +1,5 @@
+import { useSeason } from '../../lib/useSeason'
+import { Glyph } from '../Ufo/seasonArt'
 import {
   WEEKDAYS_MIN,
   WEEKDAYS_SHORT,
@@ -19,6 +21,7 @@ interface CalendarProps {
 }
 
 export function Calendar({ month, selected, today, canGoPrev, onPrev, onNext, onSelect }: CalendarProps) {
+  const season = useSeason()
   const cells = monthCells(month)
 
   return (
@@ -51,17 +54,28 @@ export function Calendar({ month, selected, today, canGoPrev, onPrev, onNext, on
           if (!d) return <span key={`blank-${i}`} />
           const isSel = sameDay(d, selected)
           const isPast = d < today
+          // Día de la temporada (solo visual: no aparta ni bloquea nada)
+          const isSeason =
+            !!season &&
+            d.getMonth() === (season.date?.month ?? season.month) &&
+            d.getDate() === (season.date?.day ?? season.day.day)
           return (
             <button
               key={d.getDate()}
               type="button"
-              className="hf-cal__day"
+              className={`hf-cal__day ${isSeason ? 'is-season' : ''}`}
               aria-pressed={isSel}
-              aria-label={dayLabel(d)}
+              aria-label={isSeason ? `${dayLabel(d)} · ${season.day.tip}` : dayLabel(d)}
+              title={isSeason ? season.day.tip : undefined}
               disabled={isPast}
               onClick={() => onSelect(d)}
             >
               {d.getDate()}
+              {isSeason && (
+                <span className="hf-cal__season" aria-hidden="true">
+                  <Glyph name={season.day.glyph} size={16} />
+                </span>
+              )}
             </button>
           )
         })}

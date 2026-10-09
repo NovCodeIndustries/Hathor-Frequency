@@ -96,6 +96,21 @@
   box-shadow: 0 0 22px rgba(242,201,76,0.4);
 }
 
+/* Día de la temporada: borde del color del mes y su glifo en la esquina */
+.hf-cal__day.is-season {
+  position: relative;
+  border-color: var(--season-acc, var(--c-gold));
+  box-shadow: inset 0 0 12px color-mix(in srgb, var(--season-acc, #F2C94C) 35%, transparent);
+}
+
+.hf-cal__season {
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  display: flex;
+  pointer-events: none;
+}
+
 .hf-cal__day:disabled {
   color: var(--c-line-2);
   cursor: not-allowed;

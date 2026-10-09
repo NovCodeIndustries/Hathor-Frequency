@@ -48,3 +48,11 @@
 @media (prefers-reduced-motion: reduce) {
   .hf-ticker__track { animation: none; }
 }
+
+/* Palabra de temporada */
+.hf-ticker__season {
+  color: var(--season-acc, var(--c-gold));
+  text-shadow: 0 0 12px var(--season-acc, var(--c-gold));
+}
+
+.hf-ticker__sep { color: var(--season-acc, var(--c-gold)); }

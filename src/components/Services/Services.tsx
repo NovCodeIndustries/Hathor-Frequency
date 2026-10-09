@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router'
 import { packages, packagesIntro, packagesNote } from '../../data/packages'
 import { services, servicesIntro } from '../../data/services'
 import { useMediaQuery } from '../../lib/useMediaQuery'
+import { useSeason } from '../../lib/useSeason'
 import { Eyebrow } from '../shared/Eyebrow'
 import { GoldText } from '../shared/GoldText'
 import { AlienSignal } from './AlienSignal'
@@ -58,6 +59,7 @@ export function Services() {
   const trigger = useRef<HTMLButtonElement | null>(null)
   const timers = useRef<number[]>([])
   const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
+  const season = useSeason()
 
   // Regreso de los faders: mientras corre, el usuario no puede moverlos
   const returning = useRef(false)
@@ -207,7 +209,7 @@ export function Services() {
           <SignalScope count={lockedCount} total={SECRET.length} />
           <div className="hf-console">
             {services.map((s, i) => (
-              <ChannelStrip key={s.ch} service={s} level={levels[i]} locked={locked[i]} onLevel={(v) => setLevel(i, v)} />
+              <ChannelStrip key={s.ch} service={s} level={levels[i]} locked={locked[i]} capColor={season?.page.caps[i]} onLevel={(v) => setLevel(i, v)} />
             ))}
             <MasterMeter count={lockedCount} />
           </div>

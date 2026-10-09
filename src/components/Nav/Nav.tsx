@@ -2,11 +2,15 @@ import { useEffect, useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router'
 import { bookingCta, navAfterCta, navLeft, navRight } from '../../data/site'
 import { Button } from '../shared/Button'
+import { useSeason } from '../../lib/useSeason'
+import { SeasonGarland } from '../Season/SeasonGarland'
 import { Logo } from '../shared/Logo'
+import { Glyph } from '../Ufo/seasonArt'
 import { MobileMenu } from './MobileMenu'
 import './Nav.css'
 
 export function Nav() {
+  const season = useSeason()
   const [open, setOpen] = useState(false)
   const headerRef = useRef<HTMLElement>(null)
   const burgerRef = useRef<HTMLButtonElement>(null)
@@ -39,6 +43,8 @@ export function Nav() {
     }
   }, [open])
 
+  const badge = season && <Glyph name={season.page.logo} size={16} />
+
   return (
     <header className="hf-nav" ref={headerRef}>
       <div className="hf-nav__bar hf-container">
@@ -48,7 +54,7 @@ export function Nav() {
             <NavLink key={l.href} to={l.href}>{l.label}</NavLink>
           ))}
         </nav>
-        <Logo size="nav" className="hf-nav__logo hf-nav__logo--desktop" />
+        <Logo size="nav" className="hf-nav__logo hf-nav__logo--desktop" badge={badge} />
         <div className="hf-nav__links hf-nav__links--right">
           <nav aria-label="Principal derecha" className="hf-nav__links">
             {navRight.map((l) => (
@@ -62,7 +68,7 @@ export function Nav() {
         </div>
 
         {/* Móvil */}
-        <Logo size="navMobile" className="hf-nav__logo--mobile" />
+        <Logo size="navMobile" className="hf-nav__logo--mobile" badge={badge} />
         <div className="hf-nav__mobile-actions">
           <Button variant="outline-gold" to={bookingCta.href}>{bookingCta.label}</Button>
           <button
@@ -87,6 +93,7 @@ export function Nav() {
         </div>
       </div>
       {open && <MobileMenu onNavigate={() => setOpen(false)} />}
+      {season && <SeasonGarland season={season} />}
     </header>
   )
 }

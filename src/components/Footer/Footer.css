@@ -94,3 +94,12 @@
     font-size: 13px;
   }
 }
+
+/* Mensaje de temporada bajo el copyright */
+.hf-footer__season {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--season-acc, var(--c-gold));
+}

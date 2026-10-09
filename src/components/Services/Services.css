@@ -300,7 +300,8 @@
   width: 36px;
   height: 14px;
   border-radius: 2px;
-  background: var(--grad-gold-v);
+  /* En temporada el cap toma su color (--cap-season) */
+  background: var(--cap-season, var(--grad-gold-v));
   box-shadow: var(--glow-cap);
   cursor: grab;
   transition: box-shadow .25s;
@@ -412,7 +413,7 @@
     left: calc(var(--level) * (100% - 14px) / 100);
     width: 14px;
     height: 30px;
-    background: var(--grad-gold);
+    background: var(--cap-season, var(--grad-gold));
   }
 
   /* Escala dB debajo del fader horizontal; solo las marcas principales */

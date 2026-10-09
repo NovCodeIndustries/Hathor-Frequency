@@ -21,7 +21,7 @@
 }
 
 .hf-ram__card {
-  border: 1px solid var(--c-gold-2);
+  border: 1px solid var(--season-acc, var(--c-gold-2));
   border-radius: var(--radius-card);
   background: var(--c-surface-2);
   overflow: hidden;
@@ -35,11 +35,14 @@
 }
 
 .hf-ram__live {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: var(--c-gold);
+  color: var(--season-acc, var(--c-gold));
 }
 
 .hf-ram__close {
@@ -69,7 +72,7 @@
 .hf-ram__bar {
   display: block;
   height: 2px;
-  background: var(--c-gold);
+  background: var(--season-acc, var(--c-gold));
   transform-origin: 0 50%;
   animation: hf-ram-bar linear both;
 }

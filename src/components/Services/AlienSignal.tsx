@@ -1,6 +1,8 @@
 import { useEffect, useRef, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
+import { useSeason } from '../../lib/useSeason'
 import { GoldText } from '../shared/GoldText'
+import { Glyph } from '../Ufo/seasonArt'
 import './AlienSignal.css'
 
 const DURATION = 10_000
@@ -17,6 +19,7 @@ interface AlienSignalProps {
  * Pantalla completa; se quita sola a los 10 s (o con clic / Escape).
  */
 export function AlienSignal({ onClose }: AlienSignalProps) {
+  const season = useSeason()
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -118,6 +121,12 @@ export function AlienSignal({ onClose }: AlienSignalProps) {
           <span className="hf-scope__led" />
           Señal 100%
         </div>
+        {/* Temporada: el glifo del mes sobre la cabeza del extraterrestre */}
+        {season && (
+          <span className="hf-scope__season" aria-hidden="true">
+            <Glyph name={season.page.logo} size={30} />
+          </span>
+        )}
         <div className="hf-scope__readout hf-scope__readout--bl hf-scope__muted" aria-hidden="true">
           Origen · desconocido
         </div>
@@ -132,6 +141,9 @@ export function AlienSignal({ onClose }: AlienSignalProps) {
           <p><span aria-hidden="true">›</span> Decodificando la mezcla… 100%</p>
           <p><span aria-hidden="true">›</span> Patrón 1·2·3·2·1 reconocido</p>
           <p className="hf-alien__msg"><span aria-hidden="true">›</span> Mensaje: “Suena increíble desde aquí.”</p>
+          {season && (
+            <p className="hf-alien__season"><span aria-hidden="true">›</span> Señal de temporada: {season.page.ticker}</p>
+          )}
           <p className="hf-alien__hint">Se cierra en 10 s · clic o Esc para cerrar</p>
         </div>
       </div>

@@ -2,6 +2,7 @@ import { useId, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { socials, testimonial, whatsapp } from '../../data/site'
 import { submitContact } from '../../lib/submit'
+import { useSeason } from '../../lib/useSeason'
 import { Button } from '../shared/Button'
 import { Eyebrow } from '../shared/Eyebrow'
 import { GoldText } from '../shared/GoldText'
@@ -14,6 +15,7 @@ type Status = 'idle' | 'sending' | 'sent' | 'error'
 const ARC = 'M 550 10 A 540 540 0 0 1 1010 270'
 
 export function Contact() {
+  const season = useSeason()
   const emailId = useId()
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<Status>('idle')
@@ -75,7 +77,7 @@ export function Contact() {
             className="hf-contact__input"
             type="email"
             name="email"
-            placeholder="Tu correo"
+            placeholder={season?.page.placeholder ?? 'Tu correo'}
             autoComplete="email"
             required
             value={email}
