@@ -37,6 +37,38 @@ export function ArtistPattern({ pattern }: { pattern: Pattern }) {
           <path d="M36 40 42 52H30Z" />
         </g>
       )}
+      {pattern === 'waves' && (
+        <g fill="none" stroke="#F2C94C" strokeOpacity="0.5">
+          {[18, 30, 42, 54].map((y) => (
+            <path key={y} d={`M4 ${y}q8-8 16 0t16 0 16 0 16 0`} />
+          ))}
+        </g>
+      )}
+      {pattern === 'bars' && (
+        <g fill="none" stroke="#F2C94C" strokeOpacity="0.5">
+          {[
+            [12, 40],
+            [22, 24],
+            [32, 48],
+            [42, 16],
+            [52, 32],
+            [62, 44],
+          ].map(([x, h]) => (
+            <rect key={x} x={x - 3} y={64 - h} width="6" height={h} />
+          ))}
+        </g>
+      )}
+      {pattern === 'grid' && (
+        <g fill="none" stroke="#F2C94C" strokeOpacity="0.5">
+          {[12, 24, 36, 48, 60].map((n) => (
+            <circle key={`a${n}`} cx={n} cy={n} r="3" />
+          ))}
+          {[12, 24, 48, 60].map((n) => (
+            <circle key={`b${n}`} cx={72 - n} cy={n} r="3" />
+          ))}
+          <path d="M12 12 60 60M60 12 12 60" />
+        </g>
+      )}
     </svg>
   )
 }

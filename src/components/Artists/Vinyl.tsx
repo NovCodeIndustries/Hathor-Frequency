@@ -1,12 +1,17 @@
-import { useId } from 'react'
+import { useId, type CSSProperties } from 'react'
 
 interface VinylProps {
   /** Variante móvil: menos surcos y etiqueta más grande */
   compact?: boolean
+  /** 0–1: el disco gira según el avance de la lista (sin giro continuo) */
+  progress?: number
   className?: string
 }
 
-export function Vinyl({ compact = false, className }: VinylProps) {
+/** Vueltas que da el disco al recorrer toda la lista */
+const TURNS = 3
+
+export function Vinyl({ compact = false, progress, className }: VinylProps) {
   const gradId = useId()
   const step = compact ? 16 : 12
   const grooves: number[] = []
@@ -29,7 +34,10 @@ export function Vinyl({ compact = false, className }: VinylProps) {
         </linearGradient>
       </defs>
       {/* Gira el <g> (no el <svg>) para no agrandar su caja de layout */}
-      <g className="hf-vinyl__spin">
+      <g
+        className={`hf-vinyl__spin ${progress === undefined ? '' : 'is-synced'}`}
+        style={progress === undefined ? undefined : ({ '--vinyl-rot': `${progress * TURNS * 360}deg` } as CSSProperties)}
+      >
       <circle cx="220" cy="220" r="216" fill="#0a0a0a" stroke="#333" />
       <g fill="none" stroke="#F2C94C" strokeOpacity="0.18">
         {grooves.map((r) => (

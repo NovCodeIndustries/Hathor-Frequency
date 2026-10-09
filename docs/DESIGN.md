@@ -354,10 +354,13 @@ Datos (`src/data`):
 |---|---|---|---|---|
 | A1 | A | Sofía M. | R&B · Soul | 4 círculos concéntricos (r 30/22/14/6) |
 | A2 | A | RALO | Hip-Hop · Trap | 8 diagonales paralelas |
+| A3 | A | Los Ecos *(provisional)* | Rock · Alternativo | 4 ondas horizontales |
 | B1 | B | Luna K. | Pop · Indie | 3 triángulos anidados |
-| B2 | B | Tu banda (CTA, texto dorado) | "Reserva tu sesión" → #reservar | marco con borde punteado (`stroke-dasharray 4 4`) y un "+" en el centro |
+| B2 | B | Mara V. *(provisional)* | Folk · Cantautora | 6 barras tipo ecualizador |
+| B3 | B | NÉBULA *(provisional)* | Electrónica · Synth-pop | aspa con 9 puntos |
+| B14 | B | Tu banda (CTA, texto dorado) | "Reserva tu sesión" → #reservar | marco con borde punteado (`stroke-dasharray 4 4`) y un "+" en el centro |
 
-Las miniaturas tienen fondo `#0a0a0a`, borde `#333` y trazos dorados con `stroke-opacity` de 0.5 (en B2, 0.7).
+Las miniaturas tienen fondo `#0a0a0a`, borde `#333` y trazos dorados con `stroke-opacity` de 0.5 (en la CTA, 0.7). La fila CTA "Tu banda" va siempre al final del Lado B (cambio del 2026-10-09: se agregaron A3, B2 y B3).
 
 **Disco** (SVG con viewBox 440 y `role="img"`, `aria-label="Disco de vinil con la etiqueta de Hathor Frequency"`):
 - base: círculo r=216 con relleno `#0a0a0a` y stroke `#333`;
@@ -396,9 +399,19 @@ Las miniaturas tienen fondo `#0a0a0a`, borde `#333` y trazos dorados con `stroke
   4. flecha.
 - En táctil, `:active` aplica el fondo dorado al 8%.
 
+**Lista con scroll** (estilo **S6 · Combinada** del canvas https://claude.ai/artifact/QJkRJorDbVXgAKWynFXrae, 2026-10-09):
+- En desktop y tablet solo la lista de artistas hace scroll: un contenedor de 520px de alto sin barra visible (`overscroll-behavior: contain`). La sección pasa a padding vertical de 64px.
+- **Controles** a la derecha (columna de 56px): botones ▲ ▼ redondos estilo transporte (como los de la galería; hover dorado; deshabilitados en cada extremo) y entre ellos el contador "04–08" / "de 26" (`aria-live`). Cada botón avanza un artista; al primero de cada lado se llega mostrando su cabecera. La rueda del mouse, el teclado y el touch usan el scroll nativo.
+- **Difuminado** (de S1): máscara en las orillas, arriba 36px solo si ya se bajó y abajo 72px solo si quedan artistas.
+- **Tocadiscos** (de S5): el disco ya no gira solo; gira según el avance de la lista (3 vueltas en total, transición de 0.6s). Un arco dorado alrededor del disco marca el avance y el brazo del tocadiscos baja de −28° a −4°.
+- **Móvil**: sin scroll interno ni controles; la lista sigue el scroll de la página y el disco compacto sigue girando solo.
+- Con `prefers-reduced-motion` no hay transiciones ni giro.
+
+**Catálogo** (2026-10-09): 26 artistas (A1–A13, B1–B13) y la CTA "Tu banda" como B14. Salvo Sofía M., RALO y Luna K. los nombres son provisionales. Cada artista tiene entre 1 y 10 videos y fotos de marcador (elegidos al azar una vez y fijos en `src/data/artists.ts`). Los datos se arman con el helper `artist()`.
+
 **Cambios del 2026-10-08:**
 - **El disco gira**: un `<g>` interno del SVG rota 360° cada 6s, lineal e infinito; sin animación con `prefers-reduced-motion`. Se rota el `<g>` y no el `<svg>`, porque rotar el `<svg>` agranda su caja y genera scroll horizontal.
-- **Panel del artista** (estilo **V6 · Combinada** del canvas https://claude.ai/artifact/9z7ye3aqYqZ3ZQuqYeabYQ): las filas A1, A2 y B1 son `<button>` que abren el mismo panel lateral que los paquetes (`shared/Drawer.tsx`, ver §4.1 Detalle). La fila B2 "Tu banda" sigue siendo un link a `/reservar`.
+- **Panel del artista** (estilo **V6 · Combinada** del canvas https://claude.ai/artifact/9z7ye3aqYqZ3ZQuqYeabYQ): las filas de artistas (A1–A13, B1–B13) son `<button>` que abren el mismo panel lateral que los paquetes (`shared/Drawer.tsx`, ver §4.1 Detalle). La fila CTA "Tu banda" (B14) sigue siendo un link a `/reservar`.
   - **Panel derecho** (`ArtistDrawer.tsx`):
     - etiqueta "A1 · Lado A" y botón cerrar;
     - cabecera con un mini vinilo de 88px (64px en móvil) que gira cada 4s, y a su derecha el nombre (Cinzel 44px) y el género (Cinzel 22px dorado);

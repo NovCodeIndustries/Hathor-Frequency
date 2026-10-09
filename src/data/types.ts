@@ -10,7 +10,7 @@ export interface Service {
   knobs: readonly [Point, Point]
 }
 
-export type ArtistPattern = 'circles' | 'diagonals' | 'triangles' | 'add'
+export type ArtistPattern = 'circles' | 'diagonals' | 'triangles' | 'waves' | 'bars' | 'grid' | 'add'
 
 export interface Artist {
   code: string

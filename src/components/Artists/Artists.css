@@ -1,6 +1,6 @@
 .hf-artists {
   min-height: 900px;
-  padding: 96px var(--pad-x);
+  padding: 64px var(--pad-x);
   display: grid;
   grid-template-columns: 5fr 7fr;
   gap: 96px;
@@ -25,6 +25,119 @@
   width: 100%;
   max-width: 440px;
   height: auto;
+}
+
+/* Tocadiscos (desktop): el disco, el arco y el brazo siguen el avance de la lista */
+.hf-artists__deck {
+  position: relative;
+  aspect-ratio: 1;
+}
+
+.hf-artists__deck .hf-artists__vinyl {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.hf-artists__arc {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.hf-artists__arc circle { transition: stroke-dasharray .6s cubic-bezier(.3,.7,.2,1); }
+
+.hf-artists__arm {
+  position: absolute;
+  right: -12%;
+  top: -8%;
+  width: 40%;
+  transform-origin: 79% 13%;
+  transform: rotate(calc(-28deg + var(--progress) * 24deg));
+  transition: transform .6s cubic-bezier(.3,.7,.2,1);
+}
+
+/* Lista con scroll propio (S6): sin barra visible, ▲ ▼ a la derecha y orillas difuminadas */
+.hf-artists__browser {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 56px;
+  gap: 24px;
+}
+
+.hf-artists__list {
+  position: relative;
+  height: 520px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  overscroll-behavior: contain;
+  --fade-top: 0px;
+  --fade-bottom: 0px;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bottom)), transparent);
+  mask-image: linear-gradient(180deg, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bottom)), transparent);
+}
+
+.hf-artists__list::-webkit-scrollbar { display: none; }
+.hf-artists__list.has-before { --fade-top: 36px; }
+.hf-artists__list.has-after { --fade-bottom: 72px; }
+
+.hf-artists__list .hf-side + .hf-side { margin-top: 44px; }
+
+.hf-artists__controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hf-artists__step {
+  width: 56px;
+  height: 56px;
+  border: 1px solid var(--c-line-2);
+  border-radius: 50%;
+  background: var(--c-surface);
+  color: var(--c-gold);
+  box-shadow: inset 0 0 12px rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color .25s, background-color .25s, color .25s, box-shadow .25s, opacity .25s;
+}
+
+.hf-artists__step:hover:not(:disabled) {
+  border-color: var(--c-gold);
+  background: var(--c-gold);
+  color: #000;
+  box-shadow: 0 0 26px rgba(242,201,76,0.45);
+}
+
+.hf-artists__step:disabled {
+  opacity: .3;
+  cursor: default;
+}
+
+.hf-artists__count {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  color: var(--c-gold);
+  font-size: 15px;
+  text-align: center;
+}
+
+.hf-artists__count span:last-child {
+  font-size: 13px;
+  color: var(--c-text-3);
+}
+
+.hf-artists__count-line {
+  width: 1px;
+  height: 40px;
+  background: var(--c-line-2);
 }
 
 .hf-artists__vinyl--mobile { display: none; }
@@ -62,12 +175,22 @@
   animation: hf-vinyl-spin 6s linear infinite;
 }
 
+/* Desktop: el giro sigue a la lista en vez de ser continuo */
+.hf-artists__vinyl .hf-vinyl__spin.is-synced {
+  animation: none;
+  transform: rotate(var(--vinyl-rot));
+  transition: transform .6s cubic-bezier(.3,.7,.2,1);
+}
+
 @keyframes hf-vinyl-spin {
   to { transform: rotate(360deg); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .hf-artists__vinyl .hf-vinyl__spin { animation: none; }
+  .hf-artists__vinyl .hf-vinyl__spin.is-synced,
+  .hf-artists__arc circle,
+  .hf-artists__arm { transition: none; }
 }
 
 /* Fila de track (button que abre el panel, o link en la fila CTA) */
@@ -167,6 +290,17 @@
   .hf-artists .hf-h2 { font-size: 34px; }
 
   .hf-artists__vinyl--desktop { display: none; }
+
+  /* Móvil: la lista sigue el scroll normal de la página */
+  .hf-artists__browser { display: contents; }
+  .hf-artists__list {
+    height: auto;
+    overflow: visible;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .hf-artists__list .hf-side + .hf-side { margin-top: 32px; }
+  .hf-artists__controls { display: none; }
 
   .hf-artists__vinyl--mobile {
     display: block;
