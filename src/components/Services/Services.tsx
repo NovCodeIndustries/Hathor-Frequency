@@ -12,7 +12,7 @@ import { MasterMeter } from './MasterMeter'
 import { PackageCard } from './PackageCard'
 import { PackageDrawer } from './PackageDrawer'
 import { SignalScope } from './SignalScope'
-import { WaveTransition, type WavePhase } from './WaveTransition'
+import { TuneTransition, type TunePhase } from './TuneTransition'
 import './Services.css'
 
 /**
@@ -29,9 +29,9 @@ const matchesSecret = (levels: number[]) => SECRET.every((zone, i) => inZone(lev
 
 type View = 'servicios' | 'paquetes'
 
-/** Duración de las ondas: cubrir la página y luego recogerse (ver WaveTransition.css) */
-const COVER_MS = 1350
-const REVEAL_MS = 1200
+/** Duración del cambio de frecuencia: cubrir la página y luego revelarla (ver TuneTransition.css) */
+const COVER_MS = 1100
+const REVEAL_MS = 700
 
 /**
  * Al cerrar la señal, tras una pausa, los faders vuelven a su nivel inicial (R2 · Escalonado):
@@ -54,7 +54,7 @@ export function Services() {
   const [params, setParams] = useSearchParams()
   const view: View = params.get('vista') === 'paquetes' ? 'paquetes' : 'servicios'
   const setView = (next: View) => setParams(next === 'paquetes' ? { vista: 'paquetes' } : {}, { replace: true })
-  const [wave, setWave] = useState<{ phase: WavePhase; target: View } | null>(null)
+  const [tune, setTune] = useState<{ phase: TunePhase; target: View } | null>(null)
   const [openIndex, setOpenIndex] = useState<number | null>(null)
   const trigger = useRef<HTMLButtonElement | null>(null)
   const timers = useRef<number[]>([])
@@ -126,20 +126,20 @@ export function Services() {
   const lockedCount = locked.filter(Boolean).length
 
   const switchTo = (target: View) => {
-    if (wave || target === view) return
+    if (tune || target === view) return
     if (reducedMotion) {
       setView(target)
       return
     }
-    setWave({ phase: 'cover', target })
+    setTune({ phase: 'cover', target })
     timers.current.push(
       window.setTimeout(() => {
         // Con la página cubierta: cambia la vista y vuelve arriba
         setView(target)
         window.scrollTo({ top: 0, behavior: 'instant' })
-        setWave({ phase: 'reveal', target })
+        setTune({ phase: 'reveal', target })
       }, COVER_MS),
-      window.setTimeout(() => setWave(null), COVER_MS + REVEAL_MS),
+      window.setTimeout(() => setTune(null), COVER_MS + REVEAL_MS),
     )
   }
 
@@ -225,7 +225,7 @@ export function Services() {
         </div>
       )}
 
-      {wave && <WaveTransition phase={wave.phase} label={wave.target === 'paquetes' ? 'Paquetes' : 'Servicios'} />}
+      {tune && <TuneTransition phase={tune.phase} target={tune.target} />}
       {openIndex !== null && <PackageDrawer pkg={packages[openIndex]} onClose={closePackage} />}
       {signal && <AlienSignal onClose={closeSignal} />}
     </section>

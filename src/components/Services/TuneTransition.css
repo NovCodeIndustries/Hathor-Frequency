@@ -1,0 +1,111 @@
+/* Transición Servicios ↔ Paquetes · T4 Cambio de frecuencia (sobre el nav, bajo el easter egg) */
+.hf-tune {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  overflow: hidden;
+  background: #000;
+  pointer-events: none;
+}
+
+/* Estática de radio: líneas finas que tiemblan */
+.hf-tune__static {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(180deg, rgba(255,255,255,0.05) 0 1px, transparent 1px 3px);
+}
+
+.hf-tune__dial {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(760px, calc(100% - 32px));
+  translate: -50% -50%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.hf-tune__scale {
+  position: relative;
+  height: 40px;
+  border-bottom: 1px solid var(--c-line-2);
+}
+
+.hf-tune__tick {
+  position: absolute;
+  bottom: 0;
+  width: 1px;
+  background: #555;
+}
+
+.hf-tune__tick--minor { height: 9px; }
+.hf-tune__tick--mid { height: 16px; }
+.hf-tune__tick--major { height: 28px; background: var(--c-text-2); }
+
+.hf-tune__needle {
+  position: absolute;
+  bottom: -6px;
+  left: var(--to);
+  width: 3px;
+  height: 64px;
+  margin-left: -1.5px;
+  /* En temporada, la aguja toma el color del mes */
+  background: var(--season-acc, var(--c-gold));
+  box-shadow: 0 0 14px var(--season-acc, var(--c-gold));
+}
+
+.hf-tune__labels {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 14%;
+  font-family: var(--font-display);
+  font-size: 18px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--c-text-3);
+}
+
+.hf-tune__labels .is-target { color: var(--c-text); }
+
+.hf-tune__tuning {
+  align-self: center;
+  margin-top: 18px;
+  font-size: 13px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--c-text-2);
+}
+
+.hf-tune__tuning b {
+  font-weight: 600;
+  color: var(--season-acc, var(--c-gold));
+}
+
+/* ---------- Cubrir (1.1s): se apaga la página, aparece el dial y la aguja viaja ---------- */
+.hf-tune--cover { animation: hf-tune-in .35s ease both; }
+.hf-tune--cover .hf-tune__static { animation: hf-tune-static .12s steps(2) infinite; }
+.hf-tune--cover .hf-tune__dial { animation: hf-tune-in .3s ease .15s both; }
+.hf-tune--cover .hf-tune__needle { animation: hf-tune-needle .8s cubic-bezier(.5,0,.2,1) .25s both; }
+
+/* ---------- Revelar (0.7s): la estación entra y todo se desvanece ---------- */
+.hf-tune--reveal { animation: hf-tune-out .6s ease .1s both; }
+.hf-tune--reveal .hf-tune__static { animation: hf-tune-out .3s ease both; }
+.hf-tune--reveal .hf-tune__dial { animation: hf-tune-out .4s ease both; }
+
+@keyframes hf-tune-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes hf-tune-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes hf-tune-static { from { transform: translateY(0); } to { transform: translateY(2px); } }
+
+/* La aguja pasa un poco de la estación y se asienta */
+@keyframes hf-tune-needle {
+  0% { left: var(--from); }
+  70% { left: calc(var(--to) + 2%); }
+  85% { left: calc(var(--to) - 1%); }
+  100% { left: var(--to); }
+}
+
+@media (max-width: 767px) {
+  .hf-tune__labels { font-size: 14px; padding: 0 8%; }
+  .hf-tune__tuning { font-size: 11px; letter-spacing: 0.2em; }
+}
