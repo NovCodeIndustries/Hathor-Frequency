@@ -9,17 +9,18 @@ La landing está construida (React + TypeScript + Vite) siguiendo `docs/DESIGN.m
 - Multipágina con `react-router`, definido en `src/App.tsx`:
   - `src/components/Layout/` contiene Nav sticky + `<Outlet>` + Ticker + Footer;
   - las páginas están en `src/pages/`;
-  - rutas: `/`, `/servicios`, `/artistas`, `/reservar`, `/contacto`, `/faq` (FAQs en el nav, después de Reservar) y `/estudio` (tour de los espacios, `src/data/studio.ts`).
-  - `/servicios` alterna dos vistas sin cambiar de ruta, Servicios (consola) y Paquetes (`src/data/packages.ts`), con la transición de ondas de `WaveTransition.tsx` (DESIGN §4.1).
+  - rutas: `/`, `/servicios`, `/artistas`, `/opiniones` (después de Artistas en el nav), `/reservar`, `/contacto`, `/faq` (FAQs en el nav, después de Reservar) y `/estudio` (tour de los espacios, `src/data/studio.ts`).
+  - `/servicios` alterna dos vistas sin cambiar de ruta, Servicios (consola) y Paquetes (`src/data/packages.ts`), con la transición de cambio de frecuencia de `TuneTransition.tsx` (DESIGN §4.1).
   - En producción, el hosting debe redirigir toda ruta a `index.html` (SPA fallback).
 - El panel lateral de detalle (paquetes y artistas) es `src/components/shared/Drawer.tsx`; la galería del artista (`Artists/MediaPanel.tsx`) se monta a su izquierda.
 - Excepción al breakpoint único: el Nav cambia a hamburguesa por debajo de 1200px (con FAQs no cabe el nav completo).
 - Componentes en `src/components/<Seccion>/` (un `.tsx` + `.css` por componente) y compartidos en `src/components/shared/`.
 - Estilos: CSS plano con prefijo `hf-`, tokens en `src/styles/tokens.css`. Breakpoint único: `@media (max-width: 767px)`.
 - Datos editables en `src/data/*.ts`, con tipos en `src/data/types.ts`.
-- Formularios (Contacto, Reservar): todo envío pasa por `src/lib/submit.ts`, que hoy solo simula. **Aún no hay API.** La base de datos está preparada (Prisma), pero el frontend no la usa todavía.
+- Capa lúdica: platillo volador en todas las vistas (`src/components/Ufo/`), temporadas por mes y cumpleaños (`src/data/seasons.ts`, hook `useSeason`) y easter eggs; detalle en DESIGN.
+- Formularios (Contacto, Reservar, Opiniones): todo envío pasa por `src/lib/submit.ts`, que hoy solo simula. **Aún no hay API.** La base de datos está preparada (Prisma), pero el frontend no la usa todavía.
 - Base de datos:
-  - esquema en `prisma/schema.prisma`, con los modelos `ContactRequest` y `Booking`;
+  - esquema en `prisma/schema.prisma`, con los modelos `ContactRequest`, `Booking` y `Review`;
   - migraciones en `prisma/migrations/`;
   - configuración en `prisma.config.ts` (Prisma 7: la URL va en la config, no en el schema);
   - el cliente se genera en `server/generated/prisma` y está en gitignore.

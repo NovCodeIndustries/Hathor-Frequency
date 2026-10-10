@@ -381,13 +381,13 @@ Cambio del 2026-10-08. `/servicios` tiene dos vistas, Servicios (la consola) y P
   - el activo va relleno dorado con texto negro (`aria-pressed="true"`), el otro transparente.
   - En móvil ocupa todo el ancho (botones `flex: 1`) y el párrafo va alineado a la izquierda.
 - **Encabezado:** la vista Paquetes cambia el eyebrow a "Paquetes", el h1 a "Elige tu disco, *nosotros lo prensamos.*" (cierre dorado) y el párrafo a `packagesIntro`.
-- **Transición** (ondas de P2, `WaveTransition.tsx`):
-  - overlay fijo a pantalla completa (z-index 90, sobre el nav), con 8 anillos concéntricos centrados en la pantalla, de `150vmax` a `38vmax` (−16vmax cada uno);
-  - los pares van rellenos de dorado (degradado #F2C94C → #B8860B, glow) y los impares en negro; el más grande es dorado liso;
-  - **cubrir**: cada anillo escala de 0 a 1 en 1.05s (`cubic-bezier(.65,0,.35,1)`), con 45ms de retraso entre anillos; a los 0.6s aparece al centro el nombre de la vista destino (Cinzel, dorado, tracking 0.3em);
-  - a los 1350ms, con la página cubierta, se cambia la vista y se vuelve arriba del todo;
-  - **recoger**: los anillos vuelven a 0 en 0.9s, del más pequeño al más grande (40ms entre anillos), y se quita el overlay a los 2550ms.
-  - Con `prefers-reduced-motion` no hay ondas: la vista cambia directamente.
+- **Transición** (**T4 · Cambio de frecuencia** del canvas https://claude.ai/artifact/1ctemxisxvpxAX3Y6oHpGm, `TuneTransition.tsx`; cambio del 2026-10-10, reemplaza las ondas):
+  - overlay fijo a pantalla completa (z-index 90, sobre el nav), fondo negro con estática de radio (líneas de 1px blancas al 5% cada 3px que tiemblan);
+  - al centro, un dial de `min(760px, 100% − 32px)`: 41 marcas (largas cada 8, medianas cada 2) sobre una línea `#444`, las estaciones "Servicios" (22%) y "Paquetes" (78%) en Cinzel 18px (la de destino en blanco) y "Sintonizando **Paquetes**…" (13px, tracking 0.3em) con el destino en el color del mes;
+  - **cubrir** (1.1s): la página se apaga en 0.35s, el dial aparece y la aguja (3×64px, color del mes con glow) viaja de una estación a la otra en 0.8s, pasando un poco y asentándose;
+  - a los 1100ms, con la página cubierta, se cambia la vista y se vuelve arriba del todo;
+  - **revelar** (0.7s): la estática y el dial se desvanecen y luego el fondo; se quita el overlay a los 1800ms.
+  - Con `prefers-reduced-motion` no hay transición: la vista cambia directamente.
 - **Cards** (portada de disco, de P2): grid de 4 columnas (2 entre 768 y 1200px, 1 en móvil) con gap de 20px; cada card es un `<button>`:
   - arte de 230px (210px en móvil): funda de 150px con el número (Cinzel 36px, dorado) y la etiqueta; detrás, un disco de 210px que al hacer hover sale de la funda (`translateX(38px) rotate(40deg)`); estampa dorada redonda de 92px girada −8° con "Desde / precio / MXN";
   - cuerpo: nombre (Cinzel 28px), descripción corta (15px, #bbb) y "Ver contenido →" dorado.
