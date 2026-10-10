@@ -397,6 +397,7 @@ Cambio del 2026-10-08. `/servicios` tiene dos vistas, Servicios (la consola) y P
   - lista "Lado A · Incluye" (A1, A2…), entrega y sesiones, y el botón "Reservar este paquete" (a `/reservar`) al fondo;
   - se cierra con la X, clic fuera o Escape; bloquea el scroll del body, enfoca el botón cerrar y devuelve el foco a la card.
 - **Datos:** `src/data/packages.ts` (`Package` en `types.ts`). Precios, IVA, tiempos y cantidades son marcadores `[..]` hasta tener los reales.
+- **Aviso de precios** (2026-10-10): sobre la grilla de paquetes, una banda con ícono de información dorado, borde `#B8860B`, fondo dorado al 6% y radius de 6px: "**Precios y descripciones sujetos a cambios.** Confirma el precio final y lo que incluye con tu asesor antes de reservar." (15px; 14px en móvil). En el detalle de cada paquete, la primera frase va en itálica #888 bajo el precio. Textos en `packagesDisclaimer` (`src/data/packages.ts`).
 
 ---
 

@@ -7,6 +7,12 @@ export const packagesIntro =
 
 export const packagesNote = 'Precios en MXN · [IVA INCLUIDO / MÁS IVA]'
 
+/** Aviso sobre la vista de paquetes y en el detalle de cada uno */
+export const packagesDisclaimer = {
+  title: 'Precios y descripciones sujetos a cambios.',
+  detail: 'Confirma el precio final y lo que incluye con tu asesor antes de reservar.',
+}
+
 export const packages: Package[] = [
   {
     n: '01',

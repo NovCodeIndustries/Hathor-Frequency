@@ -280,3 +280,11 @@
   .hf-drawer__backdrop,
   .hf-drawer__disc-spin { animation: none; }
 }
+
+/* Paquetes: aviso de precios bajo el precio */
+.hf-drawer__disclaimer {
+  margin-top: -6px;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--c-text-3);
+}

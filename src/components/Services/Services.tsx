@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
-import { packages, packagesIntro, packagesNote } from '../../data/packages'
+import { packages, packagesDisclaimer, packagesIntro, packagesNote } from '../../data/packages'
 import { services, servicesIntro } from '../../data/services'
 import { useMediaQuery } from '../../lib/useMediaQuery'
 import { useSeason } from '../../lib/useSeason'
@@ -197,6 +197,15 @@ export function Services() {
 
       {isPackages ? (
         <div className="hf-packages">
+          <p className="hf-packages__banner" role="note">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true" focusable="false">
+              <circle cx="12" cy="12" r="9.5" />
+              <path d="M12 11v6M12 7.5v.01" />
+            </svg>
+            <span>
+              <strong>{packagesDisclaimer.title}</strong> {packagesDisclaimer.detail}
+            </span>
+          </p>
           <div className="hf-packages__grid">
             {packages.map((p, i) => (
               <PackageCard key={p.n} pkg={p} onOpen={(button) => openPackage(i, button)} />

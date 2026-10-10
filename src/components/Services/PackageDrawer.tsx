@@ -1,3 +1,4 @@
+import { packagesDisclaimer } from '../../data/packages'
 import type { Package } from '../../data/types'
 import { Button } from '../shared/Button'
 import { Drawer } from '../shared/Drawer'
@@ -14,6 +15,7 @@ export function PackageDrawer({ pkg, onClose }: PackageDrawerProps) {
       <p className="hf-drawer__price">
         <span>{pkg.price}</span> MXN · [IVA]
       </p>
+      <p className="hf-drawer__disclaimer">{packagesDisclaimer.title}</p>
       <p className="hf-drawer__desc">{pkg.description}</p>
 
       <h3 className="hf-drawer__h3">Lado A · Incluye</h3>
