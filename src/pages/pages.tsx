@@ -3,6 +3,7 @@ import { Booking } from '../components/Booking/Booking'
 import { Contact } from '../components/Contact/Contact'
 import { Faq } from '../components/Faq/Faq'
 import { Hero } from '../components/Hero/Hero'
+import { Reviews } from '../components/Reviews/Reviews'
 import { Services } from '../components/Services/Services'
 import { Studio } from '../components/Studio/Studio'
 import { ComingSoon } from './ComingSoon'
@@ -79,6 +80,15 @@ export function NotFoundPage() {
     <>
       <title>{`Página no encontrada · ${SITE}`}</title>
       <ComingSoon eyebrow="404" title="Esta pista no existe" />
+    </>
+  )
+}
+
+export function ReviewsPage() {
+  return (
+    <>
+      <title>{`Opiniones · ${SITE}`}</title>
+      <Reviews />
     </>
   )
 }

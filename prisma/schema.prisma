@@ -41,6 +41,10 @@ enum RepresentativeType {
 /// Correos enviados desde la sección Contacto
 model ContactRequest {
   id        String   @id @default(uuid()) @db.Uuid
+  /// Nombre de quien pide la información
+  name      String   @db.VarChar(120)
+  /// Tema sobre el que pide información (src/data/site.ts · contactTopics)
+  topic     String   @db.VarChar(40)
   email     String   @db.VarChar(254)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
@@ -68,4 +72,32 @@ model Booking {
 
   @@index([date])
   @@map("bookings")
+}
+
+enum ReviewStatus {
+  PENDING   @map("pending")
+  PUBLISHED @map("published")
+  REJECTED  @map("rejected")
+
+  @@map("review_status")
+}
+
+/// Opiniones de la ventana "Deja tu opinión"; se publican solo después de revisarlas
+model Review {
+  id        String       @id @default(uuid()) @db.Uuid
+  /// 1 a 5 estrellas
+  rating    Int          @db.SmallInt
+  name      String       @db.VarChar(120)
+  /// Banda o proyecto (opcional)
+  project   String?      @db.VarChar(120)
+  service   String       @db.VarChar(40)
+  text      String       @db.VarChar(500)
+  /// Autorizó publicarla con su nombre
+  consent   Boolean      @default(false)
+  status    ReviewStatus @default(PENDING)
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([status])
+  @@map("reviews")
 }

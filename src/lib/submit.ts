@@ -27,12 +27,37 @@ export interface BookingRequest extends BookingContact {
 
 const fakeLatency = () => new Promise((resolve) => setTimeout(resolve, 400))
 
-export async function submitContact(email: string): Promise<void> {
+/** Datos que pide Contacto */
+export interface ContactRequest {
+  /** Nombre de quien pide la información */
+  name: string
+  /** Tema sobre el que quiere información (`contactTopics`) */
+  topic: string
+  email: string
+}
+
+export async function submitContact(data: ContactRequest): Promise<void> {
   await fakeLatency()
-  console.info('[submitContact]', { email })
+  console.info('[submitContact]', data)
 }
 
 export async function submitBooking(data: BookingRequest): Promise<void> {
   await fakeLatency()
   console.info('[submitBooking]', data)
+}
+
+/** Opinión enviada desde la ventana "Deja tu opinión" (queda pendiente de revisión) */
+export interface ReviewRequest {
+  rating: number
+  name: string
+  project: string
+  service: string
+  text: string
+  /** Autoriza publicarla con su nombre */
+  consent: boolean
+}
+
+export async function submitReview(data: ReviewRequest): Promise<void> {
+  await fakeLatency()
+  console.info('[submitReview]', data)
 }

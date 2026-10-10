@@ -311,7 +311,7 @@ export function planPageFlight(id: PageFlightId, ctx: Ctx): PagePlan | null {
 export function typingPlan(ctx: Ctx, text: string, color?: string): PagePlan | null {
   const duration = PAGE_DURATION.correo
   const dur = { animationDuration: `${duration}ms` }
-  const input = document.querySelector<HTMLInputElement>('.hf-contact__input')
+  const input = document.querySelector<HTMLInputElement>('.hf-contact__input[type="email"]')
   if (!input || input.value || document.activeElement === input) return null
   const r = input.getBoundingClientRect()
   if (!inView(r, ctx, ctx.top + 150)) return null

@@ -102,6 +102,35 @@
   transition: box-shadow .25s;
 }
 
+/* Nombre y tema: pills sin botón, a la misma altura que la del correo */
+.hf-contact__pill--name { padding-right: 28px; }
+
+/* Tema: select con la flecha propia */
+.hf-contact__pill--select { position: relative; }
+
+.hf-contact__select {
+  appearance: none;
+  cursor: pointer;
+  padding-right: 28px;
+  font-family: var(--font-body);
+}
+
+.hf-contact__select.is-empty { color: var(--c-text-3); }
+
+.hf-contact__select option {
+  background: #0a0a0a;
+  color: var(--c-text);
+}
+
+.hf-contact__chevron {
+  position: absolute;
+  right: 28px;
+  top: 50%;
+  translate: 0 -50%;
+  color: var(--c-gold);
+  pointer-events: none;
+}
+
 .hf-contact__pill:focus-within {
   box-shadow: 0 0 0 1px var(--c-gold), 0 0 30px rgba(242,201,76,0.25);
 }
@@ -169,27 +198,8 @@ a.hf-contact__wa:hover {
   box-shadow: var(--glow-btn);
 }
 
-.hf-contact__quote {
-  margin-top: 32px;
-  max-width: 620px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
 
-.hf-contact__quote blockquote {
-  font-family: var(--font-display);
-  font-size: 20px;
-  line-height: 1.45;
-}
 
-.hf-contact__quote figcaption {
-  font-size: 14px;
-  font-weight: 400;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--c-gold);
-}
 
 .hf-contact__social {
   display: flex;
@@ -283,14 +293,12 @@ a.hf-contact__wa:hover {
     height: 54px;
   }
 
-  .hf-contact__quote {
-    margin-top: 20px;
-    gap: 10px;
-  }
+  .hf-contact__pill--name { padding-right: 0; }
+  .hf-contact__select { text-align-last: center; padding: 0 44px; }
+  .hf-contact__chevron { right: 22px; }
 
-  .hf-contact__quote blockquote { font-size: 18px; }
 
-  .hf-contact__quote figcaption { font-size: 13px; }
+
 
   .hf-contact__social {
     gap: 8px;

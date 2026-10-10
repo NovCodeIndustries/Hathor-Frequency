@@ -117,3 +117,15 @@ export interface StudioVideoService {
   /** Video de muestra: URL de embed (p. ej. https://www.youtube-nocookie.com/embed/<id>) */
   embed?: string
 }
+
+/** Opinión publicada en el sitio (ya revisada y autorizada) */
+export interface Review {
+  name: string
+  /** Banda o proyecto (opcional) */
+  project?: string
+  /** Servicio sobre el que opina (`contactTopics`) */
+  service: string
+  /** 1 a 5 estrellas */
+  rating: number
+  text: string
+}

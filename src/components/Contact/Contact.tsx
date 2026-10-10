@@ -1,8 +1,9 @@
 import { useId, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
-import { socials, testimonial, whatsapp } from '../../data/site'
+import { contactTopics, socials, whatsapp } from '../../data/site'
 import { submitContact } from '../../lib/submit'
 import { useSeason } from '../../lib/useSeason'
+import { ReviewsRotator } from '../Reviews/ReviewsRotator'
 import { Button } from '../shared/Button'
 import { Eyebrow } from '../shared/Eyebrow'
 import { GoldText } from '../shared/GoldText'
@@ -16,7 +17,11 @@ const ARC = 'M 550 10 A 540 540 0 0 1 1010 270'
 
 export function Contact() {
   const season = useSeason()
+  const nameId = useId()
+  const topicId = useId()
   const emailId = useId()
+  const [name, setName] = useState('')
+  const [topic, setTopic] = useState('')
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<Status>('idle')
 
@@ -24,8 +29,10 @@ export function Contact() {
     e.preventDefault()
     setStatus('sending')
     try {
-      await submitContact(email)
+      await submitContact({ name: name.trim(), topic, email: email.trim() })
       setStatus('sent')
+      setName('')
+      setTopic('')
       setEmail('')
     } catch {
       setStatus('error')
@@ -70,6 +77,48 @@ export function Contact() {
       </div>
 
       <form className="hf-contact__form" onSubmit={handleSubmit}>
+        <label htmlFor={nameId} className="sr-only">Tu nombre</label>
+        <div className="hf-contact__pill hf-contact__pill--name">
+          <input
+            id={nameId}
+            className="hf-contact__input"
+            type="text"
+            name="name"
+            placeholder="Tu nombre"
+            autoComplete="name"
+            required
+            maxLength={120}
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value)
+              if (status !== 'sending') setStatus('idle')
+            }}
+          />
+        </div>
+        <label htmlFor={topicId} className="sr-only">¿Sobre qué quieres información?</label>
+        <div className="hf-contact__pill hf-contact__pill--name hf-contact__pill--select">
+          <select
+            id={topicId}
+            className={`hf-contact__input hf-contact__select ${topic ? '' : 'is-empty'}`}
+            name="topic"
+            required
+            value={topic}
+            onChange={(e) => {
+              setTopic(e.target.value)
+              if (status !== 'sending') setStatus('idle')
+            }}
+          >
+            <option value="" disabled>
+              ¿Sobre qué quieres información?
+            </option>
+            {contactTopics.map((t) => (
+              <option key={t}>{t}</option>
+            ))}
+          </select>
+          <svg className="hf-contact__chevron" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M3 6l5 5 5-5" />
+          </svg>
+        </div>
         <label htmlFor={emailId} className="sr-only">Tu correo</label>
         <div className="hf-contact__pill">
           <input
@@ -95,7 +144,7 @@ export function Contact() {
         </Link>
         <p className="hf-contact__status" role="status">
           {status === 'sent' && 'Recibido. Te escribimos pronto.'}
-          {status === 'error' && 'No pudimos enviar tu correo. Intenta de nuevo.'}
+          {status === 'error' && 'No pudimos enviar tus datos. Intenta de nuevo.'}
         </p>
       </form>
 
@@ -120,10 +169,8 @@ export function Contact() {
         </p>
       )}
 
-      <figure className="hf-contact__quote">
-        <blockquote>{testimonial.quote}</blockquote>
-        <figcaption>{testimonial.author}</figcaption>
-      </figure>
+      {/* Opiniones que van cambiando (antes, un testimonio fijo) */}
+      <ReviewsRotator />
 
       <nav className="hf-contact__social" aria-label="Redes">
         {socials.map((s) => (

@@ -7,6 +7,7 @@ import {
   FaqPage,
   HomePage,
   NotFoundPage,
+  ReviewsPage,
   ServicesPage,
   StudioPage,
 } from './pages/pages'
@@ -18,6 +19,7 @@ const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: 'servicios', element: <ServicesPage /> },
       { path: 'artistas', element: <ArtistsPage /> },
+      { path: 'opiniones', element: <ReviewsPage /> },
       { path: 'reservar', element: <BookingPage /> },
       { path: 'contacto', element: <ContactPage /> },
       { path: 'estudio', element: <StudioPage /> },

@@ -3,6 +3,7 @@ import type { NavLink, SocialLink, SocialPlatform } from './types'
 export const navLeft: NavLink[] = [
   { label: 'Servicios', href: '/servicios' },
   { label: 'Artistas', href: '/artistas' },
+  { label: 'Opiniones', href: '/opiniones' },
 ]
 
 // /estudio aún no tiene diseño: muestra una página "Próximamente" (docs/DESIGN.md §12)
@@ -61,3 +62,15 @@ export const ufoSchedule = {
   minSeconds: 30,
   maxSeconds: 60,
 }
+
+/** Temas de Contacto: sobre qué quiere información la persona */
+export const contactTopics = [
+  'Grabación',
+  'Mezcla',
+  'Masterización',
+  'Video',
+  'Live Sessions',
+  'Paquetes',
+  'Visita al estudio',
+  'Otro',
+] as const
