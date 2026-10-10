@@ -59,8 +59,8 @@ export const tickerItems = ['Grabación', 'Mezcla', 'Masterización', 'Video', '
  * solo con la pestaña visible. Con `?ovni=1` en la URL la primera sale al cargar (para probarlo).
  */
 export const ufoSchedule = {
-  minSeconds: 30,
-  maxSeconds: 60,
+  minSeconds: 15,
+  maxSeconds: 30,
 }
 
 /** Temas de Contacto: sobre qué quiere información la persona */

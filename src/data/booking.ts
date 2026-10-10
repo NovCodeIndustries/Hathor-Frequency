@@ -28,5 +28,5 @@ export const representativeTypes = [
  * Con `?alien=1` en la URL la primera sale al cargar (para probarlo).
  */
 export const rockAlienSchedule = {
-  intervalSeconds: 30,
+  intervalSeconds: 15,
 }
