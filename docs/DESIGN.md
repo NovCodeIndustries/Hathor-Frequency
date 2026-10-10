@@ -575,7 +575,12 @@ Las miniaturas tienen fondo `#0a0a0a`, borde `#333` y trazos dorados con `stroke
   1. Eyebrow "Contacto" con líneas de 36px **a ambos lados**.
   2. H2 de 60px con lh 0.98 y max-width de 820px: "¿Tienes una canción **esperando salir?**" (degradado con glow de 0.3).
   3. Párrafo de 18px en #bbb: "Escríbenos y la ponemos a girar."
-  4. Formulario de 560px de ancho, con padding-top de 8px. El label "Tu correo" queda oculto visualmente (clase sr-only). Todo va dentro de **una sola pill**:
+  3c. **Nombre y tema** (agregados el 2026-10-09), arriba de la pill del correo y con su mismo estilo (pill de 60px, borde `#444`, fondo `rgba(0,0,0,0.8)`, padding 6px 28px, labels sr-only), con 12px entre pills:
+     - "Tu nombre" (`autocomplete="name"`, obligatorio);
+     - selector "¿Sobre qué quieres información?" (obligatorio; el texto de ejemplo en #888 hasta elegir, flecha dorada a la derecha): Grabación, Mezcla, Masterización, Video, Live Sessions, Paquetes, Visita al estudio y Otro (`contactTopics` en `src/data/site.ts`).
+     - En móvil van apilados como el correo: pills propias de 54px con el texto centrado.
+     - Se guardan en `ContactRequest.name` y `ContactRequest.topic` (migración `contact_name_topic`); el envío sigue simulado en `submitContact`.
+  4. Formulario de 560px de ancho, con padding-top de 8px. El label "Tu correo" queda oculto visualmente (clase sr-only). El correo va dentro de **una sola pill**:
      - contenedor en flex con gap de 8px, padding 6px 6px 6px 28px, `border: 1px solid #444`, radius de 40px y fondo `rgba(0,0,0,0.8)`;
      - `input type="email"`: placeholder "Tu correo", 48px de alto, sin borde, 17px;
      - botón primario "Contactar" de 48px de alto y padding 0 28px.
@@ -642,6 +647,16 @@ Cambio del 2026-10-09. Componente `Studio.tsx`, datos en `src/data/studio.ts`.
 
 ---
 
+## 7.3 Opiniones (`/opiniones`, canvas https://claude.ai/artifact/R7Esqtm9Mbfyo4s5KyY7Du)
+
+Cambio del 2026-10-09. En el nav va después de Artistas (Servicios · Artistas · Opiniones). Datos en `src/data/reviews.ts`.
+- **Página** (`Reviews.tsx`): cabecera 7fr / 5fr con eyebrow "Opiniones", h1 "Lo que dicen *quienes ya grabaron.*" y un párrafo; a la derecha, tarjeta de resumen con el promedio (Cinzel 64px dorado), estrellas, total, barras por calificación (5 a 1) y el botón primario "Deja tu opinión ★". Debajo, filtros por servicio (pills `aria-pressed`, "Todas" + los servicios que tengan opiniones) y una grilla de 3 columnas (2 en tablet, 1 en móvil) con tarjetas: estrellas, etiqueta del servicio, cita en Cinzel 18px, nombre y proyecto.
+- **Ventana "Deja tu opinión"** (`ReviewModal.tsx`, portal): "Opiniones" + glifo de temporada, "¿Cómo sonó *tu experiencia?*" y "La revisamos antes de publicarla." Estrellas de 1 a 5 (`radiogroup`, 52px, se iluminan al pasar el mouse, flechas del teclado) con su texto: *Desafinado · Le falta mezcla · Suena bien · Suena muy bien · ¡Disco de oro!*; nombre, banda o proyecto (opcional), servicio (`contactTopics`), opinión (máx. 500 con contador) y "Pueden publicar mi opinión con mi nombre". Sin estrellas no se envía ("Elige cuántas estrellas le das"). Al enviar: estrellas iluminadas, "¡Gracias por *tu frecuencia!*" y botón Cerrar. Se cierra con la ✕, clic fuera o Escape. En móvil sube como hoja desde abajo. En temporada toma el borde, glow y anillos del color del mes, el glifo y el mensaje del mes. `/opiniones?opinar=1` la abre al llegar.
+- **Contacto**: el testimonio fijo se cambió por la rotación de opiniones (`ReviewsRotator.tsx`): cada 6s (`reviewRotateMs`) cambia con fundido; estrellas, cita en Cinzel 20px y "— Nombre · Servicio"; puntos para elegir una (se queda en esa), barra de tiempo, y el link "¿Ya grabaste con nosotros? *Deja tu opinión →*" a `/opiniones?opinar=1`. Se pausa con el mouse encima, con el foco dentro y con reduced-motion.
+- **Datos**: el envío está simulado (`submitReview`); la tabla `reviews` (migración `reviews`) guarda calificación, nombre, proyecto, servicio, texto, permiso y estado `pending/published/rejected`. Solo se muestran las opiniones de `reviews.ts`.
+
+---
+
 ## 8. Vista 7 — Footer (`07-Footer.dc.html`)
 
 ### Desktop (1440 × 140)
@@ -691,6 +706,7 @@ Cambio del 2026-10-09. Componente `Studio.tsx`, datos en `src/data/studio.ts`.
 - **Envíos**: falta definir a dónde van el formulario de contacto y la reserva (backend o servicio).
 - **Calendario**: la disponibilidad y la navegación entre meses son estáticas en el diseño.
 - **Redes**: Contacto repite los links que también aparecen en el Footer (decisión abierta).
+- **Opiniones**: las 3 de `src/data/reviews.ts` son provisionales (como el testimonio de Sofía M.); hay que reemplazarlas por opiniones reales aprobadas y definir quién las revisa.
 - **Artistas y FAQ**: faltan las bios, redes (links), videos y fotos reales de los artistas, y los datos que faltan en dos respuestas de FAQ (marcadores `[..]` de pago y tiempo de entrega).
 - **Nav**: el rango 768–1199px usa el nav móvil (hamburguesa) porque con FAQs no cabe el nav completo; no hay diseño específico de tablet.
 - **Tablet**: no hay diseño para 768–1200px; se usa el layout desktop fluido.
