@@ -46,6 +46,8 @@ model ContactRequest {
   /// Tema sobre el que pide información (src/data/site.ts · contactTopics)
   topic     String   @db.VarChar(40)
   email     String   @db.VarChar(254)
+  /// Cuándo lo marcó como atendido el estudio (panel · Contactos); null = sin atender
+  handledAt DateTime? @map("handled_at") @db.Timestamptz(6)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   @@index([email])
@@ -100,4 +102,43 @@ model Review {
 
   @@index([status])
   @@map("reviews")
+}
+
+/// Días u horarios que el estudio cierra desde el panel (no se pueden reservar)
+model BlockedSlot {
+  id        String   @id @default(uuid()) @db.Uuid
+  date      DateTime @db.Date
+  /// Hora "HH:MM"; null = el día completo
+  startTime String?  @map("start_time") @db.VarChar(5)
+  reason    String?  @db.VarChar(120)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([date])
+  @@map("blocked_slots")
+}
+
+/// Personas del estudio con acceso al panel (alta con `npm run admin:create`)
+model AdminUser {
+  id           String         @id @default(uuid()) @db.Uuid
+  email        String         @unique @db.VarChar(254)
+  name         String         @db.VarChar(120)
+  /// scrypt: "salt:hash" en hex
+  passwordHash String         @map("password_hash") @db.VarChar(200)
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  sessions     AdminSession[]
+
+  @@map("admin_users")
+}
+
+/// Sesión del panel; solo se guarda el hash del token de la cookie
+model AdminSession {
+  id        String    @id @default(uuid()) @db.Uuid
+  tokenHash String    @unique @map("token_hash") @db.VarChar(64)
+  userId    String    @map("user_id") @db.Uuid
+  user      AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([userId])
+  @@map("admin_sessions")
 }

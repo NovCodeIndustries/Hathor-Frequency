@@ -5,29 +5,38 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:api": "tsx watch server/index.ts",
+    "dev:all": "concurrently -k -n web,api -c yellow,cyan \"npm:dev\" \"npm:dev:api\"",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:seed": "prisma db seed",
+    "admin:create": "tsx server/scripts/create-admin.ts"
   },
   "dependencies": {
+    "@hono/node-server": "^2.1.4",
     "@prisma/adapter-pg": "7.10.0",
     "@prisma/client": "7.10.0",
+    "hono": "^4.13.13",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-router": "^8.4.0"
+    "react-router": "^8.4.0",
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
+    "concurrently": "^10.0.6",
     "dotenv": "^18.0.6",
     "oxlint": "^1.81.0",
     "prisma": "7.10.0",
+    "tsx": "^4.23.15",
     "typescript": "~6.0.2",
     "vite": "^8.3.0"
   }
