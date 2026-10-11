@@ -126,3 +126,13 @@ El dashboard del panel lee las visitas de Umami, que corre en el mismo `docker c
 3. `docker compose up -d app` para que tome los cambios.
 
 El sitio público carga el script por `/umami` (proxy de Vite), así que también funciona por el túnel. El panel `/admin` no se cuenta. Cada reserva enviada registra el evento `reserva-enviada`. Sin `VITE_UMAMI_WEBSITE_ID` no se carga nada.
+
+## Contenido editable y medios
+
+En **/admin/contenido** se editan servicios, paquetes, precios base, artistas, FAQs, Estudio y datos del sitio. Cada sección tiene su borrador y su **Publicar**, y la web abierta cambia al instante.
+
+Las fotos y videos no se suben al panel: viven en un **disco aparte**.
+
+1. En `.env`, pon `MEDIA_DIR=/ruta/del/hdd` (por defecto `./media`).
+2. `docker compose up -d app`: Docker la monta en solo lectura y la API la sirve en `/media/...`.
+3. En los formularios escribe la ruta (`/media/artistas/ralo/01.jpg`) o una URL externa (`https://…`). El panel revisa que exista y muestra la miniatura.

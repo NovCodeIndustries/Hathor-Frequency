@@ -13,6 +13,7 @@ Especificación **exacta** de la landing de Hathor Frequency, aprobada el 2026-1
 | Panel de admin | A1–A3, L1, O1–O2, B1, C1, D1–D3 (se eligieron A2, L1, O2, B1, C1 y D1) | https://claude.ai/artifact/PQevfwPDA7oRfVuasV4cXF |
 | Dashboard del panel | D1–D4 y M1–M2 (se eligieron D4 y M2) | https://claude.ai/artifact/7wwLUsR6SBNYJoY88dma8W |
 | Panel · Sitio (módulos) | S1–S3, H1/H2, L, G, P (se eligieron S1, H2, L, G y P) | https://claude.ai/artifact/D4NYHBREuqQbBVTPLUe3cS |
+| Panel · Contenido | C1–C3, F1–F6 (se eligieron C1 + vista previa de C2 y F1–F6) | https://claude.ai/artifact/1m6tKaTUujXp6FNuj1q4fL |
 
 Cada vista es un artboard (`Main.dc.html`, `02-Ticker.dc.html` … `07-Footer.dc.html`) con nombres iguales en los dos canvas finales. Si hay duda sobre un valor, manda el artboard.
 
@@ -733,6 +734,23 @@ Cambio del 2026-10-11. Es privado: va fuera del Layout público (sin Nav, Ufo, t
     - el historial muestra fecha, quién, qué ocultó o mostró y "Restaurar", que copia esa versión al borrador.
   - El contador de cambios sin publicar va en la pestaña "Sitio" de la barra lateral.
   - **Al publicar, la web abierta cambia al instante**, sin recargar: si estás viendo una página que se oculta, pasa a "Próximamente". Por el túnel temporal tarda hasta ~15 s.
+- **Contenido** (`/admin/contenido`, `AdminContent.tsx`, `ContentForm.tsx`, `contentForms.ts`): editar textos, precios y listas sin tocar código. Diseños C1 + vista previa de C2 + F1–F6, cambio del 2026-10-11.
+  - **Secciones** (pestañas, con punto dorado si tienen cambios):
+    - Servicios: solo textos; los 5 canales son fijos;
+    - Paquetes y Artistas: agregar, duplicar, ordenar y eliminar;
+    - Precios base, FAQs, Estudio (por grupos: espacios, Nosotros, videos, equipo, visita y mapa) y Datos del sitio (eslogan, cifras, WhatsApp, redes).
+  - **C1**:
+    - a la izquierda, la lista: "General" con los textos de la sección y luego cada elemento, con ↑↓ y "+ Agregar";
+    - a la derecha, el formulario con Duplicar / Eliminar y "Ver en Sitio";
+    - el borrador **se guarda solo** (0.6 s después de escribir).
+  - **Vista previa (C2)**: abierta por defecto (si la cierras, el navegador lo recuerda); muestra a la derecha la página real en un iframe (`?modo=vista`, solo con sesión de admin) que muestra el borrador mientras escribes. Sin bienvenida ni platillo, y no cuenta en Umami.
+  - **F1 · Medios**: un campo de ruta `/media/…` (HDD montado) o URL https, con miniatura y aviso ("Encontrada en el HDD", "No existe en el HDD", "URL externa", "Debe empezar con /media/ o https://"). **Solo se guarda la ubicación.**
+  - **F2 · Listas**: "qué incluye", pasos, párrafos y listas de objetos (redes, fotos, videos, espacios, cifras) con agregar, ordenar y quitar.
+  - **F3 · Validación**: el error va en su campo y la fila de la lista muestra "N errores"; con errores no se puede publicar.
+  - **F4 · Eliminar**: confirmación con "Mejor ocultarlo en Sitio →"; se recupera desde el Historial.
+  - **F5 · Barra de la sección**: contenido inicial / cambios sin publicar (con errores) / guardando / publicando / "publicado · la web ya lo muestra"; Historial, Descartar y **Publicar {sección}**. Cada sección se publica por separado.
+  - **F6 · Historial**: quién, cuándo y qué cambió ("Agregó EP · Cambió Sencillo"), con Restaurar, también para el contenido inicial.
+  - Al publicar, la web abierta cambia al instante (SSE `content`).
 - **D1 · Ocupado en Reservar (público)**: se queda el tachado: el horario o día lleno se apaga en `#444` con `line-through`, igual que los días pasados (§6).
 
 ---

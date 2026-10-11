@@ -35,6 +35,14 @@ La landing está construida (React + TypeScript + Vite) siguiendo `docs/DESIGN.m
   - la API lee sus cifras en `server/lib/umami.ts`;
   - el panel no se cuenta.
 - Correos: fuera de alcance por ahora.
+- Contenido editable (panel · Contenido):
+  - las secciones son servicios, paquetes, precios, artistas, faq, estudio y sitio (`src/data/content.ts`, con los valores de `src/data/*` como contenido inicial);
+  - **los componentes leen con `useContent('paquetes')`** (`src/lib/content.ts`), no importan directo de `src/data` para lo editable;
+  - la validación por sección está en `server/content/schemas.ts`;
+  - la API es `GET /api/content` y `/api/admin/content/:key/*` (draft, publish, discard, history, restore);
+  - en la BD están `ContentDraft` y `ContentVersion`; al publicar se manda el SSE `content` (`src/lib/live.ts` es el canal en vivo compartido);
+  - los formularios se definen en `src/components/Admin/contentForms.ts`; al agregar un campo editable, agrégalo al tipo, al schema y al formulario.
+- Medios: fotos y videos en un HDD aparte. Docker lo monta (`MEDIA_DIR` en `.env`) en `/app/media`, la API lo sirve en `/media/...` y la BD solo guarda rutas o URLs (`server/lib/media.ts`).
 - Módulos del sitio (panel · Sitio), para apagar cosas sin borrarlas:
   - registro en `src/data/modules.ts`, con páginas, secciones, elementos de listas y globales; **los ids publicados no se cambian**;
   - la web los lee con `src/lib/siteModules.ts` (`useModule`, `useModuleFilter`, `useVisibleLinks`) y `<Module id>` / `PageLink`; se cargan antes de pintar, en `main.tsx`;
