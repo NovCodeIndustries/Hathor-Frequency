@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useState } from 'react'
 import { timeSlots } from '../../data/booking'
-import { adminApi, dateFromISO, formatStamp, type AdminBlock, type AdminBooking, type BookingStatus } from '../../lib/adminApi'
+import { adminApi, dateFromISO, formatMoney, formatStamp, type AdminBlock, type AdminBooking, type BookingStatus, type PaymentStatus } from '../../lib/adminApi'
 import { MONTHS, WEEKDAYS_SHORT, startOfDay, toISODate } from '../../lib/calendar'
+import { formatTime } from '../../lib/time'
 import { useAdmin } from '../../lib/useAdmin'
+import { ChargeModal } from './ChargeModal'
 import './AdminAgenda.css'
 
 const STATUS_LABEL: Record<BookingStatus, string> = { PENDING: 'Pendiente', CONFIRMED: 'Confirmada', CANCELLED: 'Cancelada' }
 const STATUS_CHIP: Record<BookingStatus, string> = { PENDING: 'pending', CONFIRMED: 'done', CANCELLED: 'off' }
+const PAY_LABEL: Record<PaymentStatus, string> = { PENDING: 'Pago pendiente', DEPOSIT: 'Anticipo', PAID: 'Pagado' }
 
 const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n)
 const mondayOf = (d: Date) => addDays(startOfDay(d), -((d.getDay() + 6) % 7))
@@ -33,6 +36,7 @@ export function AdminAgenda() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [tick, setTick] = useState(0)
+  const [charge, setCharge] = useState<'confirm' | 'edit' | null>(null)
 
   const from = toISODate(monday)
   const to = toISODate(addDays(monday, 6))
@@ -121,7 +125,7 @@ export function AdminAgenda() {
               ))}
               {timeSlots.map((time) => (
                 <div key={time} className="hf-agenda__row">
-                  <span className="hf-agenda__time">{time}</span>
+                  <span className="hf-agenda__time">{formatTime(time)}</span>
                   {days.map((d) => {
                     const iso = toISODate(d)
                     const b = bookingAt(iso, time)
@@ -174,7 +178,7 @@ export function AdminAgenda() {
                 <span className="hf-agenda__name">{picked.project}</span>
                 <span className="hf-agenda__when">
                   {WEEKDAYS_SHORT[(dateFromISO(picked.date).getDay() + 6) % 7]} {dateFromISO(picked.date).getDate()}{' '}
-                  {MONTHS[dateFromISO(picked.date).getMonth()].slice(0, 3)} · {picked.startTime} h · {picked.service}
+                  {MONTHS[dateFromISO(picked.date).getMonth()].slice(0, 3)} · {formatTime(picked.startTime)} · {picked.service}
                 </span>
               </div>
               <span className={`hf-chip hf-chip--${STATUS_CHIP[picked.status]} hf-agenda__chip`}>{STATUS_LABEL[picked.status]}</span>
@@ -189,11 +193,27 @@ export function AdminAgenda() {
                 <dd><a href={`mailto:${picked.email}`}>{picked.email}</a></dd>
                 <dt>Recibida</dt>
                 <dd className="hf-agenda__muted">{formatStamp(picked.createdAt)}</dd>
+                {picked.status === 'CONFIRMED' && (
+                  <>
+                    <dt>Cobro</dt>
+                    <dd>
+                      {picked.amount !== null ? formatMoney(picked.amount) : 'Sin monto'} · {PAY_LABEL[picked.paymentStatus]}
+                      {picked.paymentStatus === 'DEPOSIT' && picked.deposit !== null && (
+                        <span className="hf-agenda__muted"> ({formatMoney(picked.deposit)} recibido)</span>
+                      )}
+                    </dd>
+                  </>
+                )}
               </dl>
               <div className="hf-agenda__actions">
                 {picked.status === 'PENDING' && (
-                  <button type="button" className="hf-admin__btn hf-admin__btn--primary" disabled={busy} onClick={() => setStatus('CONFIRMED')}>
+                  <button type="button" className="hf-admin__btn hf-admin__btn--primary" disabled={busy} onClick={() => setCharge('confirm')}>
                     Confirmar sesión
+                  </button>
+                )}
+                {picked.status === 'CONFIRMED' && (
+                  <button type="button" className="hf-admin__btn hf-admin__btn--ghost" disabled={busy} onClick={() => setCharge('edit')}>
+                    Editar cobro
                   </button>
                 )}
                 {picked.status !== 'CANCELLED' ? (
@@ -212,6 +232,20 @@ export function AdminAgenda() {
           )}
         </aside>
       </div>
+      {charge && picked && (
+        <ChargeModal
+          booking={picked}
+          mode={charge}
+          onClose={() => setCharge(null)}
+          onError={onError}
+          onSaved={() => {
+            setCharge(null)
+            setError('')
+            reload()
+            refreshSummary()
+          }}
+        />
+      )}
     </>
   )
 }

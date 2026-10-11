@@ -3,13 +3,15 @@ import { z } from 'zod'
 import { timeSlots } from '../../src/data/booking'
 import { endSession, requireAdmin, startSession, verifyPassword, type AdminVariables } from '../auth'
 import { prisma } from '../db'
-import { BookingStatus, ReviewStatus } from '../generated/prisma/enums'
+import { BookingStatus, PaymentStatus, ReviewStatus } from '../generated/prisma/enums'
+import type { Booking } from '../generated/prisma/client'
 import { parseBody } from '../lib/body'
 import { dateFromISO, isoFromDate, todayISO } from '../lib/dates'
 import { fail, invalid } from '../lib/errors'
 import { isUniqueViolation } from '../lib/prismaErrors'
 import { rateLimit } from '../lib/rateLimit'
 import { serviceLabel } from '../lib/services'
+import { dashboard } from './dashboard'
 
 export const admin = new Hono<{ Variables: AdminVariables }>()
 
@@ -56,6 +58,15 @@ const bookingFilters = z.object({
   to: z.iso.date().optional(),
 })
 
+/** Reserva para el panel: fecha "YYYY-MM-DD", servicio con su etiqueta y montos en pesos */
+export const toAdminBooking = ({ amountCents, depositCents, ...b }: Booking) => ({
+  ...b,
+  date: isoFromDate(b.date),
+  service: serviceLabel[b.service],
+  amount: amountCents === null ? null : amountCents / 100,
+  deposit: depositCents === null ? null : depositCents / 100,
+})
+
 admin.get('/bookings', async (c) => {
   const q = bookingFilters.safeParse(c.req.query())
   if (!q.success) return invalid(c, q.error)
@@ -68,15 +79,42 @@ admin.get('/bookings', async (c) => {
     orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
     take: 500,
   })
-  return c.json(rows.map((b) => ({ ...b, date: isoFromDate(b.date), service: serviceLabel[b.service] })))
+  return c.json(rows.map(toAdminBooking))
 })
 
+const pesos = z.number().min(0).max(10_000_000)
+const toCents = (n: number | null | undefined) => (n === undefined ? undefined : n === null ? null : Math.round(n * 100))
+
+/** Estado de la reserva y, desde la ventana de cobro, monto, pago y anticipo (en pesos) */
+const bookingPatch = z
+  .object({
+    status: z.enum(BookingStatus).optional(),
+    amount: pesos.nullable().optional(),
+    paymentStatus: z.enum(PaymentStatus).optional(),
+    deposit: pesos.nullable().optional(),
+  })
+  .refine((b) => b.deposit == null || b.amount == null || b.deposit <= b.amount, {
+    message: 'El anticipo no puede ser mayor que el monto',
+    path: ['deposit'],
+  })
+
 admin.patch('/bookings/:id', async (c) => {
-  const body = await parseBody(c, z.object({ status: z.enum(BookingStatus) }))
+  const body = await parseBody(c, bookingPatch)
   if (body instanceof Response) return body
+  const { status, amount, paymentStatus, deposit } = body
   try {
-    const b = await prisma.booking.update({ where: { id: c.req.param('id') }, data: { status: body.status } })
-    return c.json({ ...b, date: isoFromDate(b.date), service: serviceLabel[b.service] })
+    const b = await prisma.booking.update({
+      where: { id: c.req.param('id') },
+      data: {
+        status,
+        amountCents: toCents(amount),
+        paymentStatus,
+        // El anticipo solo aplica con pago "Anticipo"; pagada guarda la fecha
+        depositCents: paymentStatus === undefined ? toCents(deposit) : paymentStatus === 'DEPOSIT' ? toCents(deposit) ?? null : null,
+        paidAt: paymentStatus === undefined ? undefined : paymentStatus === 'PAID' ? new Date() : null,
+      },
+    })
+    return c.json(toAdminBooking(b))
   } catch (err) {
     // Reactivar una cancelada cuando su horario ya lo tomó otra reserva
     if (isUniqueViolation(err)) return fail(c, 409, 'Ese horario ya tiene otra reserva activa')
@@ -166,3 +204,7 @@ admin.delete('/blocks/:id', async (c) => {
   const { count } = await prisma.blockedSlot.deleteMany({ where: { id: c.req.param('id') } })
   return count ? c.json({ ok: true }) : fail(c, 404, 'Bloqueo no encontrado')
 })
+
+// ── Dashboard (Inicio) ────────────────────────────────────
+
+admin.route('/dashboard', dashboard)

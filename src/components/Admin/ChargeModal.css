@@ -1,0 +1,99 @@
+/* Ventana de cobro al confirmar (diseño M2) */
+.hf-charge {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  font-family: var(--font-body);
+  color: var(--c-text);
+}
+
+.hf-charge__backdrop { position: absolute; inset: 0; border: 0; background: rgba(0,0,0,0.7); cursor: default; }
+
+.hf-charge__card {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  max-height: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 32px;
+  border: 1px solid var(--c-gold);
+  border-radius: var(--radius-card);
+  background: var(--c-surface);
+  box-shadow: 0 0 40px rgba(242,201,76,0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.hf-charge__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.hf-charge__title { margin: 0; font-family: var(--font-display); font-size: 26px; font-weight: 600; }
+.hf-charge__title span { color: var(--c-gold); }
+.hf-charge__sub { margin: 6px 0 0; font-size: 14px; color: var(--c-text-2); }
+.hf-charge__close {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--c-line-2);
+  background: transparent;
+  color: var(--c-text-2);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.hf-charge__close:hover { border-color: var(--c-gold); color: var(--c-gold); }
+
+.hf-charge__money {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 52px;
+  padding: 0 20px;
+  border: 1px solid var(--c-gold);
+  border-radius: var(--radius-pill);
+  background: #000;
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--c-gold);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.hf-charge__money input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--c-text); font-family: var(--font-display); font-size: 22px; outline: none; }
+.hf-charge__money input::placeholder { font-family: var(--font-body); font-size: 15px; color: var(--c-text-3); }
+.hf-charge__money:focus-within { box-shadow: var(--glow-btn); }
+.hf-charge__money--sm { height: 46px; border-color: var(--c-line-2); font-size: 18px; }
+.hf-charge__money--sm input { font-size: 18px; }
+
+.hf-charge__chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: -6px; }
+.hf-charge__chip {
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--c-line-2);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--c-text);
+  font-family: var(--font-body);
+  font-size: 13px;
+  cursor: pointer;
+}
+.hf-charge__chip:hover { border-color: var(--c-gold); color: var(--c-gold); }
+.hf-charge__hint { margin: -6px 0 0; font-size: 13px; color: var(--c-text-3); }
+
+.hf-charge__pay { margin: 0; padding: 0; border: 0; min-width: 0; }
+.hf-charge__pay legend { margin-bottom: 10px; padding: 0; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--c-text-2); }
+.hf-charge__pay-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.hf-charge__pay-grid .hf-admin__filter { height: 44px; padding: 0; }
+
+.hf-charge__actions { display: flex; gap: 10px; }
+.hf-charge__actions .hf-admin__btn { flex: 1; }
+.hf-charge__submit { flex: 1.4 !important; font-weight: 600; }
+
+@media (max-width: 767px) {
+  .hf-charge { align-items: flex-end; padding: 0; }
+  .hf-charge__card { max-width: none; padding: 28px 20px 24px; border-radius: 16px 16px 0 0; }
+}

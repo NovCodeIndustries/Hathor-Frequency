@@ -1,10 +1,11 @@
-import { useCallback, useLayoutEffect, useState } from 'react'
-import { Outlet, ScrollRestoration } from 'react-router'
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react'
+import { Outlet, ScrollRestoration, useLocation } from 'react-router'
 import { Footer } from '../Footer/Footer'
 import { Nav } from '../Nav/Nav'
 import { Ticker } from '../Ticker/Ticker'
 import { Ufo } from '../Ufo/Ufo'
 import { Welcome } from '../Welcome/Welcome'
+import { trackPageview } from '../../lib/analytics'
 import { useSeason } from '../../lib/useSeason'
 import './Layout.css'
 
@@ -14,6 +15,12 @@ export function Layout() {
   const [welcome, setWelcome] = useState(true)
   const closeWelcome = useCallback(() => setWelcome(false), [])
   const season = useSeason()
+  const { pathname } = useLocation()
+
+  // Una vista de Umami por ruta pública
+  useEffect(() => {
+    trackPageview()
+  }, [pathname])
 
   // Acento de la temporada en la raíz: lo heredan las páginas y los modales (que se montan en <body>)
   useLayoutEffect(() => {

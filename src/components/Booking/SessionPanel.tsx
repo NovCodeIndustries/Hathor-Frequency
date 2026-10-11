@@ -1,6 +1,7 @@
 import { useId, useRef, type FormEvent } from 'react'
 import { bookingServices, representativeTypes, timeSlots } from '../../data/booking'
 import { dayLabel } from '../../lib/calendar'
+import { formatTime } from '../../lib/time'
 import type { BookingContact } from '../../lib/submit'
 import { Button } from '../shared/Button'
 import { Honeypot } from '../shared/Honeypot'
@@ -72,11 +73,11 @@ export function SessionPanel({ date, slot, takenSlots, error, service, contact, 
                   type="button"
                   className="hf-slot"
                   aria-pressed={i === slot && !taken}
-                  aria-label={taken ? `${t} · ocupado` : undefined}
+                  aria-label={taken ? `${formatTime(t)} · ocupado` : undefined}
                   disabled={taken}
                   onClick={() => onSlot(i)}
                 >
-                  {t}
+                  {formatTime(t)}
                 </button>
               )
             })}
@@ -169,7 +170,7 @@ export function SessionPanel({ date, slot, takenSlots, error, service, contact, 
 
         <div className="hf-session__submit">
           <Button type="submit" variant="primary" block disabled={status === 'sending' || dayFull}>
-            {status === 'sending' ? 'Enviando…' : dayFull ? 'Sin horarios este día' : `Reservar ${timeSlots[slot]} h`}
+            {status === 'sending' ? 'Enviando…' : dayFull ? 'Sin horarios este día' : `Reservar ${formatTime(timeSlots[slot])}`}
           </Button>
           <p className="hf-session__status" role="status">
             {status === 'error' && error}

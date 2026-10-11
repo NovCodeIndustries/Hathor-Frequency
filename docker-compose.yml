@@ -1,6 +1,7 @@
 # Levanta todo el proyecto: `docker compose up`
-#   app → http://localhost:5173 (Vite)
-#   db  → PostgreSQL (puerto del host: ${DB_PORT:-5440})
+#   app    → http://localhost:5173 (Vite + API)
+#   db     → PostgreSQL (puerto del host: ${DB_PORT:-5440})
+#   umami  → analítica de visitas, http://localhost:${UMAMI_PORT:-3100} (su propia base: umami-db)
 name: hathor-frequency
 
 services:
@@ -29,12 +30,47 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-hathor}:${POSTGRES_PASSWORD:-hathor}@db:5432/${POSTGRES_DB:-hathor_frequency}?schema=public
       PRISMA_HIDE_UPDATE_MESSAGE: "1"
+      # Umami: Vite le pasa /umami (script y envíos) y la API lee sus cifras para el dashboard
+      UMAMI_PROXY_TARGET: http://umami:3000
+      UMAMI_URL: http://umami:3000
+      UMAMI_WEBSITE_ID: ${UMAMI_WEBSITE_ID:-}
+      UMAMI_USERNAME: ${UMAMI_USERNAME:-admin}
+      UMAMI_PASSWORD: ${UMAMI_PASSWORD:-umami}
     ports:
       - "${APP_PORT:-5173}:5173"
     volumes:
       - .:/app
       - node_modules:/app/node_modules
 
+  # Analítica de visitas sin cookies (dashboard del panel · Visitas)
+  umami-db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: umami
+      POSTGRES_PASSWORD: ${UMAMI_DB_PASSWORD:-umami}
+      POSTGRES_DB: umami
+    volumes:
+      - umamidata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U umami -d umami"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    restart: unless-stopped
+    depends_on:
+      umami-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD:-umami}@umami-db:5432/umami
+      APP_SECRET: ${UMAMI_APP_SECRET:-hathor-dev-umami-secret}
+    ports:
+      - "${UMAMI_PORT:-3100}:3000"
+
 volumes:
   pgdata:
   node_modules:
+  umamidata:

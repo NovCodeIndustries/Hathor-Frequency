@@ -15,7 +15,7 @@
 .hf-agenda__key--blocked { border: 1px solid var(--c-line); background: repeating-linear-gradient(135deg, var(--c-line) 0 2px, transparent 2px 5px); }
 
 .hf-agenda__scroll { overflow-x: auto; }
-.hf-agenda__grid { min-width: 860px; display: grid; grid-template-columns: 72px repeat(7, minmax(0, 1fr)); gap: 6px; }
+.hf-agenda__grid { min-width: 880px; display: grid; grid-template-columns: 96px repeat(7, minmax(0, 1fr)); gap: 6px; }
 /* Cada fila de horario aporta sus 8 celdas a la cuadrícula */
 .hf-agenda__row { display: contents; }
 

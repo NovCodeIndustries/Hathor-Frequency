@@ -3,6 +3,8 @@ import { bookingServices, defaultSlotIndex, timeSlots } from '../../data/booking
 import { addMonths, compareMonths, dayLabel, startOfDay, toISODate, type YearMonth } from '../../lib/calendar'
 import { SubmitError, submitBooking, submitErrorText, type BookingContact } from '../../lib/submit'
 import { useAvailability } from '../../lib/useAvailability'
+import { trackEvent } from '../../lib/analytics'
+import { formatTime } from '../../lib/time'
 import { Eyebrow } from '../shared/Eyebrow'
 import { GoldText } from '../shared/GoldText'
 import { BookingModal } from './BookingModal'
@@ -58,9 +60,10 @@ export function Booking() {
     try {
       const data = { date: selectedISO, time: timeSlots[activeSlot], service, ...trimmed(contact), website }
       await submitBooking(data)
+      trackEvent('reserva-enviada', { servicio: service })
       setStatus('sent')
       setSent({
-        session: `${dayLabel(selected)} · ${data.time} h · ${service}`,
+        session: `${dayLabel(selected)} · ${formatTime(data.time)} · ${service}`,
         project: data.project,
         contact: `${data.representativeName} (${data.representativeType}) · ${data.phone}`,
       })

@@ -55,6 +55,7 @@ export function AdminLayout() {
   }
 
   const tabs = [
+    { to: '/admin', label: 'Inicio', end: true },
     { to: '/admin/reservas', label: 'Reservas', count: summary?.pendingBookings, kind: 'fill' },
     { to: '/admin/opiniones', label: 'Opiniones', count: summary?.pendingReviews, kind: 'gold' },
     { to: '/admin/contactos', label: 'Contactos', count: summary?.openContacts, kind: 'muted' },
@@ -72,7 +73,7 @@ export function AdminLayout() {
         </div>
         <nav className="hf-admin__tabs" aria-label="Panel">
           {tabs.map((t) => (
-            <NavLink key={t.to} to={t.to} className="hf-admin__tab">
+            <NavLink key={t.to} to={t.to} end={t.end} className="hf-admin__tab">
               <span>{t.label}</span>
               {!!t.count && (
                 <span className={`hf-admin__count hf-admin__count--${t.kind}`} aria-label={`${t.count} pendientes`}>

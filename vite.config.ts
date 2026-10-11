@@ -13,6 +13,13 @@ export default defineConfig({
     allowedHosts: ['.trycloudflare.com'],
     proxy: {
       '/api': { target: `http://localhost:${process.env.API_PORT ?? 3000}`, changeOrigin: false, xfwd: true },
+      // Umami (visitas): script y envíos por el mismo origen del sitio
+      '/umami': {
+        target: process.env.UMAMI_PROXY_TARGET ?? 'http://localhost:3100',
+        changeOrigin: true,
+        xfwd: true,
+        rewrite: (path) => path.replace(/^\/umami/, ''),
+      },
     },
   },
   preview: { host: true, allowedHosts: ['.trycloudflare.com'] },

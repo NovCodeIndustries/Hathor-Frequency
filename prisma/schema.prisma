@@ -69,11 +69,27 @@ model Booking {
   representativeName String             @map("representative_name") @db.VarChar(120)
   phone              String             @db.VarChar(20)
   email              String             @db.VarChar(254)
+  /// Monto acordado en centavos MXN (se captura al confirmar en el panel)
+  amountCents        Int?               @map("amount_cents")
+  paymentStatus      PaymentStatus      @default(PENDING) @map("payment_status")
+  /// Anticipo recibido en centavos MXN (paymentStatus = DEPOSIT)
+  depositCents       Int?               @map("deposit_cents")
+  /// Cuándo quedó pagada por completo
+  paidAt             DateTime?          @map("paid_at") @db.Timestamptz(6)
   createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt          DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@index([date])
   @@map("bookings")
+}
+
+/// Cobro de una reserva: pendiente, con anticipo o pagada
+enum PaymentStatus {
+  PENDING @map("pending")
+  DEPOSIT @map("deposit")
+  PAID    @map("paid")
+
+  @@map("payment_status")
 }
 
 enum ReviewStatus {
@@ -142,3 +158,4 @@ model AdminSession {
   @@index([userId])
   @@map("admin_sessions")
 }
+

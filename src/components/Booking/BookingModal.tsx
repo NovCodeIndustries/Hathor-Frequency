@@ -6,7 +6,7 @@ import { GoldText } from '../shared/GoldText'
 import './BookingModal.css'
 
 interface BookingModalProps {
-  /** "Viernes 9 de octubre · 15:00 h · Grabación" */
+  /** "Viernes 9 de octubre · 3:00 p. m. · Grabación" */
   session: string
   project: string
   /** "Ana López (integrante) · +52 55 0000 0000" */

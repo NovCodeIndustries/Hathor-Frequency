@@ -15,6 +15,7 @@ import {
   type YearMonth,
 } from '../../lib/calendar'
 import { useAdmin } from '../../lib/useAdmin'
+import { formatTime } from '../../lib/time'
 import './AdminBlocks.css'
 
 interface Draft {
@@ -114,7 +115,7 @@ export function AdminBlocks() {
     }
   }
 
-  // Bloqueos próximos agrupados por día: "26 oct · Día completo" / "15 oct · 17:00, 19:00"
+  // Bloqueos próximos agrupados por día: "26 oct · Día completo" / "15 oct · 5:00 p. m., 7:00 p. m."
   const upcomingDays = [...new Set(upcoming.map((b) => b.date))].map((date) => {
     const list = upcoming.filter((b) => b.date === date)
     const d = dateFromISO(date)
@@ -122,7 +123,7 @@ export function AdminBlocks() {
     return {
       date,
       when: `${d.getDate()} ${MONTHS[d.getMonth()].slice(0, 3)}`,
-      what: full ? 'Día completo' : list.map((b) => b.startTime).join(', '),
+      what: full ? 'Día completo' : list.flatMap((b) => (b.startTime ? [formatTime(b.startTime)] : [])).join(', '),
       reason: (full ?? list[0]).reason,
       ids: list,
     }
@@ -213,7 +214,7 @@ export function AdminBlocks() {
                     aria-pressed={on && !current.closed}
                     onClick={() => edit({ slots: on ? current.slots.filter((s) => s !== t) : [...current.slots, t] })}
                   >
-                    {t}
+                    {formatTime(t)}
                   </button>
                 )
               })}

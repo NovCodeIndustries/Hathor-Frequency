@@ -22,7 +22,7 @@ export function AdminLogin() {
     try {
       await adminApi.login(email.trim(), password)
       const next = params.get('next')
-      navigate(next?.startsWith('/admin') ? next : '/admin/reservas', { replace: true })
+      navigate(next?.startsWith('/admin') ? next : '/admin', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No pudimos iniciar sesión')
       setSending(false)

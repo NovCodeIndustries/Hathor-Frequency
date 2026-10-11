@@ -36,12 +36,12 @@ const router = createBrowserRouter([
     path: 'admin',
     lazy: async () => ({ Component: (await import('./components/Admin/AdminLayout')).AdminLayout }),
     children: [
-      { index: true, element: <Navigate to="reservas" replace /> },
+      { index: true, lazy: async () => ({ Component: (await import('./components/Admin/AdminDashboard')).AdminDashboard }) },
       { path: 'reservas', lazy: async () => ({ Component: (await import('./components/Admin/AdminAgenda')).AdminAgenda }) },
       { path: 'opiniones', lazy: async () => ({ Component: (await import('./components/Admin/AdminReviews')).AdminReviews }) },
       { path: 'contactos', lazy: async () => ({ Component: (await import('./components/Admin/AdminContacts')).AdminContacts }) },
       { path: 'bloqueos', lazy: async () => ({ Component: (await import('./components/Admin/AdminBlocks')).AdminBlocks }) },
-      { path: '*', element: <Navigate to="reservas" replace /> },
+      { path: '*', element: <Navigate to="/admin" replace /> },
     ],
   },
 ])

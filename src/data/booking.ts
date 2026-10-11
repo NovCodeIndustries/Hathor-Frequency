@@ -1,9 +1,21 @@
 export const timeSlots = ['10:00', '12:00', '15:00', '17:00', '19:00', '21:00'] as const
 
-/** Índice del horario seleccionado al cargar (15:00) */
+/** Índice del horario seleccionado al cargar (15:00 = 3:00 p. m.). Se guardan en 24 h; se muestran con `formatTime` */
 export const defaultSlotIndex = 2
 
 export const bookingServices = ['Grabación', 'Mezcla', 'Masterización', 'Video', 'Live Sessions'] as const
+
+/**
+ * Precio base por sesión en MXN: el panel lo propone al confirmar una reserva (se puede ajustar).
+ * TODO: precios reales. `null` = sin precio base todavía; el monto se captura a mano.
+ */
+export const servicePrices: Record<(typeof bookingServices)[number], number | null> = {
+  Grabación: null,
+  Mezcla: null,
+  Masterización: null,
+  Video: null,
+  'Live Sessions': null,
+}
 
 /** Representante: botones y textos de ayuda según el tipo */
 export const representativeTypes = [
