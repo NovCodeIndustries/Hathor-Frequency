@@ -5,6 +5,7 @@ export const servicesIntro =
 
 export const services: Service[] = [
   {
+    id: 'grabacion',
     ch: '01',
     name: 'Grabación',
     description: 'Sala, microfonía y backline listos; en vivo o por pistas.',
@@ -12,6 +13,7 @@ export const services: Service[] = [
     knobs: [[8, 8], [26, 9]],
   },
   {
+    id: 'mezcla',
     ch: '02',
     name: 'Mezcla',
     description: 'Balance, espacio y carácter sin perder la energía de la toma.',
@@ -19,6 +21,7 @@ export const services: Service[] = [
     knobs: [[17, 4], [7, 12]],
   },
   {
+    id: 'masterizacion',
     ch: '03',
     name: 'Masterización',
     description: 'Consistencia y pegada para streaming, radio y vinil.',
@@ -26,6 +29,7 @@ export const services: Service[] = [
     knobs: [[27, 12], [11, 5]],
   },
   {
+    id: 'video',
     ch: '04',
     name: 'Video',
     description: 'Videoclips con la misma intención que tu sonido.',
@@ -33,6 +37,7 @@ export const services: Service[] = [
     knobs: [[6, 17], [23, 5]],
   },
   {
+    id: 'live-sessions',
     ch: '05',
     name: 'Live Sessions',
     description: 'Tu show en vivo, audio y video, listo para publicar.',

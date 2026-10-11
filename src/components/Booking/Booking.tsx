@@ -13,6 +13,7 @@ import { RockAlien } from './RockAlien'
 import { RockAlienMini } from './RockAlienMini'
 import { SessionPanel, type SubmitStatus } from './SessionPanel'
 import './Booking.css'
+import { Module } from '../shared/Module'
 
 const EMPTY_CONTACT: BookingContact = {
   project: '',
@@ -104,8 +105,10 @@ export function Booking() {
             touch()
           }}
         />
-        <RockAlien />
-        <RockAlienMini />
+        <Module id="global.eggs">
+          <RockAlien />
+          <RockAlienMini />
+        </Module>
       </div>
 
       <SessionPanel

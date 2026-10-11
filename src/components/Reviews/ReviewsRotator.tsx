@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router'
+import { PageLink } from '../shared/PageLink'
 import { reviewRotateMs } from '../../data/reviews'
 import { useMediaQuery } from '../../lib/useMediaQuery'
 import { useReviews } from '../../lib/useReviews'
@@ -71,9 +71,9 @@ export function ReviewsRotator() {
       )}
       {running && <span key={index} className="hf-rotator__timer" style={{ animationDuration: `${reviewRotateMs}ms` }} aria-hidden="true" />}
 
-      <Link to="/opiniones?opinar=1" className="hf-rotator__link">
+      <PageLink to="/opiniones?opinar=1" className="hf-rotator__link">
         ¿Ya grabaste con nosotros? <span>Deja tu opinión →</span>
-      </Link>
+      </PageLink>
     </section>
   )
 }

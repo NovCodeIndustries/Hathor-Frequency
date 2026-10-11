@@ -159,3 +159,24 @@ model AdminSession {
   @@map("admin_sessions")
 }
 
+/// Borrador de módulos apagados del panel · Sitio (una sola fila, id = 1)
+model SiteDraft {
+  id            Int      @id @default(1)
+  /// Ids de src/data/modules.ts que están apagados
+  disabled      String[]
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  updatedByName String?  @map("updated_by_name") @db.VarChar(120)
+
+  @@map("site_draft")
+}
+
+/// Cada publicación del panel · Sitio; la más reciente es la que ve el público
+model SiteVersion {
+  id              String   @id @default(uuid()) @db.Uuid
+  disabled        String[]
+  publishedAt     DateTime @default(now()) @map("published_at") @db.Timestamptz(6)
+  publishedByName String   @map("published_by_name") @db.VarChar(120)
+
+  @@index([publishedAt])
+  @@map("site_versions")
+}

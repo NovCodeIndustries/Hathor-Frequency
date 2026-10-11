@@ -1,6 +1,7 @@
 import { Fragment } from 'react'
 import { copyright, socials } from '../../data/site'
 import { useSeason } from '../../lib/useSeason'
+import { Module } from '../shared/Module'
 import { Logo } from '../shared/Logo'
 import './Footer.css'
 
@@ -10,6 +11,7 @@ export function Footer() {
     <footer className="hf-footer">
       <div className="hf-footer__inner hf-container">
         <Logo size="footer" className="hf-footer__logo" />
+        <Module id="global.socials">
         <nav className="hf-footer__social" aria-label="Redes sociales">
           {socials.map((s, i) => (
             <Fragment key={s.label}>
@@ -18,6 +20,7 @@ export function Footer() {
             </Fragment>
           ))}
         </nav>
+        </Module>
         <p className="hf-footer__copy">
           {copyright}
           {season && <span className="hf-footer__season">{season.page.footer}</span>}

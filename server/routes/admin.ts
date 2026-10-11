@@ -12,6 +12,8 @@ import { isUniqueViolation } from '../lib/prismaErrors'
 import { rateLimit } from '../lib/rateLimit'
 import { serviceLabel } from '../lib/services'
 import { dashboard } from './dashboard'
+import { adminSite } from './site'
+import { publishedDisabled } from '../lib/site'
 
 export const admin = new Hono<{ Variables: AdminVariables }>()
 
@@ -42,12 +44,17 @@ admin.get('/me', (c) => c.json(c.get('admin')))
 
 /** Contadores de las pestañas del panel */
 admin.get('/summary', async (c) => {
-  const [pendingBookings, pendingReviews, openContacts] = await Promise.all([
+  const [pendingBookings, pendingReviews, openContacts, draft, published] = await Promise.all([
     prisma.booking.count({ where: { status: BookingStatus.PENDING, date: { gte: dateFromISO(todayISO()) } } }),
     prisma.review.count({ where: { status: ReviewStatus.PENDING } }),
     prisma.contactRequest.count({ where: { handledAt: null } }),
+    prisma.siteDraft.findUnique({ where: { id: 1 }, select: { disabled: true } }),
+    publishedDisabled(),
   ])
-  return c.json({ pendingBookings, pendingReviews, openContacts })
+  // Cambios del panel · Sitio sin publicar
+  const d = draft?.disabled ?? published.disabled
+  const siteChanges = d.filter((id) => !published.disabled.includes(id)).length + published.disabled.filter((id) => !d.includes(id)).length
+  return c.json({ pendingBookings, pendingReviews, openContacts, siteChanges })
 })
 
 // ── Reservas ──────────────────────────────────────────────
@@ -208,3 +215,7 @@ admin.delete('/blocks/:id', async (c) => {
 // ── Dashboard (Inicio) ────────────────────────────────────
 
 admin.route('/dashboard', dashboard)
+
+// ── Sitio (módulos) ───────────────────────────────────────
+
+admin.route('/site', adminSite)

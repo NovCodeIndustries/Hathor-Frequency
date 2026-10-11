@@ -7,9 +7,10 @@ import { ArtistDrawer } from './ArtistDrawer'
 import { TrackRow } from './TrackRow'
 import { Vinyl } from './Vinyl'
 import './Artists.css'
+import { artistModule } from '../../data/modules'
+import { useLinkVisible, useModuleFilter } from '../../lib/siteModules'
 
 const pad = (n: number) => String(n).padStart(2, '0')
-const artistCount = artists.filter((a) => !a.cta).length
 
 interface ScrollState {
   /** 0–1, avance de la lista */
@@ -22,6 +23,11 @@ interface ScrollState {
 }
 
 export function Artists() {
+  // Artistas apagados en el panel · Sitio; "Tu banda" se va si Reservar está apagado
+  const isOn = useModuleFilter()
+  const bookingOn = useLinkVisible('/reservar')
+  const shown = artists.filter((a) => isOn(artistModule(a.code)) && (!a.cta || bookingOn))
+  const artistCount = shown.filter((a) => !a.cta).length
   const [selected, setSelected] = useState<Artist | null>(null)
   const trigger = useRef<HTMLButtonElement | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
@@ -116,7 +122,7 @@ export function Artists() {
               <span className="hf-side__speed" aria-hidden="true">{sides[side].speed}</span>
             </h3>
             <ul>
-              {artists
+              {shown
                 .filter((a) => a.side === side)
                 .map((a) => (
                   <TrackRow key={a.code} artist={a} onSelect={select} />

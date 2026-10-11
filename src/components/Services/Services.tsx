@@ -14,6 +14,10 @@ import { PackageDrawer } from './PackageDrawer'
 import { SignalScope } from './SignalScope'
 import { TuneTransition, type TunePhase } from './TuneTransition'
 import './Services.css'
+import { Module } from '../shared/Module'
+import { packageModule, serviceModule } from '../../data/modules'
+import { useModule, useModuleFilter } from '../../lib/siteModules'
+import { EditItem } from '../shared/EditFrame'
 
 /**
  * Easter egg: CH1 abajo · CH2 mitad · CH3 arriba · CH4 mitad · CH5 abajo
@@ -52,7 +56,10 @@ export function Services() {
   const [signal, setSignal] = useState(false)
   // La vista vive en la URL (/servicios?vista=paquetes) para poder enlazarla desde otras páginas
   const [params, setParams] = useSearchParams()
-  const view: View = params.get('vista') === 'paquetes' ? 'paquetes' : 'servicios'
+  // Paquetes apagado en el panel · Sitio: siempre la consola y sin el cambio de vista
+  const packagesOn = useModule('servicios.paquetes')
+  const isOn = useModuleFilter()
+  const view: View = packagesOn && params.get('vista') === 'paquetes' ? 'paquetes' : 'servicios'
   const setView = (next: View) => setParams(next === 'paquetes' ? { vista: 'paquetes' } : {}, { replace: true })
   const [tune, setTune] = useState<{ phase: TunePhase; target: View } | null>(null)
   const [openIndex, setOpenIndex] = useState<number | null>(null)
@@ -173,6 +180,8 @@ export function Services() {
           </h1>
         </div>
         <div className="hf-services__side">
+          {packagesOn && (
+          <Module id="servicios.paquetes">
           <div className="hf-switch" role="group" aria-label="Cambiar vista">
             <button
               type="button"
@@ -191,11 +200,14 @@ export function Services() {
               Paquetes
             </button>
           </div>
+          </Module>
+          )}
           <p className="hf-lead">{isPackages ? packagesIntro : servicesIntro}</p>
         </div>
       </div>
 
       {isPackages ? (
+        <Module id="servicios.paquetes">
         <div className="hf-packages">
           <p className="hf-packages__banner" role="note">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true" focusable="false">
@@ -207,19 +219,30 @@ export function Services() {
             </span>
           </p>
           <div className="hf-packages__grid">
-            {packages.map((p, i) => (
-              <PackageCard key={p.n} pkg={p} onOpen={(button) => openPackage(i, button)} />
-            ))}
+            {packages.map(
+              (p, i) =>
+                isOn(packageModule(p.id)) && (
+                  <EditItem key={p.n} id={packageModule(p.id)}>
+                    <PackageCard pkg={p} onOpen={(button) => openPackage(i, button)} />
+                  </EditItem>
+                ),
+            )}
           </div>
           <p className="hf-packages__note">{packagesNote}</p>
         </div>
+        </Module>
       ) : (
         <div className="hf-mixer">
           <SignalScope count={lockedCount} total={SECRET.length} />
           <div className="hf-console">
-            {services.map((s, i) => (
-              <ChannelStrip key={s.ch} service={s} level={levels[i]} locked={locked[i]} capColor={season?.page.caps[i]} onLevel={(v) => setLevel(i, v)} />
-            ))}
+            {services.map(
+              (s, i) =>
+                isOn(serviceModule(s.id)) && (
+                  <EditItem key={s.ch} id={serviceModule(s.id)}>
+                    <ChannelStrip service={s} level={levels[i]} locked={locked[i]} capColor={season?.page.caps[i]} onLevel={(v) => setLevel(i, v)} />
+                  </EditItem>
+                ),
+            )}
             <MasterMeter count={lockedCount} />
           </div>
         </div>
@@ -227,7 +250,11 @@ export function Services() {
 
       {tune && <TuneTransition phase={tune.phase} target={tune.target} />}
       {openIndex !== null && <PackageDrawer pkg={packages[openIndex]} onClose={closePackage} />}
-      {signal && <AlienSignal onClose={closeSignal} />}
+      {signal && (
+        <Module id="global.eggs">
+          <AlienSignal onClose={closeSignal} />
+        </Module>
+      )}
     </section>
   )
 }

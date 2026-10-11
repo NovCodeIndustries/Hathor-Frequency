@@ -8,6 +8,7 @@ import { Button } from '../shared/Button'
 import { Eyebrow } from '../shared/Eyebrow'
 import { GoldText } from '../shared/GoldText'
 import './Studio.css'
+import { Module } from '../shared/Module'
 
 const total = studioRooms.length
 
@@ -127,6 +128,7 @@ export function Studio() {
   return (
     <div className="hf-studio">
       {/* Tour */}
+      <Module id="estudio.tour">
       <section
         className="hf-tour"
         aria-labelledby="estudio-title"
@@ -208,8 +210,10 @@ export function Studio() {
           )}
         </div>
       </section>
+      </Module>
 
       {/* Nosotros */}
+      <Module id="estudio.nosotros">
       <section className="hf-about hf-container" aria-labelledby="nosotros-title">
         <div className="hf-about__intro">
           <Eyebrow>Nosotros</Eyebrow>
@@ -246,8 +250,10 @@ export function Studio() {
           </dl>
         </div>
       </section>
+      </Module>
 
       {/* Videos musicales y live sessions */}
+      <Module id="estudio.videos">
       <section className="hf-vid hf-container" aria-labelledby="video-title">
         <div className="hf-vid__head">
           <div className="hf-vid__intro">
@@ -271,8 +277,10 @@ export function Studio() {
           <Button variant="ghost" to="/reservar">Reservar sesión</Button>
         </div>
       </section>
+      </Module>
 
       {/* Equipo */}
+      <Module id="estudio.equipo">
       <section className="hf-gear hf-container" aria-labelledby="equipo-title">
         <div className="hf-gear__intro">
           <Eyebrow>Equipo</Eyebrow>
@@ -313,8 +321,10 @@ export function Studio() {
           </div>
         </div>
       </section>
+      </Module>
 
       {/* Visita */}
+      <Module id="estudio.visita">
       <section className="hf-visit hf-container" aria-labelledby="visita-title">
         <div className="hf-visit__head">
           <h2 id="visita-title" className="hf-h2 hf-studio__h2">
@@ -351,6 +361,7 @@ export function Studio() {
           </div>
         </div>
       </section>
+      </Module>
     </div>
   )
 }

@@ -6,8 +6,10 @@ import { Ticker } from '../Ticker/Ticker'
 import { Ufo } from '../Ufo/Ufo'
 import { Welcome } from '../Welcome/Welcome'
 import { trackPageview } from '../../lib/analytics'
+import { isEditMode, postToPanel, useModule } from '../../lib/siteModules'
 import { useSeason } from '../../lib/useSeason'
 import './Layout.css'
+import { Module } from '../shared/Module'
 
 /** Estructura común de todas las páginas: nav fijo arriba, ticker sobre el footer */
 export function Layout() {
@@ -16,11 +18,16 @@ export function Layout() {
   const closeWelcome = useCallback(() => setWelcome(false), [])
   const season = useSeason()
   const { pathname } = useLocation()
+  const showTicker = useModule('global.ticker')
+  const showUfo = useModule('global.ufo')
+  const showWelcome = useModule('global.welcome')
 
-  // Una vista de Umami por ruta pública
+  // Una vista de Umami por ruta pública; en el modo edición del panel no se cuenta y se avisa la ruta al panel
+  const { search } = useLocation()
   useEffect(() => {
-    trackPageview()
-  }, [pathname])
+    if (isEditMode()) postToPanel({ type: 'hf-edit-route', path: pathname + search })
+    else trackPageview()
+  }, [pathname, search])
 
   // Acento de la temporada en la raíz: lo heredan las páginas y los modales (que se montan en <body>)
   useLayoutEffect(() => {
@@ -40,12 +47,16 @@ export function Layout() {
       <main className="hf-layout__main">
         <Outlet />
       </main>
-      <Ticker />
+      {showTicker && (
+        <Module id="global.ticker">
+          <Ticker />
+        </Module>
+      )}
       <Footer />
       <ScrollRestoration />
       {/* El platillo explora todas las vistas; sigue su horario al navegar entre páginas */}
-      <Ufo />
-      {welcome && <Welcome onDone={closeWelcome} />}
+      {showUfo && <Ufo />}
+      {welcome && showWelcome && <Welcome onDone={closeWelcome} />}
     </div>
   )
 }

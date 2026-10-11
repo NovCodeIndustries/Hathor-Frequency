@@ -1,6 +1,8 @@
 import { Link } from 'react-router'
 import type { Artist } from '../../data/types'
 import { ArtistPattern } from './ArtistPattern'
+import { artistModule } from '../../data/modules'
+import { EditItem } from '../shared/EditFrame'
 
 interface TrackRowProps {
   artist: Artist
@@ -23,6 +25,7 @@ export function TrackRow({ artist, onSelect }: TrackRowProps) {
 
   return (
     <li>
+      <EditItem id={artistModule(artist.code)}>
       {artist.cta ? (
         <Link className="hf-track hf-track--cta" to={artist.href}>
           {content}
@@ -37,6 +40,7 @@ export function TrackRow({ artist, onSelect }: TrackRowProps) {
           {content}
         </button>
       )}
+      </EditItem>
     </li>
   )
 }

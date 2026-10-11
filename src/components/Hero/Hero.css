@@ -172,3 +172,8 @@
 @media (prefers-reduced-motion: reduce) {
   .hf-hero__spin { animation: none; }
 }
+
+/* Modo edición del panel · Sitio: vinilo apagado (atenuado) y su switch */
+.hf-hero__vinyl-off { display: contents; }
+.hf-hero__vinyl-off .hf-hero__vinyl { opacity: .12; }
+.hf-hero__edit-chip { top: 24px; right: 24px; }

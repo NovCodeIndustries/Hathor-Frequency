@@ -1,5 +1,5 @@
 import { useId, useRef, useState, type FormEvent } from 'react'
-import { Link } from 'react-router'
+import { PageLink } from '../shared/PageLink'
 import { contactTopics, socials, whatsapp } from '../../data/site'
 import { submitContact, submitErrorText } from '../../lib/submit'
 import { useSeason } from '../../lib/useSeason'
@@ -11,6 +11,7 @@ import { GoldText } from '../shared/GoldText'
 import { WhatsAppIcon } from '../shared/SocialIcon'
 import { VinylRings } from '../shared/VinylRings'
 import './Contact.css'
+import { Module } from '../shared/Module'
 
 type Status = 'idle' | 'sending' | 'sent' | 'error'
 
@@ -144,15 +145,16 @@ export function Contact() {
             {status === 'sending' ? 'Enviando…' : 'Contactar'}
           </Button>
         </div>
-        <Link to="/reservar" className="hf-contact__book">
+        <PageLink to="/reservar" className="hf-contact__book">
           ¿Ya quieres apartar fecha? <span>Reserva aquí →</span>
-        </Link>
+        </PageLink>
         <p className="hf-contact__status" role="status">
           {status === 'sent' && 'Recibido. Te escribimos pronto.'}
           {status === 'error' && error}
         </p>
       </form>
 
+      <Module id="global.socials">
       {/* WhatsApp: ícono + número (link a wa.me cuando haya número) */}
       {whatsapp.number ? (
         <a
@@ -173,15 +175,20 @@ export function Contact() {
           <span className="hf-contact__wa-number">{whatsapp.display}</span>
         </p>
       )}
+      </Module>
 
       {/* Opiniones que van cambiando (antes, un testimonio fijo) */}
-      <ReviewsRotator />
+      <Module id="contacto.opiniones">
+        <ReviewsRotator />
+      </Module>
 
-      <nav className="hf-contact__social" aria-label="Redes">
-        {socials.map((s) => (
-          <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer">{s.label}</a>
-        ))}
-      </nav>
+      <Module id="global.socials">
+        <nav className="hf-contact__social" aria-label="Redes">
+          {socials.map((s) => (
+            <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer">{s.label}</a>
+          ))}
+        </nav>
+      </Module>
     </section>
   )
 }

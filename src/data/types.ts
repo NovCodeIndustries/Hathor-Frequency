@@ -1,6 +1,8 @@
 export type Point = readonly [number, number]
 
 export interface Service {
+  /** Id fijo para el panel · Sitio (módulo `servicios.<id>`) */
+  id: string
   ch: string
   name: string
   description: string
@@ -62,6 +64,8 @@ export interface SocialLink {
 }
 
 export interface Package {
+  /** Id fijo para el panel · Sitio (módulo `paquetes.<id>`) */
+  id: string
   n: string
   name: string
   /** Etiqueta corta en la portada ("Para empezar") */
@@ -79,6 +83,8 @@ export interface Package {
 }
 
 export interface Faq {
+  /** Id fijo para el panel · Sitio (módulo `faq.<id>`) */
+  id: string
   /** Grupo en la lista (las preguntas de un mismo grupo van juntas) */
   category: string
   q: string

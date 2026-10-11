@@ -1,23 +1,26 @@
 import { useRef, useState, type CSSProperties } from 'react'
-import { Link } from 'react-router'
+import { PageLink } from '../shared/PageLink'
 import { faqs } from '../../data/faq'
+import { faqModule } from '../../data/modules'
+import type { Faq } from '../../data/types'
+import { useModuleFilter } from '../../lib/siteModules'
 import { useMediaQuery } from '../../lib/useMediaQuery'
 import { Eyebrow } from '../shared/Eyebrow'
 import { GoldText } from '../shared/GoldText'
 import './Faq.css'
+import { EditItem } from '../shared/EditFrame'
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
-/** Preguntas agrupadas por categoría, conservando el orden de faq.ts y el índice global */
-const groups = faqs.reduce<{ category: string; items: { faq: (typeof faqs)[number]; index: number }[] }[]>(
-  (acc, faq, index) => {
+/** Preguntas agrupadas por categoría, conservando el orden de faq.ts y su índice en la lista visible */
+function groupFaqs(list: Faq[]) {
+  return list.reduce<{ category: string; items: { faq: Faq; index: number }[] }[]>((acc, faq, index) => {
     const last = acc[acc.length - 1]
     if (last?.category === faq.category) last.items.push({ faq, index })
     else acc.push({ category: faq.category, items: [{ faq, index }] })
     return acc
-  },
-  [],
-)
+  }, [])
+}
 
 /** Grooves del disco */
 const GROOVES = [250, 222, 194, 166, 138]
@@ -27,7 +30,12 @@ const GROOVES = [250, 222, 194, 166, 138]
  * en un panel sobre el disco, que gira al cambiar de pregunta.
  */
 export function Faq() {
-  const [current, setCurrent] = useState(0)
+  // Preguntas apagadas en el panel · Sitio
+  const isOn = useModuleFilter()
+  const list = faqs.filter((f) => isOn(faqModule(f.id)))
+  const groups = groupFaqs(list)
+  const [picked, setCurrent] = useState(0)
+  const current = Math.min(picked, Math.max(0, list.length - 1))
   const answerRef = useRef<HTMLDivElement>(null)
   const isMobile = useMediaQuery('(max-width: 767px)')
   const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
@@ -38,7 +46,17 @@ export function Faq() {
     if (isMobile) answerRef.current?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' })
   }
 
-  const faq = faqs[current]
+  const faq = list[current]
+  if (!faq) {
+    return (
+      <section className="hf-faq hf-container" aria-labelledby="faq-title">
+        <div className="hf-faq__head">
+          <Eyebrow both>Preguntas frecuentes</Eyebrow>
+          <h1 id="faq-title" className="hf-h2">Pronto <GoldText>las publicamos.</GoldText></h1>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section className="hf-faq hf-container" aria-labelledby="faq-title">
@@ -59,6 +77,7 @@ export function Faq() {
               <ol aria-labelledby={`hf-faq-cat-${gi}`}>
                 {g.items.map(({ faq: f, index: i }) => (
                   <li key={f.q}>
+                    <EditItem id={faqModule(f.id)}>
                     <button
                       type="button"
                       className="hf-faq__q"
@@ -70,6 +89,7 @@ export function Faq() {
                       <span>{f.q}</span>
                       <span className="hf-faq__arrow" aria-hidden="true">→</span>
                     </button>
+                    </EditItem>
                   </li>
                 ))}
               </ol>
@@ -93,7 +113,7 @@ export function Faq() {
             <div className="hf-faq__label">
               <span>Pregunta</span>
               <strong>{pad(current + 1)}</strong>
-              <span>de {pad(faqs.length)}</span>
+              <span>de {pad(list.length)}</span>
             </div>
             <svg className="hf-faq__arm" viewBox="0 0 190 300" fill="none" stroke="#bbb" strokeWidth="3" strokeLinecap="round">
               <circle cx="150" cy="40" r="22" fill="#111" stroke="#444" strokeWidth="1.5" />
@@ -107,10 +127,10 @@ export function Faq() {
             <h2 className="hf-faq__question">{faq.q}</h2>
             <p className="hf-faq__text">{faq.a}</p>
             <div className="hf-faq__foot">
-              <Link to="/contacto" className="hf-faq__contact">
+              <PageLink to="/contacto" className="hf-faq__contact">
                 ¿Otra duda? <span>Escríbenos →</span>
-              </Link>
-              <button type="button" className="hf-faq__next" onClick={() => setCurrent((current + 1) % faqs.length)}>
+              </PageLink>
+              <button type="button" className="hf-faq__next" onClick={() => setCurrent((current + 1) % list.length)}>
                 Siguiente pregunta →
               </button>
             </div>

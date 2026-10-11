@@ -6,6 +6,8 @@ import { GoldText } from '../shared/GoldText'
 import { ReviewModal } from './ReviewModal'
 import { Stars } from './Stars'
 import './Reviews.css'
+import { useModule } from '../../lib/siteModules'
+import { Module } from '../shared/Module'
 
 /**
  * Página Opiniones (canvas https://claude.ai/artifact/R7Esqtm9Mbfyo4s5KyY7Du): resumen con el promedio
@@ -16,6 +18,8 @@ export function Reviews() {
   // /opiniones?opinar=1 (desde Contacto) abre la ventana al llegar
   const [params, setParams] = useSearchParams()
   const [open, setOpen] = useState(() => params.get('opinar') === '1')
+  // "Deja tu opinión" apagado en el panel · Sitio: sin botón ni ventana
+  const canReview = useModule('opiniones.dejar')
   const close = useCallback(() => {
     setOpen(false)
     if (params.has('opinar')) setParams({}, { replace: true })
@@ -63,9 +67,11 @@ export function Reviews() {
               )
             })}
           </dl>
-          <button type="button" className="hf-btn hf-btn--primary hf-reviews__cta" onClick={() => setOpen(true)}>
-            Deja tu opinión ★
-          </button>
+          <Module id="opiniones.dejar">
+            <button type="button" className="hf-btn hf-btn--primary hf-reviews__cta" onClick={() => setOpen(true)}>
+              Deja tu opinión ★
+            </button>
+          </Module>
         </div>
       </div>
 
@@ -93,7 +99,7 @@ export function Reviews() {
         ))}
       </div>
 
-      {open && <ReviewModal onClose={close} />}
+      {open && canReview && <ReviewModal onClose={close} />}
     </section>
   )
 }

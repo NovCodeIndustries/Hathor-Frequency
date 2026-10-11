@@ -1,5 +1,6 @@
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from 'react'
 import { Link } from 'react-router'
+import { useLinkVisible } from '../../lib/siteModules'
 import './Button.css'
 
 type Variant = 'primary' | 'ghost' | 'outline-gold'
@@ -23,6 +24,9 @@ export type ButtonProps = RouteProps | AnchorProps | NativeButtonProps
 export function Button(props: ButtonProps) {
   const { variant = 'primary', block = false, className = '', children, ...rest } = props
   const cls = `hf-btn hf-btn--${variant} ${block ? 'hf-btn--block' : ''} ${className}`
+  // Un botón a una página apagada en el panel · Sitio no se muestra
+  const visible = useLinkVisible(rest.to)
+  if (!visible) return null
 
   if (rest.to !== undefined) {
     const { to, ...anchor } = rest as RouteProps

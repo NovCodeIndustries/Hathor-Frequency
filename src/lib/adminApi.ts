@@ -20,8 +20,27 @@ export interface AdminSummary {
   pendingBookings: number
   pendingReviews: number
   openContacts: number
+  /** Cambios del panel · Sitio sin publicar */
+  siteChanges: number
 }
 
+/** Estado del panel · Sitio: ids apagados en el borrador y en lo publicado */
+export interface SiteState {
+  draft: string[]
+  published: string[]
+  versionId: string | null
+  updatedAt: string | null
+}
+
+export interface SiteVersionInfo {
+  id: string
+  publishedAt: string
+  publishedByName: string
+  current: boolean
+  /** Ids que esta versión ocultó / volvió a mostrar respecto a la anterior */
+  hidden: string[]
+  shown: string[]
+}
 
 export interface AdminBooking {
   id: string
@@ -176,6 +195,12 @@ export const adminApi = {
 
   dashboard: (range: DashboardRange) => request<Dashboard>('GET', `/dashboard?range=${range}`),
 
+  site: () => request<SiteState>('GET', '/site'),
+  saveSiteDraft: (disabled: string[]) => request<SiteState>('PUT', '/site/draft', { disabled }),
+  publishSite: () => request<SiteState>('POST', '/site/publish', {}),
+  discardSite: () => request<SiteState>('POST', '/site/discard', {}),
+  siteHistory: () => request<SiteVersionInfo[]>('GET', '/site/history'),
+  restoreSite: (id: string) => request<SiteState>('POST', `/site/restore/${id}`, {}),
 
   reviews: () => request<AdminReview[]>('GET', '/reviews'),
   setReviewStatus: (id: string, status: ReviewStatus) => request<AdminReview>('PATCH', `/reviews/${id}`, { status }),

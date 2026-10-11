@@ -15,6 +15,7 @@ export const packagesDisclaimer = {
 
 export const packages: Package[] = [
   {
+    id: 'demo',
     n: '01',
     name: 'Demo',
     tag: 'Para empezar',
@@ -27,6 +28,7 @@ export const packages: Package[] = [
     sessions: '[N]',
   },
   {
+    id: 'sencillo',
     n: '02',
     name: 'Sencillo',
     tag: 'Recomendado',
@@ -39,6 +41,7 @@ export const packages: Package[] = [
     sessions: '[N]',
   },
   {
+    id: 'ep',
     n: '03',
     name: 'EP',
     tag: 'Proyecto completo',
@@ -51,6 +54,7 @@ export const packages: Package[] = [
     sessions: '[N]',
   },
   {
+    id: 'live-session',
     n: '04',
     name: 'Live Session',
     tag: 'Audio + video',

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router'
 import { bookingCta, navAfterCta, navLeft, navRight } from '../../data/site'
 import { Button } from '../shared/Button'
+import { useVisibleLinks } from '../../lib/siteModules'
 import { useSeason } from '../../lib/useSeason'
 import { SeasonGarland } from '../Season/SeasonGarland'
 import { Logo } from '../shared/Logo'
@@ -15,6 +16,9 @@ export function Nav() {
   const headerRef = useRef<HTMLElement>(null)
   const burgerRef = useRef<HTMLButtonElement>(null)
   const { pathname } = useLocation()
+  const left = useVisibleLinks(navLeft)
+  const right = useVisibleLinks(navRight)
+  const after = useVisibleLinks(navAfterCta)
 
   // Cerrar el menú al cambiar de página
   const [lastPath, setLastPath] = useState(pathname)
@@ -50,19 +54,19 @@ export function Nav() {
       <div className="hf-nav__bar hf-container">
         {/* Desktop */}
         <nav className="hf-nav__links hf-nav__links--left" aria-label="Principal izquierda">
-          {navLeft.map((l) => (
+          {left.map((l) => (
             <NavLink key={l.href} to={l.href}>{l.label}</NavLink>
           ))}
         </nav>
         <Logo size="nav" className="hf-nav__logo hf-nav__logo--desktop" badge={badge} />
         <div className="hf-nav__links hf-nav__links--right">
           <nav aria-label="Principal derecha" className="hf-nav__links">
-            {navRight.map((l) => (
+            {right.map((l) => (
               <NavLink key={l.href} to={l.href}>{l.label}</NavLink>
             ))}
           </nav>
           <Button variant="outline-gold" to={bookingCta.href}>{bookingCta.label}</Button>
-          {navAfterCta.map((l) => (
+          {after.map((l) => (
             <NavLink key={l.href} to={l.href}>{l.label}</NavLink>
           ))}
         </div>

@@ -1,4 +1,4 @@
-import { Fragment } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { slogan } from '../../data/site'
 import { stats } from '../../data/stats'
 import { useSeason } from '../../lib/useSeason'
@@ -8,9 +8,20 @@ import { Button } from '../shared/Button'
 import { Eyebrow } from '../shared/Eyebrow'
 import { GoldText } from '../shared/GoldText'
 import './Hero.css'
+import { Module } from '../shared/Module'
+import { EditChip } from '../shared/EditFrame'
+import { useEditState, useModule } from '../../lib/siteModules'
 
 /** Surcos del vinilo de fondo */
 const GROOVES = Array.from({ length: 9 }, (_, i) => 200 - i * 12)
+
+/** Vinilo de fondo: no se enmarca (es absoluto); en modo edición se atenúa y su switch es un chip */
+function Vinyl({ children }: { children: ReactNode }) {
+  const show = useModule('inicio.vinilo')
+  const edit = useEditState('inicio.vinilo')
+  if (!show) return null
+  return edit && !edit.on ? <div className="hf-hero__vinyl-off">{children}</div> : <>{children}</>
+}
 
 /**
  * Inicio (diseño I1 · Vinilo gigante): texto centrado sobre un vinilo enorme
@@ -20,6 +31,8 @@ export function Hero() {
   const season = useSeason()
   return (
     <section className="hf-hero" aria-labelledby="hero-title">
+      <EditChip id="inicio.vinilo" className="hf-hero__edit-chip" />
+      <Vinyl>
       <svg className="hf-hero__vinyl" viewBox="0 0 440 440" aria-hidden="true" focusable="false">
         <g className="hf-hero__spin">
           <circle cx="220" cy="220" r="216" fill="#0a0a0a" stroke="#333" />
@@ -33,6 +46,7 @@ export function Hero() {
           <circle cx="220" cy="220" r="5" fill="#000" />
         </g>
       </svg>
+      </Vinyl>
       {season && (
         <div className="hf-hero__season-label" aria-hidden="true">
           <Glyph name={season.page.label} size={150} />
@@ -55,6 +69,7 @@ export function Hero() {
           <Button variant="primary" to="/reservar">Comenzar proyecto</Button>
           <Button variant="ghost" to="/artistas">Ver portafolio</Button>
         </div>
+        <Module id="inicio.cifras">
         <dl className="hf-hero__stats">
           {stats.map((s, i) => (
             <Fragment key={s.label}>
@@ -66,6 +81,7 @@ export function Hero() {
             </Fragment>
           ))}
         </dl>
+        </Module>
       </div>
     </section>
   )

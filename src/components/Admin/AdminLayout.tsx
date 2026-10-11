@@ -60,6 +60,7 @@ export function AdminLayout() {
     { to: '/admin/opiniones', label: 'Opiniones', count: summary?.pendingReviews, kind: 'gold' },
     { to: '/admin/contactos', label: 'Contactos', count: summary?.openContacts, kind: 'muted' },
     { to: '/admin/bloqueos', label: 'Bloqueos' },
+    { to: '/admin/sitio', label: 'Sitio', count: summary?.siteChanges, kind: 'gold' },
   ]
 
   return (
