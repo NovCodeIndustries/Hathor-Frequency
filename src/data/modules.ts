@@ -75,12 +75,27 @@ export const packageModule = (id: string) => `paquetes.${id}`
 export const serviceModule = (id: string) => `servicios.${id}`
 export const faqModule = (id: string) => `faq.${id}`
 
+/** Elementos de listas creados en el panel · Contenido (no están en el registro): su padre sale del prefijo */
+const ITEM_PARENT: Record<string, string> = {
+  artistas: 'page.artistas',
+  paquetes: 'servicios.paquetes',
+  faq: 'page.faq',
+  servicios: 'page.servicios',
+}
+export const DYNAMIC_ITEM = /^(artistas|paquetes|faq)\.[a-z0-9-]{1,40}$/
+
+export function parentOf(id: string): string | undefined {
+  const m = moduleById.get(id)
+  if (m) return m.parent
+  return DYNAMIC_ITEM.test(id) ? ITEM_PARENT[id.split('.')[0]] : undefined
+}
+
 /** ¿Está encendido? Un módulo se apaga si él o cualquiera de sus padres está en `disabled` */
 export function isModuleOn(id: string, disabled: ReadonlySet<string>): boolean {
   let cur: string | undefined = id
   while (cur) {
     if (disabled.has(cur)) return false
-    cur = moduleById.get(cur)?.parent
+    cur = parentOf(cur)
   }
   return true
 }

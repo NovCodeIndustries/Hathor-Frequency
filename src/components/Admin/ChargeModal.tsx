@@ -1,7 +1,6 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
-import { servicePrices } from '../../data/booking'
-import { packages } from '../../data/packages'
+import { useContent } from '../../lib/content'
 import { adminApi, dateFromISO, formatMoney, type AdminBooking, type PaymentStatus } from '../../lib/adminApi'
 import { MONTHS, WEEKDAYS_SHORT } from '../../lib/calendar'
 import { formatTime } from '../../lib/time'
@@ -54,7 +53,10 @@ const packagePrice = (price: string) => {
 export function ChargeModal({ booking, mode, onClose, onSaved, onError }: ChargeModalProps) {
   const id = useId()
   const amountRef = useRef<HTMLInputElement>(null)
-  const base = servicePrices[booking.service as keyof typeof servicePrices] ?? null
+  // Precios base y paquetes del panel · Contenido
+  const { prices } = useContent('precios')
+  const packages = useContent('paquetes').items
+  const base = prices[booking.service as keyof typeof prices] ?? null
   const [amount, setAmount] = useState(() => inputMoney(booking.amount ?? base))
   const [pay, setPay] = useState<PaymentStatus>(booking.paymentStatus ?? 'PENDING')
   const [deposit, setDeposit] = useState(() => inputMoney(booking.deposit))

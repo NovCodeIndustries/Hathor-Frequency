@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
-import { artists, artistsIntro, sides } from '../../data/artists'
+import { artists as defaultArtists, sides } from '../../data/artists'
+import { useContent } from '../../lib/content'
 import type { Artist } from '../../data/types'
 import { Eyebrow } from '../shared/Eyebrow'
 import { GoldText } from '../shared/GoldText'
@@ -24,6 +25,9 @@ interface ScrollState {
 
 export function Artists() {
   // Artistas apagados en el panel · Sitio; "Tu banda" se va si Reservar está apagado
+  // Artistas del panel · Contenido; la fila "Tu banda" es fija y va al final
+  const { intro: artistsIntro, items } = useContent('artistas')
+  const artists = [...items, ...defaultArtists.filter((a) => a.cta)]
   const isOn = useModuleFilter()
   const bookingOn = useLinkVisible('/reservar')
   const shown = artists.filter((a) => isOn(artistModule(a.code)) && (!a.cta || bookingOn))

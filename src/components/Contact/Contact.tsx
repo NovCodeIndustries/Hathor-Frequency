@@ -1,6 +1,7 @@
 import { useId, useRef, useState, type FormEvent } from 'react'
 import { PageLink } from '../shared/PageLink'
-import { contactTopics, socials, whatsapp } from '../../data/site'
+import { contactTopics } from '../../data/site'
+import { useContent } from '../../lib/content'
 import { submitContact, submitErrorText } from '../../lib/submit'
 import { useSeason } from '../../lib/useSeason'
 import { ReviewsRotator } from '../Reviews/ReviewsRotator'
@@ -18,6 +19,7 @@ type Status = 'idle' | 'sending' | 'sent' | 'error'
 const ARC = 'M 550 10 A 540 540 0 0 1 1010 270'
 
 export function Contact() {
+  const { socials, whatsapp } = useContent('sitio')
   const season = useSeason()
   const nameId = useId()
   const topicId = useId()

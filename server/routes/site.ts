@@ -6,7 +6,7 @@ import { prisma } from '../db'
 import { parseBody } from '../lib/body'
 import { fail } from '../lib/errors'
 import { cleanIds, publishedDisabled } from '../lib/site'
-import { emitSitePublished, onSitePublished } from '../lib/siteEvents'
+import { emitSitePublished, onLiveEvent } from '../lib/siteEvents'
 
 /** GET /api/site: módulos apagados que ve el público */
 export const site = new Hono()
@@ -22,8 +22,8 @@ site.get('/events', (c) => {
   c.header('X-Accel-Buffering', 'no')
   return streamSSE(c, async (stream) => {
     let closed = false
-    const off = onSitePublished((disabled) => {
-      void stream.writeSSE({ event: 'site', data: JSON.stringify({ disabled }) })
+    const off = onLiveEvent((event, data) => {
+      void stream.writeSSE({ event, data: JSON.stringify(data) })
     })
     stream.onAbort(() => {
       closed = true

@@ -149,3 +149,6 @@ vite.config.ts.timestamp-*
 .turbo
 
 /server/generated/prisma
+
+# Medios locales (el HDD de medios se monta aparte)
+/media

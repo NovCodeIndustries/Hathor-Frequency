@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
-import { packages, packagesDisclaimer, packagesIntro, packagesNote } from '../../data/packages'
-import { services, servicesIntro } from '../../data/services'
+import { services as serviceDefs } from '../../data/services'
+import { useContent } from '../../lib/content'
 import { useMediaQuery } from '../../lib/useMediaQuery'
 import { useSeason } from '../../lib/useSeason'
 import { Eyebrow } from '../shared/Eyebrow'
@@ -44,15 +44,20 @@ const REVEAL_MS = 700
 const RETURN_DELAY_MS = 1000
 const RETURN_STAGGER_MS = 110
 const RETURN_MS = 650
-const HOME = services.map((s) => s.level)
+const HOME = serviceDefs.map((s) => s.level)
 
 /** easeOutBack suave: pasa un poco del objetivo y regresa, como el motor del fader al frenar */
 const settle = (t: number) => 1 + 2.2 * (t - 1) ** 3 + 1.2 * (t - 1) ** 2
 
 export function Services() {
+  // Textos y paquetes del panel · Contenido; nivel, perillas y canal de cada servicio son fijos
+  const servicesText = useContent('servicios')
+  const pk = useContent('paquetes')
+  const services = serviceDefs.map((s) => ({ ...s, ...servicesText.items.find((t) => t.id === s.id) }))
+  const packages = pk.items
   const [levels, setLevels] = useState(HOME)
   // Solo cuentan los faders que el usuario movió (algunos arrancan dentro de su zona)
-  const [touched, setTouched] = useState(() => services.map(() => false))
+  const [touched, setTouched] = useState(() => serviceDefs.map(() => false))
   const [signal, setSignal] = useState(false)
   // La vista vive en la URL (/servicios?vista=paquetes) para poder enlazarla desde otras páginas
   const [params, setParams] = useSearchParams()
@@ -84,7 +89,7 @@ export function Services() {
 
   const returnHome = useCallback((from: number[]) => {
     // Al arrancar se apagan las ondas de los caps y el easter egg queda listo para repetirse
-    setTouched(services.map(() => false))
+    setTouched(serviceDefs.map(() => false))
     const finish = () => {
       setLevels(HOME)
       returning.current = false
@@ -202,7 +207,7 @@ export function Services() {
           </div>
           </Module>
           )}
-          <p className="hf-lead">{isPackages ? packagesIntro : servicesIntro}</p>
+          <p className="hf-lead">{isPackages ? pk.intro : servicesText.intro}</p>
         </div>
       </div>
 
@@ -215,7 +220,7 @@ export function Services() {
               <path d="M12 11v6M12 7.5v.01" />
             </svg>
             <span>
-              <strong>{packagesDisclaimer.title}</strong> {packagesDisclaimer.detail}
+              <strong>{pk.disclaimer.title}</strong> {pk.disclaimer.detail}
             </span>
           </p>
           <div className="hf-packages__grid">
@@ -228,7 +233,7 @@ export function Services() {
                 ),
             )}
           </div>
-          <p className="hf-packages__note">{packagesNote}</p>
+          <p className="hf-packages__note">{pk.note}</p>
         </div>
         </Module>
       ) : (
@@ -249,7 +254,7 @@ export function Services() {
       )}
 
       {tune && <TuneTransition phase={tune.phase} target={tune.target} />}
-      {openIndex !== null && <PackageDrawer pkg={packages[openIndex]} onClose={closePackage} />}
+      {openIndex !== null && packages[openIndex] && <PackageDrawer pkg={packages[openIndex]} onClose={closePackage} />}
       {signal && (
         <Module id="global.eggs">
           <AlienSignal onClose={closeSignal} />

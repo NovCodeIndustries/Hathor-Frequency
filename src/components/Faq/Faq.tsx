@@ -1,6 +1,6 @@
 import { useRef, useState, type CSSProperties } from 'react'
 import { PageLink } from '../shared/PageLink'
-import { faqs } from '../../data/faq'
+import { useContent } from '../../lib/content'
 import { faqModule } from '../../data/modules'
 import type { Faq } from '../../data/types'
 import { useModuleFilter } from '../../lib/siteModules'
@@ -32,6 +32,7 @@ const GROOVES = [250, 222, 194, 166, 138]
 export function Faq() {
   // Preguntas apagadas en el panel · Sitio
   const isOn = useModuleFilter()
+  const { items: faqs } = useContent('faq')
   const list = faqs.filter((f) => isOn(faqModule(f.id)))
   const groups = groupFaqs(list)
   const [picked, setCurrent] = useState(0)

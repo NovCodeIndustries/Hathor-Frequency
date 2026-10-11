@@ -31,6 +31,8 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-hathor}:${POSTGRES_PASSWORD:-hathor}@db:5432/${POSTGRES_DB:-hathor_frequency}?schema=public
       PRISMA_HIDE_UPDATE_MESSAGE: "1"
       # Umami: Vite le pasa /umami (script y envíos) y la API lee sus cifras para el dashboard
+      # Medios (fotos/videos) en un disco aparte, montado abajo y servido en /media
+      MEDIA_DIR: /app/media
       UMAMI_PROXY_TARGET: http://umami:3000
       UMAMI_URL: http://umami:3000
       UMAMI_WEBSITE_ID: ${UMAMI_WEBSITE_ID:-}
@@ -41,6 +43,8 @@ services:
     volumes:
       - .:/app
       - node_modules:/app/node_modules
+      # Ruta del HDD de medios en el host (MEDIA_DIR en .env); por defecto ./media
+      - ${MEDIA_DIR:-./media}:/app/media:ro
 
   # Analítica de visitas sin cookies (dashboard del panel · Visitas)
   umami-db:

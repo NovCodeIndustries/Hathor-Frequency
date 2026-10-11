@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { moduleById } from '../../data/modules'
 import { useEditState, type EditState } from '../../lib/siteModules'
 import './EditFrame.css'
+import { contentItemLabel } from '../../lib/content'
 
 /** Switch dorado del modo edición (diseño S1 · E) */
 export function EditSwitch({ state, label, small = false }: { state: EditState; label: string; small?: boolean }) {
@@ -24,7 +25,7 @@ export function EditSwitch({ state, label, small = false }: { state: EditState; 
   )
 }
 
-const labelOf = (id: string) => moduleById.get(id)?.label ?? id
+const labelOf = (id: string) => contentItemLabel(id) ?? moduleById.get(id)?.label ?? id
 
 /** Por qué está oculto: él mismo o un padre ("Oculto por Vista Paquetes") */
 const hiddenText = (state: EditState) => (!state.selfOn || !state.offBy ? 'Oculto' : `Oculto por ${state.offBy}`)

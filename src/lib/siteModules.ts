@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
-import { isModuleOn, linkModuleOf, moduleById } from '../data/modules'
+import { isModuleOn, linkModuleOf, moduleById, parentOf } from '../data/modules'
+import { onLive, onRefresh } from './live'
 
 /**
  * Módulos apagados del sitio (panel · Sitio). Se cargan antes de pintar la app (main.tsx)
@@ -15,9 +16,11 @@ const CACHE_KEY = 'hf-site-disabled'
 interface Snapshot {
   disabled: ReadonlySet<string>
   edit: boolean
+  /** Vista previa del panel · Contenido (`?modo=vista`): sin marcos, sin bienvenida ni platillo */
+  preview: boolean
 }
 
-let snap: Snapshot = { disabled: new Set(), edit: false }
+let snap: Snapshot = { disabled: new Set(), edit: false, preview: false }
 const listeners = new Set<() => void>()
 
 function update(patch: Partial<Snapshot>) {
@@ -87,61 +90,19 @@ async function fetchPublished(timeout = 5000): Promise<void> {
   }
 }
 
-/** Respaldo sin SSE: cada cuánto se vuelve a pedir lo publicado */
-const POLL_MS = 15_000
-/** Si el canal en vivo no responde en este tiempo, se pasa al respaldo */
-const SSE_TIMEOUT_MS = 6_000
-
-/**
- * Cambios en vivo: al publicar en el panel, el servidor avisa por SSE (`/api/site/events`) y la web
- * cambia sin recargar. Al (re)conectar y al volver a la pestaña se vuelve a pedir, por si se perdió un aviso.
- * Donde SSE no pasa (p. ej. el túnel rápido de Cloudflare, que lo retiene), se consulta cada 15 s.
- */
-function startLiveUpdates() {
-  let poll: number | undefined
-  const startPolling = () => {
-    poll ??= window.setInterval(() => {
-      if (document.visibilityState === 'visible') void fetchPublished()
-    }, POLL_MS)
-  }
-
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') void fetchPublished()
-  })
-
-  if (typeof EventSource === 'undefined') return startPolling()
-  const events = new EventSource('/api/site/events')
-  const fallback = window.setTimeout(() => {
-    events.close()
-    startPolling()
-  }, SSE_TIMEOUT_MS)
-
-  events.addEventListener('site', (e) => {
-    try {
-      applyPublished((JSON.parse((e as MessageEvent<string>).data) as { disabled: string[] }).disabled)
-    } catch {
-      void fetchPublished()
-    }
-  })
-  // "hello" llega en cada conexión, también al reconectar tras un corte
-  let first = true
-  events.addEventListener('hello', () => {
-    window.clearTimeout(fallback)
-    if (!first) void fetchPublished()
-    first = false
-  })
-}
-
 /** Carga lo publicado (máx. 1.5 s) y, dentro del panel, el modo edición; nunca falla */
 export async function loadSiteModules(): Promise<void> {
   update({ disabled: new Set(readCache()) })
-  if (inFrame() && new URLSearchParams(window.location.search).get('modo') === 'edicion') {
+  const mode = inFrame() ? new URLSearchParams(window.location.search).get('modo') : null
+  if (mode === 'edicion') {
     await startEditMode()
     if (snap.edit) return
   }
+  if (mode === 'vista') update({ preview: true })
   await fetchPublished(1500)
-  // El panel no necesita los avisos en vivo (no muestra módulos públicos)
-  if (!window.location.pathname.startsWith('/admin')) startLiveUpdates()
+  // Al publicar en el panel, la web cambia al instante (src/lib/live.ts)
+  onLive('site', (data) => applyPublished((data as { disabled: string[] }).disabled))
+  onRefresh(() => void fetchPublished())
 }
 
 const subscribe = (l: () => void) => {
@@ -156,6 +117,7 @@ const EDIT_HIDDEN = new Set(['global.ufo', 'global.welcome', 'global.eggs'])
 const EDIT_LIVE = new Set(['global.seasons'])
 
 function visible(id: string, s: Snapshot): boolean {
+  if (s.preview && EDIT_HIDDEN.has(id)) return false
   if (!s.edit) return isModuleOn(id, s.disabled)
   if (EDIT_HIDDEN.has(id)) return false
   if (EDIT_LIVE.has(id)) return isModuleOn(id, s.disabled)
@@ -170,6 +132,8 @@ export function useModule(id: string): boolean {
 /** ¿Estamos en el modo edición del panel? */
 export const useEditMode = () => useSnap().edit
 export const isEditMode = () => snap.edit
+/** Dentro de un iframe del panel (Sitio o Contenido): no se cuenta en Umami */
+export const isPanelFrame = () => snap.edit || snap.preview
 
 export interface EditState {
   /** El propio switch */
@@ -186,7 +150,7 @@ export function useEditState(id: string): EditState | null {
   const s = useSnap()
   if (!s.edit) return null
   let offBy: string | undefined
-  for (let p = moduleById.get(id)?.parent; p; p = moduleById.get(p)?.parent) {
+  for (let p = parentOf(id); p; p = parentOf(p)) {
     if (s.disabled.has(p)) {
       offBy = moduleById.get(p)?.label
       break

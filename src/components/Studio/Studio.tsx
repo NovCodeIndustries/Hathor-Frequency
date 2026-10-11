@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react'
-import { stats } from '../../data/stats'
-import { studioAbout, studioGear, studioMap, studioRooms, studioTourInterval, studioValues, studioVideo, studioVisit } from '../../data/studio'
+import { studioTourInterval } from '../../data/studio'
+import { useContent } from '../../lib/content'
 import type { StudioVideoService } from '../../data/types'
 import { useMediaQuery } from '../../lib/useMediaQuery'
 import { useSeason } from '../../lib/useSeason'
@@ -10,11 +10,6 @@ import { GoldText } from '../shared/GoldText'
 import './Studio.css'
 import { Module } from '../shared/Module'
 
-const total = studioRooms.length
-
-const { lat, lng, zoom } = studioMap
-const mapEmbed = `https://maps.google.com/maps?q=${lat},${lng}&z=${zoom}&hl=es&output=embed`
-const mapDirections = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
 const pad = (n: number) => String(n).padStart(2, '0')
 
 /** Foto o, mientras no la haya, un marcador con anillos */
@@ -107,6 +102,14 @@ function PlayIcon() {
  * quiénes somos, videos y live sessions, equipo en pestañas y datos de visita.
  */
 export function Studio() {
+  // Contenido del panel · Contenido (Estudio y las cifras de Datos del sitio)
+  const { rooms: studioRooms, about: studioAbout, values: studioValues, gear: studioGear, video: studioVideo, visit: studioVisit, map: studioMap } =
+    useContent('estudio')
+  const { stats } = useContent('sitio')
+  const total = Math.max(1, studioRooms.length)
+  const { lat, lng, zoom } = studioMap
+  const mapEmbed = `https://maps.google.com/maps?q=${lat},${lng}&z=${zoom}&hl=es&output=embed`
+  const mapDirections = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
   const season = useSeason()
   const [room, setRoom] = useState(0)
   const [paused, setPaused] = useState(false)
@@ -119,11 +122,11 @@ export function Studio() {
     if (!running) return
     const id = window.setTimeout(() => setRoom((r) => (r + 1) % total), studioTourInterval)
     return () => window.clearTimeout(id)
-  }, [running, room])
+  }, [running, room, total])
 
   const go = (i: number) => setRoom((i + total) % total)
-  const current = studioRooms[room]
-  const gear = studioGear[tab]
+  const current = studioRooms[room % total] ?? studioRooms[0]
+  const gear = studioGear[tab] ?? studioGear[0]
 
   return (
     <div className="hf-studio">

@@ -41,6 +41,7 @@ const router = createBrowserRouter([
       { path: 'opiniones', lazy: async () => ({ Component: (await import('./components/Admin/AdminReviews')).AdminReviews }) },
       { path: 'contactos', lazy: async () => ({ Component: (await import('./components/Admin/AdminContacts')).AdminContacts }) },
       { path: 'bloqueos', lazy: async () => ({ Component: (await import('./components/Admin/AdminBlocks')).AdminBlocks }) },
+      { path: 'contenido', lazy: async () => ({ Component: (await import('./components/Admin/AdminContent')).AdminContent }) },
       { path: 'sitio', lazy: async () => ({ Component: (await import('./components/Admin/AdminSite')).AdminSite }) },
       { path: '*', element: <Navigate to="/admin" replace /> },
     ],

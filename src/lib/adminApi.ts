@@ -22,6 +22,31 @@ export interface AdminSummary {
   openContacts: number
   /** Cambios del panel · Sitio sin publicar */
   siteChanges: number
+  /** Secciones del panel · Contenido con cambios sin publicar */
+  contentChanges: number
+}
+
+export interface FieldIssue {
+  path: (string | number)[]
+  message: string
+}
+
+/** Estado de una sección del panel · Contenido */
+export interface ContentState {
+  key: string
+  draft: unknown
+  published: unknown
+  versionId: string | null
+  dirty: boolean
+  issues: FieldIssue[]
+}
+
+export interface ContentVersionInfo {
+  id: string
+  summary: string
+  publishedAt: string
+  publishedByName: string
+  current: boolean
 }
 
 /** Estado del panel · Sitio: ids apagados en el borrador y en lo publicado */
@@ -201,6 +226,15 @@ export const adminApi = {
   discardSite: () => request<SiteState>('POST', '/site/discard', {}),
   siteHistory: () => request<SiteVersionInfo[]>('GET', '/site/history'),
   restoreSite: (id: string) => request<SiteState>('POST', `/site/restore/${id}`, {}),
+
+  contentDirty: () => request<{ dirty: string[] }>('GET', '/content'),
+  content: (key: string) => request<ContentState>('GET', `/content/${key}`),
+  saveContentDraft: (key: string, data: unknown) => request<ContentState>('PUT', `/content/${key}/draft`, { data }),
+  publishContent: (key: string) => request<ContentState>('POST', `/content/${key}/publish`, {}),
+  discardContent: (key: string) => request<ContentState>('POST', `/content/${key}/discard`, {}),
+  contentHistory: (key: string) => request<ContentVersionInfo[]>('GET', `/content/${key}/history`),
+  restoreContent: (key: string, id: string) => request<ContentState>('POST', `/content/${key}/restore/${id}`, {}),
+  mediaCheck: (path: string) => request<{ path: string; exists: boolean | null }>('GET', `/media/check?path=${encodeURIComponent(path)}`),
 
   reviews: () => request<AdminReview[]>('GET', '/reviews'),
   setReviewStatus: (id: string, status: ReviewStatus) => request<AdminReview>('PATCH', `/reviews/${id}`, { status }),

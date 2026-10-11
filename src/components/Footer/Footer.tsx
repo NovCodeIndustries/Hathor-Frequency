@@ -1,11 +1,13 @@
 import { Fragment } from 'react'
-import { copyright, socials } from '../../data/site'
+import { copyright } from '../../data/site'
+import { useContent } from '../../lib/content'
 import { useSeason } from '../../lib/useSeason'
 import { Module } from '../shared/Module'
 import { Logo } from '../shared/Logo'
 import './Footer.css'
 
 export function Footer() {
+  const { socials } = useContent('sitio')
   const season = useSeason()
   return (
     <footer className="hf-footer">

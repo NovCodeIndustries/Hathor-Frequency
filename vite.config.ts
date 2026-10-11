@@ -13,6 +13,8 @@ export default defineConfig({
     allowedHosts: ['.trycloudflare.com'],
     proxy: {
       '/api': { target: `http://localhost:${process.env.API_PORT ?? 3000}`, changeOrigin: false, xfwd: true },
+      // Fotos y videos del HDD de medios (los sirve la API)
+      '/media': { target: `http://localhost:${process.env.API_PORT ?? 3000}`, changeOrigin: false },
       // Umami (visitas): script y envíos por el mismo origen del sitio
       '/umami': {
         target: process.env.UMAMI_PROXY_TARGET ?? 'http://localhost:3100',

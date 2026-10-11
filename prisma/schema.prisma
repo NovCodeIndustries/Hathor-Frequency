@@ -180,3 +180,28 @@ model SiteVersion {
   @@index([publishedAt])
   @@map("site_versions")
 }
+
+/// Borrador de una sección del panel · Contenido (una fila por sección)
+model ContentDraft {
+  /// Sección: servicios, paquetes, precios, artistas, faq, estudio, sitio (src/data/content.ts)
+  key           String   @id @db.VarChar(40)
+  data          Json
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  updatedByName String?  @map("updated_by_name") @db.VarChar(120)
+
+  @@map("content_drafts")
+}
+
+/// Cada publicación de una sección; la más reciente de cada `key` es la que ve el público
+model ContentVersion {
+  id              String   @id @default(uuid()) @db.Uuid
+  key             String   @db.VarChar(40)
+  data            Json
+  /// Resumen de qué cambió respecto a la versión anterior (para el historial)
+  summary         String   @db.VarChar(500)
+  publishedAt     DateTime @default(now()) @map("published_at") @db.Timestamptz(6)
+  publishedByName String   @map("published_by_name") @db.VarChar(120)
+
+  @@index([key, publishedAt])
+  @@map("content_versions")
+}

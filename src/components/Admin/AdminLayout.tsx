@@ -61,6 +61,7 @@ export function AdminLayout() {
     { to: '/admin/contactos', label: 'Contactos', count: summary?.openContacts, kind: 'muted' },
     { to: '/admin/bloqueos', label: 'Bloqueos' },
     { to: '/admin/sitio', label: 'Sitio', count: summary?.siteChanges, kind: 'gold' },
+    { to: '/admin/contenido', label: 'Contenido', count: summary?.contentChanges, kind: 'gold' },
   ]
 
   return (

@@ -1,15 +1,18 @@
 import 'dotenv/config'
 import { serve } from '@hono/node-server'
+import { serveStatic } from '@hono/node-server/serve-static'
 import { Hono } from 'hono'
 import { logger } from 'hono/logger'
 import { jsonOnly } from './auth'
 import { fail } from './lib/errors'
+import { MEDIA_DIR } from './lib/media'
 import { rateLimit } from './lib/rateLimit'
 import { admin } from './routes/admin'
 import { availability, bookings } from './routes/bookings'
 import { contact } from './routes/contact'
 import { reviews } from './routes/reviews'
 import { site } from './routes/site'
+import { content } from './routes/content'
 import { isPublishedOn } from './lib/site'
 
 const app = new Hono().basePath('/api')
@@ -35,6 +38,7 @@ app.route('/contact', contact)
 app.route('/bookings', bookings)
 app.route('/availability', availability)
 app.route('/site', site)
+app.route('/content', content)
 app.route('/reviews', reviews)
 app.route('/admin', admin)
 
@@ -44,5 +48,12 @@ app.onError((err, c) => {
   return fail(c, 500, 'Error del servidor')
 })
 
+/** Fuera de /api: los medios del HDD montado, en /media/... (solo lectura) */
+const root = new Hono()
+if (MEDIA_DIR) {
+  root.use('/media/*', serveStatic({ root: MEDIA_DIR, rewriteRequestPath: (p) => p.replace(/^\/media/, '') }))
+}
+root.route('/', app)
+
 const port = Number(process.env.API_PORT ?? 3000)
-serve({ fetch: app.fetch, port }, () => console.info(`API en http://localhost:${port}/api`))
+serve({ fetch: root.fetch, port }, () => console.info(`API en http://localhost:${port}/api`))

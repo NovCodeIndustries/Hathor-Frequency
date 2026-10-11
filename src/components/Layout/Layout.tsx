@@ -6,7 +6,7 @@ import { Ticker } from '../Ticker/Ticker'
 import { Ufo } from '../Ufo/Ufo'
 import { Welcome } from '../Welcome/Welcome'
 import { trackPageview } from '../../lib/analytics'
-import { isEditMode, postToPanel, useModule } from '../../lib/siteModules'
+import { isEditMode, isPanelFrame, postToPanel, useModule } from '../../lib/siteModules'
 import { useSeason } from '../../lib/useSeason'
 import './Layout.css'
 import { Module } from '../shared/Module'
@@ -26,7 +26,7 @@ export function Layout() {
   const { search } = useLocation()
   useEffect(() => {
     if (isEditMode()) postToPanel({ type: 'hf-edit-route', path: pathname + search })
-    else trackPageview()
+    else if (!isPanelFrame()) trackPageview()
   }, [pathname, search])
 
   // Acento de la temporada en la raíz: lo heredan las páginas y los modales (que se montan en <body>)

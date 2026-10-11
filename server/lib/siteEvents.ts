@@ -1,19 +1,19 @@
 /**
- * Avisos en vivo del panel · Sitio: al publicar, cada visitante conectado a `GET /api/site/events`
- * recibe los módulos apagados y la web cambia al instante.
+ * Avisos en vivo a la web abierta (`GET /api/site/events`, SSE):
+ * `site` al publicar módulos (panel · Sitio) y `content` al publicar una sección (panel · Contenido).
  * Vive en memoria de este proceso; con varias instancias habría que pasarlo a LISTEN/NOTIFY de PostgreSQL.
  */
 
-type Listener = (disabled: string[]) => void
+type Listener = (event: string, data: unknown) => void
 const listeners = new Set<Listener>()
 
-export function onSitePublished(l: Listener): () => void {
+export function onLiveEvent(l: Listener): () => void {
   listeners.add(l)
   return () => listeners.delete(l)
 }
 
-export function emitSitePublished(disabled: string[]) {
-  for (const l of listeners) l(disabled)
+export function emitLive(event: 'site' | 'content', data: unknown) {
+  for (const l of listeners) l(event, data)
 }
 
-export const siteListenerCount = () => listeners.size
+export const emitSitePublished = (disabled: string[]) => emitLive('site', { disabled })

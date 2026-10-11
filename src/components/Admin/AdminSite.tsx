@@ -4,6 +4,7 @@ import { adminApi, formatStamp, type SiteState, type SiteVersionInfo } from '../
 import type { EditMessage } from '../../lib/siteModules'
 import { useAdmin } from '../../lib/useAdmin'
 import './AdminSite.css'
+import { contentItemLabel } from '../../lib/content'
 
 const PAGES = [{ path: '/', label: 'Inicio', id: undefined as string | undefined }, ...pageModules.map((m) => ({ path: m.route!, label: m.label, id: m.id }))]
 
@@ -21,7 +22,12 @@ const SECTION_PAGE: Record<string, string> = { inicio: 'Inicio' }
 /** "Estudio · Equipo", "Artistas · Luna K.", "Global · Platillo volador" */
 function moduleTitle(id: string): string {
   const m = moduleById.get(id)
-  if (!m) return id
+  if (!m) {
+    // Elemento creado en Contenido: "Artistas · Nuevo artista"
+    const page = { artistas: 'Artistas', paquetes: 'Servicios', faq: 'FAQs' }[id.split('.')[0]]
+    const label = contentItemLabel(id)
+    return label && page ? `${page} · ${label}` : id
+  }
   if (m.kind === 'page') return `Página ${m.label}`
   if (m.kind === 'global') return `Global · ${m.label}`
   let page = SECTION_PAGE[id.split('.')[0]]
