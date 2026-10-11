@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
-import { reviewRotateMs, reviews } from '../../data/reviews'
+import { reviewRotateMs } from '../../data/reviews'
 import { useMediaQuery } from '../../lib/useMediaQuery'
+import { useReviews } from '../../lib/useReviews'
 import { Stars } from './Stars'
 import './Reviews.css'
 
@@ -11,6 +12,7 @@ import './Reviews.css'
  * una a mano y con reduced-motion.
  */
 export function ReviewsRotator() {
+  const reviews = useReviews() ?? []
   const [index, setIndex] = useState(0)
   const [hovered, setHovered] = useState(false)
   const [picked, setPicked] = useState(false)
@@ -21,7 +23,7 @@ export function ReviewsRotator() {
     if (!running) return
     const t = window.setTimeout(() => setIndex((i) => (i + 1) % reviews.length), reviewRotateMs)
     return () => window.clearTimeout(t)
-  }, [running, index])
+  }, [running, index, reviews.length])
 
   if (reviews.length === 0) return null
 

@@ -116,6 +116,9 @@
   cursor: not-allowed;
 }
 
+/* Día sin horarios libres (API de disponibilidad) · D1 Tachado */
+.hf-cal__day.is-full:disabled { text-decoration: line-through; }
+
 .hf-cal__arrow:focus-visible,
 .hf-cal__day:focus-visible,
 .hf-slot:focus-visible { outline-offset: 2px; }
@@ -277,7 +280,14 @@ fieldset.hf-session__field {
   transition: border-color .2s, background .2s, color .2s;
 }
 
-.hf-slot:hover { border-color: var(--c-gold); }
+.hf-slot:hover:not(:disabled) { border-color: var(--c-gold); }
+
+/* Horario ocupado · D1 Tachado */
+.hf-slot:disabled {
+  color: var(--c-line-2);
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
 
 .hf-slot[aria-pressed="true"] {
   border-color: var(--c-gold);

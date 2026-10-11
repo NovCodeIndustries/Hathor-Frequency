@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { useSearchParams } from 'react-router'
-import { reviews } from '../../data/reviews'
+import { useReviews } from '../../lib/useReviews'
 import { Eyebrow } from '../shared/Eyebrow'
 import { GoldText } from '../shared/GoldText'
 import { ReviewModal } from './ReviewModal'
@@ -21,13 +21,15 @@ export function Reviews() {
     if (params.has('opinar')) setParams({}, { replace: true })
   }, [params, setParams])
 
+  const loaded = useReviews()
+  const reviews = loaded ?? []
   const total = reviews.length
   const average = total ? reviews.reduce((s, r) => s + r.rating, 0) / total : 0
   const filters = ['Todas', ...new Set(reviews.map((r) => r.service))]
   const shown = filter === 'Todas' ? reviews : reviews.filter((r) => r.service === filter)
 
   return (
-    <section className="hf-reviews hf-container" aria-labelledby="opiniones-title">
+    <section className="hf-reviews hf-container" aria-labelledby="opiniones-title" aria-busy={loaded === null}>
       <div className="hf-reviews__head">
         <div className="hf-reviews__intro">
           <Eyebrow>Opiniones</Eyebrow>
@@ -77,7 +79,7 @@ export function Reviews() {
 
       <div className="hf-reviews__grid">
         {shown.map((r) => (
-          <article key={`${r.name}-${r.text}`} className="hf-reviews__card">
+          <article key={r.id ?? `${r.name}-${r.text}`} className="hf-reviews__card">
             <div className="hf-reviews__card-top">
               <Stars rating={r.rating} />
               <span className="hf-reviews__tag">{r.service}</span>

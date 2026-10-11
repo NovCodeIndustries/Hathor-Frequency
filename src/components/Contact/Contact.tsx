@@ -1,10 +1,11 @@
-import { useId, useState, type FormEvent } from 'react'
+import { useId, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { contactTopics, socials, whatsapp } from '../../data/site'
-import { submitContact } from '../../lib/submit'
+import { submitContact, submitErrorText } from '../../lib/submit'
 import { useSeason } from '../../lib/useSeason'
 import { ReviewsRotator } from '../Reviews/ReviewsRotator'
 import { Button } from '../shared/Button'
+import { Honeypot } from '../shared/Honeypot'
 import { Eyebrow } from '../shared/Eyebrow'
 import { GoldText } from '../shared/GoldText'
 import { WhatsAppIcon } from '../shared/SocialIcon'
@@ -24,17 +25,20 @@ export function Contact() {
   const [topic, setTopic] = useState('')
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<Status>('idle')
+  const [error, setError] = useState('')
+  const trap = useRef<HTMLInputElement>(null)
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setStatus('sending')
     try {
-      await submitContact({ name: name.trim(), topic, email: email.trim() })
+      await submitContact({ name: name.trim(), topic, email: email.trim(), website: trap.current?.value })
       setStatus('sent')
       setName('')
       setTopic('')
       setEmail('')
-    } catch {
+    } catch (err) {
+      setError(submitErrorText(err, 'No pudimos enviar tus datos. Intenta de nuevo.'))
       setStatus('error')
     }
   }
@@ -77,6 +81,7 @@ export function Contact() {
       </div>
 
       <form className="hf-contact__form" onSubmit={handleSubmit}>
+        <Honeypot ref={trap} />
         <label htmlFor={nameId} className="sr-only">Tu nombre</label>
         <div className="hf-contact__pill hf-contact__pill--name">
           <input
@@ -144,7 +149,7 @@ export function Contact() {
         </Link>
         <p className="hf-contact__status" role="status">
           {status === 'sent' && 'Recibido. Te escribimos pronto.'}
-          {status === 'error' && 'No pudimos enviar tus datos. Intenta de nuevo.'}
+          {status === 'error' && error}
         </p>
       </form>
 

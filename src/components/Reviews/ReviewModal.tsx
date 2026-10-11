@@ -2,10 +2,11 @@ import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent 
 import { createPortal } from 'react-dom'
 import { ratingLabels, reviewMaxLength } from '../../data/reviews'
 import { contactTopics } from '../../data/site'
-import { submitReview } from '../../lib/submit'
+import { submitErrorText, submitReview } from '../../lib/submit'
 import { useSeason } from '../../lib/useSeason'
 import { SeasonBadge } from '../Season/SeasonBadge'
 import { GoldText } from '../shared/GoldText'
+import { Honeypot } from '../shared/Honeypot'
 import { Star } from './Stars'
 import './Reviews.css'
 
@@ -28,6 +29,8 @@ export function ReviewModal({ onClose }: { onClose: () => void }) {
   const [text, setText] = useState('')
   const [consent, setConsent] = useState(true)
   const [status, setStatus] = useState<Status>('idle')
+  const [error, setError] = useState('')
+  const trap = useRef<HTMLInputElement>(null)
   const [missingRating, setMissingRating] = useState(false)
 
   useEffect(() => {
@@ -63,9 +66,10 @@ export function ReviewModal({ onClose }: { onClose: () => void }) {
     }
     setStatus('sending')
     try {
-      await submitReview({ rating, name: name.trim(), project: project.trim(), service, text: text.trim(), consent })
+      await submitReview({ rating, name: name.trim(), project: project.trim(), service, text: text.trim(), consent, website: trap.current?.value })
       setStatus('sent')
-    } catch {
+    } catch (err) {
+      setError(submitErrorText(err, 'No pudimos enviar tu opinión. Intenta de nuevo.'))
       setStatus('error')
     }
   }
@@ -102,6 +106,7 @@ export function ReviewModal({ onClose }: { onClose: () => void }) {
           </div>
         ) : (
           <form className="hf-review__form" onSubmit={handleSubmit}>
+            <Honeypot ref={trap} />
             <div className="hf-review__head">
               <span className="hf-review__kicker">
                 Opiniones <SeasonBadge size={16} />
@@ -179,7 +184,7 @@ export function ReviewModal({ onClose }: { onClose: () => void }) {
               {status === 'sending' ? 'Enviando…' : 'Enviar opinión'}
             </button>
             <p className="hf-review__status" role="status">
-              {status === 'error' && 'No pudimos enviar tu opinión. Intenta de nuevo.'}
+              {status === 'error' && error}
             </p>
           </form>
         )}

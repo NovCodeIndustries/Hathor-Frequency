@@ -118,8 +118,10 @@ export interface StudioVideoService {
   embed?: string
 }
 
-/** Opinión publicada en el sitio (ya revisada y autorizada) */
+/** Opinión publicada en el sitio (ya revisada; sin permiso de nombre llega como "Anónimo") */
 export interface Review {
+  /** Id en la tabla `reviews` */
+  id?: string
   name: string
   /** Banda o proyecto (opcional) */
   project?: string

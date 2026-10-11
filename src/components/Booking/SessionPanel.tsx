@@ -1,8 +1,9 @@
-import { useId, type FormEvent } from 'react'
+import { useId, useRef, type FormEvent } from 'react'
 import { bookingServices, representativeTypes, timeSlots } from '../../data/booking'
 import { dayLabel } from '../../lib/calendar'
 import type { BookingContact } from '../../lib/submit'
 import { Button } from '../shared/Button'
+import { Honeypot } from '../shared/Honeypot'
 import { VinylRings } from '../shared/VinylRings'
 
 export type SubmitStatus = 'idle' | 'sending' | 'sent' | 'error'
@@ -10,23 +11,29 @@ export type SubmitStatus = 'idle' | 'sending' | 'sent' | 'error'
 interface SessionPanelProps {
   date: Date
   slot: number
+  /** Horarios ocupados del día elegido */
+  takenSlots: string[]
+  /** Mensaje cuando `status` es 'error' */
+  error: string
   service: string
   contact: BookingContact
   status: SubmitStatus
   onSlot: (i: number) => void
   onService: (s: string) => void
   onContact: (patch: Partial<BookingContact>) => void
-  onSubmit: () => void
+  onSubmit: (website?: string) => void
 }
 
 /** Diseño RA (canvas https://claude.ai/artifact/VuPzsH4vpZaQc3XDpAXBzL): sesión y datos de contacto en el mismo panel */
-export function SessionPanel({ date, slot, service, contact, status, onSlot, onService, onContact, onSubmit }: SessionPanelProps) {
+export function SessionPanel({ date, slot, takenSlots, error, service, contact, status, onSlot, onService, onContact, onSubmit }: SessionPanelProps) {
   const id = useId()
+  const trap = useRef<HTMLInputElement>(null)
+  const dayFull = timeSlots.every((t) => takenSlots.includes(t))
   const rep = representativeTypes.find((r) => r.value === contact.representativeType) ?? representativeTypes[0]
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
-    onSubmit()
+    onSubmit(trap.current?.value)
   }
 
   return (
@@ -39,6 +46,7 @@ export function SessionPanel({ date, slot, service, contact, status, onSlot, onS
         center={{ r: 30, opacity: 0.3 }}
       />
       <form className="hf-session__form" onSubmit={handleSubmit}>
+        <Honeypot ref={trap} />
         <div className="hf-session__date">
           <span className="hf-session__kicker">Tu sesión</span>
           <span className="hf-session__day" aria-live="polite">{dayLabel(date)}</span>
@@ -56,11 +64,22 @@ export function SessionPanel({ date, slot, service, contact, status, onSlot, onS
         <fieldset className="hf-session__slots">
           <legend className="hf-label">Hora de inicio</legend>
           <div className="hf-session__grid">
-            {timeSlots.map((t, i) => (
-              <button key={t} type="button" className="hf-slot" aria-pressed={i === slot} onClick={() => onSlot(i)}>
-                {t}
-              </button>
-            ))}
+            {timeSlots.map((t, i) => {
+              const taken = takenSlots.includes(t)
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  className="hf-slot"
+                  aria-pressed={i === slot && !taken}
+                  aria-label={taken ? `${t} · ocupado` : undefined}
+                  disabled={taken}
+                  onClick={() => onSlot(i)}
+                >
+                  {t}
+                </button>
+              )
+            })}
           </div>
         </fieldset>
 
@@ -149,11 +168,11 @@ export function SessionPanel({ date, slot, service, contact, status, onSlot, onS
         </div>
 
         <div className="hf-session__submit">
-          <Button type="submit" variant="primary" block disabled={status === 'sending'}>
-            {status === 'sending' ? 'Enviando…' : `Reservar ${timeSlots[slot]} h`}
+          <Button type="submit" variant="primary" block disabled={status === 'sending' || dayFull}>
+            {status === 'sending' ? 'Enviando…' : dayFull ? 'Sin horarios este día' : `Reservar ${timeSlots[slot]} h`}
           </Button>
           <p className="hf-session__status" role="status">
-            {status === 'error' && 'No pudimos enviar tu reserva. Intenta de nuevo.'}
+            {status === 'error' && error}
           </p>
         </div>
       </form>

@@ -1,7 +1,8 @@
 import { useCallback, useState } from 'react'
 import { bookingServices, defaultSlotIndex, timeSlots } from '../../data/booking'
 import { addMonths, compareMonths, dayLabel, startOfDay, toISODate, type YearMonth } from '../../lib/calendar'
-import { submitBooking, type BookingContact } from '../../lib/submit'
+import { SubmitError, submitBooking, submitErrorText, type BookingContact } from '../../lib/submit'
+import { useAvailability } from '../../lib/useAvailability'
 import { Eyebrow } from '../shared/Eyebrow'
 import { GoldText } from '../shared/GoldText'
 import { BookingModal } from './BookingModal'
@@ -39,13 +40,23 @@ export function Booking() {
   const [contact, setContact] = useState<BookingContact>(EMPTY_CONTACT)
   // Copia de lo enviado para el resumen del modal
   const [sent, setSent] = useState<{ session: string; project: string; contact: string } | null>(null)
+  const [error, setError] = useState('')
+
+  const { availability, refresh } = useAvailability(month)
+  const selectedISO = toISODate(selected)
+  const blockedDays = new Set(availability.blockedDays)
+  const takenSlots = blockedDays.has(selectedISO) ? [...timeSlots] : (availability.taken[selectedISO] ?? [])
+  // Si el horario elegido se ocupó (o el día se cerró), se usa el primero libre
+  const activeSlot = takenSlots.includes(timeSlots[slot])
+    ? Math.max(0, timeSlots.findIndex((t) => !takenSlots.includes(t)))
+    : slot
 
   const touch = () => status !== 'sending' && setStatus('idle')
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (website?: string) => {
     setStatus('sending')
     try {
-      const data = { date: toISODate(selected), time: timeSlots[slot], service, ...trimmed(contact) }
+      const data = { date: selectedISO, time: timeSlots[activeSlot], service, ...trimmed(contact), website }
       await submitBooking(data)
       setStatus('sent')
       setSent({
@@ -54,8 +65,12 @@ export function Booking() {
         contact: `${data.representativeName} (${data.representativeType}) · ${data.phone}`,
       })
       setContact(EMPTY_CONTACT)
-    } catch {
+      refresh()
+    } catch (err) {
+      setError(submitErrorText(err, 'No pudimos enviar tu reserva. Intenta de nuevo.'))
       setStatus('error')
+      // 409: el horario se ocupó mientras llenaba el formulario
+      if (err instanceof SubmitError && err.status === 409) refresh()
     }
   }
 
@@ -77,6 +92,7 @@ export function Booking() {
           month={month}
           selected={selected}
           today={today}
+          blockedDays={blockedDays}
           canGoPrev={compareMonths(month, currentMonth) > 0}
           onPrev={() => setMonth((m) => addMonths(m, -1))}
           onNext={() => setMonth((m) => addMonths(m, 1))}
@@ -91,7 +107,9 @@ export function Booking() {
 
       <SessionPanel
         date={selected}
-        slot={slot}
+        slot={activeSlot}
+        takenSlots={takenSlots}
+        error={error}
         service={service}
         contact={contact}
         status={status}

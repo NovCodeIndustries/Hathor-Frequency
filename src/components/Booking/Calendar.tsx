@@ -7,6 +7,7 @@ import {
   monthCells,
   monthTitle,
   sameDay,
+  toISODate,
   type YearMonth,
 } from '../../lib/calendar'
 
@@ -14,13 +15,15 @@ interface CalendarProps {
   month: YearMonth
   selected: Date
   today: Date
+  /** Días "YYYY-MM-DD" cerrados o sin horarios libres (API de disponibilidad) */
+  blockedDays: Set<string>
   canGoPrev: boolean
   onPrev: () => void
   onNext: () => void
   onSelect: (d: Date) => void
 }
 
-export function Calendar({ month, selected, today, canGoPrev, onPrev, onNext, onSelect }: CalendarProps) {
+export function Calendar({ month, selected, today, blockedDays, canGoPrev, onPrev, onNext, onSelect }: CalendarProps) {
   const season = useSeason()
   const cells = monthCells(month)
 
@@ -54,6 +57,7 @@ export function Calendar({ month, selected, today, canGoPrev, onPrev, onNext, on
           if (!d) return <span key={`blank-${i}`} />
           const isSel = sameDay(d, selected)
           const isPast = d < today
+          const isFull = !isPast && blockedDays.has(toISODate(d))
           // Día de la temporada (solo visual: no aparta ni bloquea nada)
           const isSeason =
             !!season &&
@@ -63,11 +67,11 @@ export function Calendar({ month, selected, today, canGoPrev, onPrev, onNext, on
             <button
               key={d.getDate()}
               type="button"
-              className={`hf-cal__day ${isSeason ? 'is-season' : ''}`}
+              className={`hf-cal__day ${isSeason ? 'is-season' : ''} ${isFull ? 'is-full' : ''}`}
               aria-pressed={isSel}
-              aria-label={isSeason ? `${dayLabel(d)} · ${season.day.tip}` : dayLabel(d)}
+              aria-label={`${dayLabel(d)}${isSeason ? ` · ${season.day.tip}` : ''}${isFull ? ' · sin horarios' : ''}`}
               title={isSeason ? season.day.tip : undefined}
-              disabled={isPast}
+              disabled={isPast || isFull}
               onClick={() => onSelect(d)}
             >
               {d.getDate()}
