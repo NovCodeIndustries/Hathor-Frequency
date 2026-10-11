@@ -1,0 +1,29 @@
+/* Contactos (diseño C1) */
+.hf-acontacts { overflow-x: auto; border: 1px solid var(--c-line); border-radius: var(--radius-card); background: var(--c-surface); padding-top: 18px; }
+
+.hf-acontacts__table { width: 100%; min-width: 820px; border-collapse: collapse; }
+.hf-acontacts__table th { padding: 0 16px 14px; font-size: 11px; font-weight: 400; letter-spacing: .2em; text-transform: uppercase; color: var(--c-text-3); text-align: left; }
+.hf-acontacts__table td { padding: 18px 16px; border-top: 1px solid var(--c-line-3); font-size: 15px; vertical-align: middle; }
+.hf-acontacts__table tr.is-done td { opacity: .55; }
+.hf-acontacts__table a { color: var(--c-gold); }
+.hf-acontacts__table a:hover { color: var(--c-text); }
+
+.hf-acontacts__right { text-align: right !important; }
+.hf-acontacts__muted { color: var(--c-text-2); font-size: 14px !important; }
+
+.hf-acontacts__check { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; color: var(--c-text-2); cursor: pointer; }
+.hf-acontacts__check input { width: 18px; height: 18px; accent-color: var(--c-gold); cursor: pointer; }
+
+.hf-acontacts__reply {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 18px;
+  border: 1px solid var(--c-gold);
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  letter-spacing: .08em;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.hf-acontacts__reply:hover { background: var(--c-gold); color: #000 !important; }

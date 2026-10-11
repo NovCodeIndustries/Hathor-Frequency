@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from 'react-router'
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router'
 import { Layout } from './components/Layout/Layout'
 import {
   ArtistsPage,
@@ -25,6 +25,23 @@ const router = createBrowserRouter([
       { path: 'estudio', element: <StudioPage /> },
       { path: 'faq', element: <FaqPage /> },
       { path: '*', element: <NotFoundPage /> },
+    ],
+  },
+  // Panel del estudio: fuera del Layout público (sin Nav, Ufo ni ticker) y cargado solo al entrar
+  {
+    path: 'admin/login',
+    lazy: async () => ({ Component: (await import('./components/Admin/AdminLogin')).AdminLogin }),
+  },
+  {
+    path: 'admin',
+    lazy: async () => ({ Component: (await import('./components/Admin/AdminLayout')).AdminLayout }),
+    children: [
+      { index: true, element: <Navigate to="reservas" replace /> },
+      { path: 'reservas', lazy: async () => ({ Component: (await import('./components/Admin/AdminAgenda')).AdminAgenda }) },
+      { path: 'opiniones', lazy: async () => ({ Component: (await import('./components/Admin/AdminReviews')).AdminReviews }) },
+      { path: 'contactos', lazy: async () => ({ Component: (await import('./components/Admin/AdminContacts')).AdminContacts }) },
+      { path: 'bloqueos', lazy: async () => ({ Component: (await import('./components/Admin/AdminBlocks')).AdminBlocks }) },
+      { path: '*', element: <Navigate to="reservas" replace /> },
     ],
   },
 ])

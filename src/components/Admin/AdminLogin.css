@@ -1,0 +1,84 @@
+/* Login del panel (diseño L1) */
+.hf-login {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: var(--font-body);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 16px 96px;
+  box-sizing: border-box;
+}
+
+.hf-login__rings {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1100px;
+  height: 1100px;
+  transform: translate(-50%, -50%);
+  color: var(--c-gold);
+  pointer-events: none;
+}
+
+.hf-login__card {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  box-sizing: border-box;
+  padding: 48px 44px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius-card);
+  background: rgba(10,10,10,0.92);
+  box-shadow: 0 0 60px rgba(242,201,76,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.hf-login__brand { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-bottom: 8px; }
+.hf-login__logo { font-family: var(--font-display); font-size: 30px; font-weight: 600; letter-spacing: .32em; padding-left: .32em; }
+.hf-login__sub { font-family: var(--font-display); font-size: 12px; letter-spacing: .5em; padding-left: .5em; color: var(--c-text-2); }
+.hf-login__kicker { margin-top: 18px; font-size: 12px; letter-spacing: .3em; text-transform: uppercase; color: var(--c-gold); }
+
+.hf-login__input { height: 52px; padding: 0 22px; font-size: 16px; }
+
+.hf-login__error { margin: -6px 0 0; min-height: 1.2em; font-size: 14px; color: var(--c-gold); text-align: center; }
+
+.hf-login__submit {
+  height: 56px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--c-gold);
+  color: #000;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: var(--glow-btn);
+  transition: box-shadow .2s;
+}
+.hf-login__submit:hover:not(:disabled) { box-shadow: var(--glow-btn-hover); }
+.hf-login__submit:disabled { opacity: .6; cursor: wait; }
+
+.hf-login__help { margin: 0; font-size: 13px; color: var(--c-text-3); text-align: center; line-height: 1.5; }
+
+.hf-login__back {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 13px;
+  letter-spacing: .14em;
+  color: var(--c-gold);
+}
+.hf-login__back:hover { color: var(--c-text); }
+
+@media (max-width: 767px) {
+  .hf-login__card { padding: 36px 24px; }
+}

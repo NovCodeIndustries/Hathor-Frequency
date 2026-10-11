@@ -1,0 +1,27 @@
+/* Opiniones · tarjetas (diseño O2) */
+.hf-areviews { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+
+.hf-areviews__card {
+  box-sizing: border-box;
+  min-height: 300px;
+  padding: 28px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius-card);
+  background: var(--c-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.hf-areviews__card.is-pending { border-color: var(--c-gold); box-shadow: 0 0 22px rgba(242,201,76,0.12); }
+.hf-areviews__card.is-rejected { opacity: .6; }
+
+.hf-areviews__top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.hf-areviews__text { flex: 1; margin: 0; font-family: var(--font-display); font-size: 17px; line-height: 1.45; overflow-wrap: anywhere; }
+
+.hf-areviews__by { display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+.hf-areviews__muted { color: var(--c-text-3); font-size: 12px; letter-spacing: .04em; }
+.hf-areviews__by > span:first-child .hf-areviews__muted { font-size: 14px; letter-spacing: 0; }
+.hf-areviews__anon { color: var(--c-gold); font-size: 12px; letter-spacing: .04em; }
+
+.hf-areviews__actions { display: flex; gap: 8px; }
+.hf-areviews__actions .hf-admin__btn { flex: 1 1 0; }
