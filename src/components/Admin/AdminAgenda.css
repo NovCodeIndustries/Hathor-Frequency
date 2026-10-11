@@ -105,3 +105,22 @@
   .hf-agenda__title { font-size: 22px; min-width: 0; }
   .hf-agenda__detail { max-width: none; min-height: 0; padding: 24px; }
 }
+
+/* Terminada (cuenta en "Proyectos" de la web): dorado con un check, más apagado que la confirmada */
+.hf-agenda__key--finished { background: var(--c-gold-2); }
+.hf-agenda__cell--finished {
+  width: 100%;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+  border: 1px solid var(--c-gold-2);
+  background: var(--c-gold-2);
+  color: #000;
+  font-family: var(--font-body);
+  text-align: left;
+  cursor: pointer;
+}
+.hf-agenda__cell--finished .hf-agenda__project::before { content: '✓ '; }

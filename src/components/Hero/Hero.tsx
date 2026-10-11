@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from 'react'
-import { useContent } from '../../lib/content'
+import { useContent, useStats } from '../../lib/content'
 import { useSeason } from '../../lib/useSeason'
 import { SeasonParticles } from '../Season/SeasonParticles'
 import { Glyph } from '../Ufo/seasonArt'
@@ -27,7 +27,8 @@ function Vinyl({ children }: { children: ReactNode }) {
  * que gira despacio, con viñeta negra para leer el texto.
  */
 export function Hero() {
-  const { slogan, stats } = useContent('sitio')
+  const { slogan } = useContent('sitio')
+  const stats = useStats()
   const season = useSeason()
   return (
     <section className="hf-hero" aria-labelledby="hero-title">

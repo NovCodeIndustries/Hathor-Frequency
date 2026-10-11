@@ -7,6 +7,7 @@ import { parseBody } from '../lib/body'
 import { fail } from '../lib/errors'
 import { cleanIds, publishedDisabled } from '../lib/site'
 import { emitSitePublished, onLiveEvent } from '../lib/siteEvents'
+import { broadcastStats, computeStats } from '../lib/stats'
 
 /** GET /api/site: módulos apagados que ve el público */
 export const site = new Hono()
@@ -14,6 +15,12 @@ export const site = new Hono()
 site.get('/', async (c) => {
   c.header('Cache-Control', 'no-cache')
   return c.json(await publishedDisabled())
+})
+
+/** GET /api/site/stats: cifras que salen de la base (proyectos terminados y artistas publicados) */
+site.get('/stats', async (c) => {
+  c.header('Cache-Control', 'no-cache')
+  return c.json(await computeStats())
 })
 
 /** GET /api/site/events: SSE con un evento `site` cada vez que se publica (y un ping cada 25 s) */
@@ -65,6 +72,7 @@ adminSite.post('/publish', async (c) => {
   await prisma.siteVersion.create({ data: { disabled: draft, publishedByName: c.get('admin').name } })
   // La web abierta cambia al instante
   emitSitePublished(draft)
+  void broadcastStats()
   return c.json(await draftOrPublished())
 })
 

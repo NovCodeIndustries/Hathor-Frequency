@@ -14,6 +14,7 @@ import { serviceLabel } from '../lib/services'
 import { dashboard } from './dashboard'
 import { adminContent, contentChanges } from './content'
 import { mediaExists } from '../lib/media'
+import { broadcastStats } from '../lib/stats'
 import { adminSite } from './site'
 import { publishedDisabled } from '../lib/site'
 
@@ -124,6 +125,8 @@ admin.patch('/bookings/:id', async (c) => {
         paidAt: paymentStatus === undefined ? undefined : paymentStatus === 'PAID' ? new Date() : null,
       },
     })
+    // Terminar o reabrir una sesión cambia la cifra de proyectos
+    if (status) void broadcastStats()
     return c.json(toAdminBooking(b))
   } catch (err) {
     // Reactivar una cancelada cuando su horario ya lo tomó otra reserva

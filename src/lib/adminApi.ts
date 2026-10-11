@@ -6,7 +6,7 @@ import { formatClock } from './time'
  * La sesión va en la cookie httpOnly `hf_admin`; el navegador la manda sola.
  */
 
-export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED'
+export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED'
 export type ReviewStatus = 'PENDING' | 'PUBLISHED' | 'REJECTED'
 export type PaymentStatus = 'PENDING' | 'DEPOSIT' | 'PAID'
 

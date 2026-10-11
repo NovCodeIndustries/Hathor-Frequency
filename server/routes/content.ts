@@ -8,6 +8,7 @@ import type { Prisma } from '../generated/prisma/client'
 import { parseBody } from '../lib/body'
 import { fail } from '../lib/errors'
 import { emitLive } from '../lib/siteEvents'
+import { broadcastStats } from '../lib/stats'
 
 const isKey = (k: string): k is ContentKey => (contentKeys as string[]).includes(k)
 
@@ -129,6 +130,7 @@ adminContent.post('/:key/publish', async (c) => {
   await prisma.contentDraft.delete({ where: { key } }).catch(() => {})
   // La web abierta cambia al instante
   emitLive('content', { key, data: state.draft })
+  if (key === 'artistas') void broadcastStats()
   return c.json(await sectionState(key))
 })
 

@@ -47,7 +47,7 @@ export function startLive() {
     startPolling()
   }, SSE_TIMEOUT_MS)
 
-  for (const name of ['site', 'content']) {
+  for (const name of ['site', 'content', 'stats']) {
     events.addEventListener(name, (e) => {
       let data: unknown
       try {

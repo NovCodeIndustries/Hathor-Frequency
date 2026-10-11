@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { contentDefaults, type ContentKey, type ContentMap } from '../data/content'
+import type { Stat } from '../data/types'
 import { onLive, onRefresh } from './live'
 
 /**
@@ -58,9 +59,29 @@ async function startPreview() {
   window.parent.postMessage({ type: 'hf-preview-ready' } satisfies PreviewMessage, window.location.origin)
 }
 
+// ── Cifras que salen de la base (Inicio y Estudio) ──
+
+let dbStats: { projects: number; artists: number } | null = null
+
+async function fetchStats(timeout = 5000) {
+  try {
+    const res = await fetch('/api/site/stats', { signal: AbortSignal.timeout(timeout), cache: 'no-store' })
+    if (!res.ok) return
+    dbStats = (await res.json()) as typeof dbStats
+    emit()
+  } catch {
+    // sin red: se muestra el valor escrito
+  }
+}
+
 /** Carga lo publicado (máx. 1.5 s) y escucha las publicaciones en vivo; nunca falla */
 export async function loadContent(): Promise<void> {
-  await fetchPublished(1500)
+  await Promise.all([fetchPublished(1500), fetchStats(1500)])
+  onLive('stats', (data) => {
+    dbStats = data as typeof dbStats
+    emit()
+  })
+  onRefresh(() => void fetchStats())
   onLive('content', (data) => {
     const { key, data: value } = data as { key: ContentKey; data: unknown }
     published = { ...published, [key]: value }
@@ -97,4 +118,16 @@ export function contentItemLabel(moduleId: string): string | undefined {
   if (kind === 'faq') return getContent('faq').items.find((f) => f.id === id)?.q
   if (kind === 'servicios') return getContent('servicios').items.find((x) => x.id === id)?.name
   return undefined
+}
+
+/** Cifras de Datos del sitio con su valor real: las de la base se cuentan (proyectos terminados, artistas publicados) */
+export function useStats(): Stat[] {
+  const { stats } = useContent('sitio')
+  return stats.map((s) =>
+    s.source === 'proyectos' && dbStats
+      ? { ...s, value: String(dbStats.projects) }
+      : s.source === 'artistas' && dbStats
+        ? { ...s, value: String(dbStats.artists) }
+        : s,
+  )
 }

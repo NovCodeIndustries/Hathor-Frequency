@@ -26,6 +26,8 @@ enum BookingStatus {
   PENDING   @map("pending")
   CONFIRMED @map("confirmed")
   CANCELLED @map("cancelled")
+  /// El admin la marcó como terminada (cuenta en las cifras de "Proyectos")
+  COMPLETED @map("completed")
 
   @@map("booking_status")
 }

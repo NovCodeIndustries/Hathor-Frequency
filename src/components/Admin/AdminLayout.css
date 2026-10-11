@@ -140,6 +140,7 @@
 .hf-chip--pending { border: 1px solid var(--c-gold); color: var(--c-gold); }
 .hf-chip--done { background: var(--c-gold); color: #000; font-weight: 600; }
 .hf-chip--off { border: 1px solid var(--c-line-2); color: var(--c-text-3); }
+.hf-chip--finished { background: var(--c-gold-2); color: #000; font-weight: 600; }
 .hf-chip--tag { border: 1px solid var(--c-line-2); color: var(--c-text-2); text-transform: none; letter-spacing: .08em; }
 
 /* Campos */

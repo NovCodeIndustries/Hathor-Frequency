@@ -7,8 +7,8 @@ import { useAdmin } from '../../lib/useAdmin'
 import { ChargeModal } from './ChargeModal'
 import './AdminAgenda.css'
 
-const STATUS_LABEL: Record<BookingStatus, string> = { PENDING: 'Pendiente', CONFIRMED: 'Confirmada', CANCELLED: 'Cancelada' }
-const STATUS_CHIP: Record<BookingStatus, string> = { PENDING: 'pending', CONFIRMED: 'done', CANCELLED: 'off' }
+const STATUS_LABEL: Record<BookingStatus, string> = { PENDING: 'Pendiente', CONFIRMED: 'Confirmada', CANCELLED: 'Cancelada', COMPLETED: 'Terminada' }
+const STATUS_CHIP: Record<BookingStatus, string> = { PENDING: 'pending', CONFIRMED: 'done', CANCELLED: 'off', COMPLETED: 'finished' }
 const PAY_LABEL: Record<PaymentStatus, string> = { PENDING: 'Pago pendiente', DEPOSIT: 'Anticipo', PAID: 'Pagado' }
 
 const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n)
@@ -105,6 +105,7 @@ export function AdminAgenda() {
             <div className="hf-agenda__legend">
               <span><i className="hf-agenda__key hf-agenda__key--pending" />Pendiente</span>
               <span><i className="hf-agenda__key hf-agenda__key--done" />Confirmada</span>
+              <span><i className="hf-agenda__key hf-agenda__key--finished" />Terminada</span>
               <span><i className="hf-agenda__key hf-agenda__key--blocked" />Bloqueado</span>
             </div>
           </div>
@@ -134,7 +135,7 @@ export function AdminAgenda() {
                         <button
                           key={iso}
                           type="button"
-                          className={`hf-agenda__cell hf-agenda__cell--${b.status === 'CONFIRMED' ? 'done' : 'pending'}`}
+                          className={`hf-agenda__cell hf-agenda__cell--${b.status === 'PENDING' ? 'pending' : b.status === 'COMPLETED' ? 'finished' : 'done'}`}
                           aria-pressed={picked?.id === b.id}
                           aria-label={`${b.project}, ${b.service}, ${STATUS_LABEL[b.status]}`}
                           onClick={() => setPickedId(b.id)}
@@ -193,7 +194,7 @@ export function AdminAgenda() {
                 <dd><a href={`mailto:${picked.email}`}>{picked.email}</a></dd>
                 <dt>Recibida</dt>
                 <dd className="hf-agenda__muted">{formatStamp(picked.createdAt)}</dd>
-                {picked.status === 'CONFIRMED' && (
+                {(picked.status === 'CONFIRMED' || picked.status === 'COMPLETED') && (
                   <>
                     <dt>Cobro</dt>
                     <dd>
@@ -211,12 +212,22 @@ export function AdminAgenda() {
                     Confirmar sesión
                   </button>
                 )}
+                {/* Terminada = cuenta en la cifra "Proyectos" de la web */}
                 {picked.status === 'CONFIRMED' && (
+                  <button type="button" className="hf-admin__btn hf-admin__btn--primary" disabled={busy} onClick={() => setStatus('COMPLETED')}>
+                    Marcar como terminada
+                  </button>
+                )}
+                {(picked.status === 'CONFIRMED' || picked.status === 'COMPLETED') && (
                   <button type="button" className="hf-admin__btn hf-admin__btn--ghost" disabled={busy} onClick={() => setCharge('edit')}>
                     Editar cobro
                   </button>
                 )}
-                {picked.status !== 'CANCELLED' ? (
+                {picked.status === 'COMPLETED' ? (
+                  <button type="button" className="hf-admin__btn" disabled={busy} onClick={() => setStatus('CONFIRMED')}>
+                    Reabrir (quitar de Proyectos)
+                  </button>
+                ) : picked.status !== 'CANCELLED' ? (
                   <button type="button" className="hf-admin__btn" disabled={busy} onClick={() => setStatus('CANCELLED')}>
                     Cancelar
                   </button>

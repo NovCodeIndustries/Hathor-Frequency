@@ -118,7 +118,7 @@ export const contentSchemas: Record<ContentKey, z.ZodType> = {
 
   sitio: z.object({
     slogan: req(120),
-    stats: z.array(z.object({ value: req(12), label: req(30) })).min(1).max(5),
+    stats: z.array(z.object({ value: opt(12), label: req(30), source: z.enum(['manual', 'proyectos', 'artistas']).optional() })).min(1).max(5),
     whatsapp: z.object({ display: opt(40), number: z.string().trim().regex(/^(\d{10,15})?$/, 'Solo dígitos con lada (52 + 10)') }),
     socials: z.array(z.object({ label: req(30), href: z.string().trim().regex(/^https:\/\/\S+$/, 'URL https://') })).max(8),
   }),

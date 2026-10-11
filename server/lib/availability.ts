@@ -4,7 +4,7 @@ import { BookingStatus } from '../generated/prisma/enums'
 import { isoFromDate } from './dates'
 
 /** Estados que ocupan un horario (CANCELLED lo libera) */
-export const ACTIVE_STATUSES = [BookingStatus.PENDING, BookingStatus.CONFIRMED]
+export const ACTIVE_STATUSES = [BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.COMPLETED]
 
 export interface Availability {
   /** Horarios ocupados por día (reservas activas + bloqueos por horario) */

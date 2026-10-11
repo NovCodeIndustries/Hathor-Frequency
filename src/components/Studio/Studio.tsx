@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { studioTourInterval } from '../../data/studio'
-import { useContent } from '../../lib/content'
+import { useContent, useStats } from '../../lib/content'
 import type { StudioVideoService } from '../../data/types'
 import { useMediaQuery } from '../../lib/useMediaQuery'
 import { useSeason } from '../../lib/useSeason'
@@ -105,7 +105,7 @@ export function Studio() {
   // Contenido del panel · Contenido (Estudio y las cifras de Datos del sitio)
   const { rooms: studioRooms, about: studioAbout, values: studioValues, gear: studioGear, video: studioVideo, visit: studioVisit, map: studioMap } =
     useContent('estudio')
-  const { stats } = useContent('sitio')
+  const stats = useStats()
   const total = Math.max(1, studioRooms.length)
   const { lat, lng, zoom } = studioMap
   const mapEmbed = `https://maps.google.com/maps?q=${lat},${lng}&z=${zoom}&hl=es&output=embed`

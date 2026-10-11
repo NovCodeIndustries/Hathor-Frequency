@@ -85,7 +85,7 @@ dashboard.get('/', async (c) => {
   const dayPlan = (iso: string) =>
     timeSlots.map((time) => {
       const b = soon.find((x) => isoFromDate(x.date) === iso && x.startTime === time)
-      if (b) return { time, kind: b.status === 'CONFIRMED' ? 'confirmed' : 'pending', id: b.id, project: b.project, service: serviceLabel[b.service] }
+      if (b) return { time, kind: b.status === 'PENDING' ? 'pending' : 'confirmed', id: b.id, project: b.project, service: serviceLabel[b.service] }
       const block = soonBlocks.find((x) => isoFromDate(x.date) === iso && (x.startTime === null || x.startTime === time))
       if (block) return { time, kind: 'blocked', reason: block.reason ?? (block.startTime ? 'Bloqueado' : 'Cerrado') }
       return { time, kind: 'free' }
@@ -93,7 +93,9 @@ dashboard.get('/', async (c) => {
 
   // ── Reservas del periodo
   const active = bookings.filter((b) => b.status !== 'CANCELLED')
-  const confirmed = bookings.filter((b) => b.status === 'CONFIRMED')
+  // Terminadas cuentan como confirmadas (la sesión se hizo)
+  const isDone = (s: string) => s === 'CONFIRMED' || s === 'COMPLETED'
+  const confirmed = bookings.filter((b) => isDone(b.status))
   const days = Math.round((dateFromISO(p.to).getTime() - dateFromISO(p.from).getTime()) / 86_400_000) + 1
   const blockedKeys = new Set<string>()
   for (const b of blocks) {
@@ -104,7 +106,7 @@ dashboard.get('/', async (c) => {
 
   // ── Ingresos (solo reservas confirmadas con monto)
   const revenue = (list: typeof prevBookings) => {
-    const conf = list.filter((b) => b.status === 'CONFIRMED')
+    const conf = list.filter((b) => isDone(b.status))
     const total = conf.reduce((s, b) => s + (b.amountCents ?? 0), 0)
     const paid = conf.reduce((s, b) => s + collected(b), 0)
     return { paid: paid / 100, due: (total - paid) / 100 }

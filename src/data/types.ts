@@ -49,8 +49,11 @@ export interface MediaItem {
 }
 
 export interface Stat {
+  /** Lo que se muestra si `source` es manual (o mientras carga la cifra de la base) */
   value: string
   label: string
+  /** De dónde sale: escrita a mano, o contada en la base (proyectos terminados / artistas publicados) */
+  source?: 'manual' | 'proyectos' | 'artistas'
 }
 
 export interface NavLink {
