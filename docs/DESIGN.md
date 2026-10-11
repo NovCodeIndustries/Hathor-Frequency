@@ -744,13 +744,20 @@ Cambio del 2026-10-11. Es privado: va fuera del Layout público (sin Nav, Ufo, t
     - a la derecha, el formulario con Duplicar / Eliminar y "Ver en Sitio";
     - el borrador **se guarda solo** (0.6 s después de escribir).
   - **Vista previa (C2)**: abierta por defecto (si la cierras, el navegador lo recuerda); muestra a la derecha la página real en un iframe (`?modo=vista`, solo con sesión de admin) que muestra el borrador mientras escribes. Sin bienvenida ni platillo, y no cuenta en Umami.
-  - **F1 · Medios**: un campo de ruta `/media/…` (HDD montado) o URL https, con miniatura y aviso ("Encontrada en el HDD", "No existe en el HDD", "URL externa", "Debe empezar con /media/ o https://"). **Solo se guarda la ubicación.**
+  - **F1 · Medios**: botón **"Buscar archivo"** que abre el buscador del HDD (`MediaPicker.tsx`): navegar por carpetas con migas, buscar por nombre en todo el disco, miniaturas de fotos y videos (solo los del tipo del campo) y elegir con un clic. También acepta escribir una ruta `/media/…` (HDD montado) o URL https, con miniatura y aviso ("Encontrada en el HDD", "No existe en el HDD", "URL externa", "Debe empezar con /media/ o https://"). **Solo se guarda la ubicación.**
   - **F2 · Listas**: "qué incluye", pasos, párrafos y listas de objetos (redes, fotos, videos, espacios, cifras) con agregar, ordenar y quitar.
   - **F3 · Validación**: el error va en su campo y la fila de la lista muestra "N errores"; con errores no se puede publicar.
   - **F4 · Eliminar**: confirmación con "Mejor ocultarlo en Sitio →"; se recupera desde el Historial.
   - **F5 · Barra de la sección**: contenido inicial / cambios sin publicar (con errores) / guardando / publicando / "publicado · la web ya lo muestra"; Historial, Descartar y **Publicar {sección}**. Cada sección se publica por separado.
   - **F6 · Historial**: quién, cuándo y qué cambió ("Agregó EP · Cambió Sencillo"), con Restaurar, también para el contenido inicial.
   - Al publicar, la web abierta cambia al instante (SSE `content`).
+- **Cifras de Inicio y Estudio** (cambio del 2026-10-11): en Datos del sitio, cada cifra dice de dónde sale:
+  - **escrita a mano**;
+  - **proyectos terminados**: reservas que el admin marca como **"Terminada"** en la agenda, con "Marcar como terminada" en el detalle; "Reabrir" lo deshace;
+  - **artistas publicados**: los de Contenido · Artistas sin los ocultos en Sitio ni "Tu banda".
+  - Solo cuenta lo de la base, sin número base. Por defecto, Proyectos y Artistas salen de la base y Años es manual.
+  - En la agenda, la terminada se ve en dorado secundario con ✓ y sigue ocupando su horario.
+  - La web recibe la cifra nueva al instante (SSE `stats`).
 - **D1 · Ocupado en Reservar (público)**: se queda el tachado: el horario o día lleno se apaga en `#444` con `line-through`, igual que los días pasados (§6).
 
 ---

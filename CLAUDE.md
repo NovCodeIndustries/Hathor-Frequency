@@ -42,7 +42,8 @@ La landing está construida (React + TypeScript + Vite) siguiendo `docs/DESIGN.m
   - la API es `GET /api/content` y `/api/admin/content/:key/*` (draft, publish, discard, history, restore);
   - en la BD están `ContentDraft` y `ContentVersion`; al publicar se manda el SSE `content` (`src/lib/live.ts` es el canal en vivo compartido);
   - los formularios se definen en `src/components/Admin/contentForms.ts`; al agregar un campo editable, agrégalo al tipo, al schema y al formulario.
-- Medios: fotos y videos en un HDD aparte. Docker lo monta (`MEDIA_DIR` en `.env`) en `/app/media`, la API lo sirve en `/media/...` y la BD solo guarda rutas o URLs (`server/lib/media.ts`).
+- Cifras: "Proyectos" = reservas `COMPLETED` (el admin las marca como terminadas en la agenda) y "Artistas" = artistas publicados sin los ocultos. Salen de `GET /api/site/stats` (`server/lib/stats.ts`) y la web las lee con `useStats()`. El estado `COMPLETED` sigue ocupando su horario (índice `bookings_active_slot_key`).
+- Medios: fotos y videos en un HDD aparte; en el panel se eligen con el buscador (`MediaPicker.tsx`, `GET /api/admin/media/list?dir=|q=`). Docker lo monta (`MEDIA_DIR` en `.env`) en `/app/media`, la API lo sirve en `/media/...` y la BD solo guarda rutas o URLs (`server/lib/media.ts`).
 - Módulos del sitio (panel · Sitio), para apagar cosas sin borrarlas:
   - registro en `src/data/modules.ts`, con páginas, secciones, elementos de listas y globales; **los ids publicados no se cambian**;
   - la web los lee con `src/lib/siteModules.ts` (`useModule`, `useModuleFilter`, `useVisibleLinks`) y `<Module id>` / `PageLink`; se cargan antes de pintar, en `main.tsx`;
