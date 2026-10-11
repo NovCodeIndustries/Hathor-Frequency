@@ -9,18 +9,29 @@ La landing está construida (React + TypeScript + Vite) siguiendo `docs/DESIGN.m
 - Multipágina con `react-router`, definido en `src/App.tsx`:
   - `src/components/Layout/` contiene Nav sticky + `<Outlet>` + Ticker + Footer;
   - las páginas están en `src/pages/`;
-  - rutas: `/`, `/servicios`, `/artistas`, `/opiniones` (después de Artistas en el nav), `/reservar`, `/contacto`, `/faq` (FAQs en el nav, después de Reservar) y `/estudio` (tour de los espacios, `src/data/studio.ts`).
+  - rutas públicas: `/`, `/servicios`, `/artistas`, `/opiniones` (después de Artistas en el nav), `/reservar`, `/contacto`, `/faq` (FAQs en el nav, después de Reservar) y `/estudio` (tour de los espacios, `src/data/studio.ts`).
   - `/servicios` alterna dos vistas sin cambiar de ruta, Servicios (consola) y Paquetes (`src/data/packages.ts`), con la transición de cambio de frecuencia de `TuneTransition.tsx` (DESIGN §4.1).
   - En producción, el hosting debe redirigir toda ruta a `index.html` (SPA fallback).
 - El panel lateral de detalle (paquetes y artistas) es `src/components/shared/Drawer.tsx`; la galería del artista (`Artists/MediaPanel.tsx`) se monta a su izquierda.
-- Excepción al breakpoint único: el Nav cambia a hamburguesa por debajo de 1200px (con FAQs no cabe el nav completo).
+- Excepción al breakpoint único: el Nav cambia a hamburguesa por debajo de 1200px (con FAQs no cabe el nav completo). La barra lateral del panel `/admin` pasa arriba por debajo de 1024px.
 - Componentes en `src/components/<Seccion>/` (un `.tsx` + `.css` por componente) y compartidos en `src/components/shared/`.
 - Estilos: CSS plano con prefijo `hf-`, tokens en `src/styles/tokens.css`. Breakpoint único: `@media (max-width: 767px)`.
 - Datos editables en `src/data/*.ts`, con tipos en `src/data/types.ts`.
 - Capa lúdica: platillo volador en todas las vistas (`src/components/Ufo/`), temporadas por mes y cumpleaños (`src/data/seasons.ts`, hook `useSeason`) y easter eggs; detalle en DESIGN.
-- Formularios (Contacto, Reservar, Opiniones): todo envío pasa por `src/lib/submit.ts`, que hoy solo simula. **Aún no hay API.** La base de datos está preparada (Prisma), pero el frontend no la usa todavía.
+- API (Hono) en `server/`:
+  - `index.ts` monta todo bajo `/api`; las rutas están en `routes/`, la validación con zod en `schemas.ts` (reusa `timeSlots`, `bookingServices` y `contactTopics` de `src/data/`) y la sesión de admin en `auth.ts`;
+  - en dev corre con `tsx watch` en :3000, Vite la sirve en `/api` con un proxy, y `npm run dev:all` levanta las dos (es el CMD de Docker);
+  - tipos en `tsconfig.server.json`, que forma parte de `npm run build`.
+- Formularios (Contacto, Reservar, Opiniones): todo envío pasa por `src/lib/submit.ts` (fetch + `SubmitError`). Llevan honeypot (`shared/Honeypot.tsx`) y hay rate limit por IP.
+- Reservar: una sesión por horario. La garantía es el índice único parcial `bookings_active_slot_key`, hecho con SQL crudo en la migración `availability_admin` y que Prisma no modela; conservarlo. El calendario usa `useAvailability`.
+- Opiniones: vienen de `GET /api/reviews` (`useReviews`), solo las PUBLISHED; sin consentimiento, el nombre sale como "Anónimo".
+- Panel del estudio en `/admin` (DESIGN §7.4):
+  - fuera del Layout público, con rutas `lazy` en `src/App.tsx`, componentes en `src/components/Admin/`, cliente `src/lib/adminApi.ts` y contexto `src/lib/useAdmin.ts`;
+  - la API está en `/api/admin/*` y los usuarios se crean con `npm run admin:create`.
+- Correos: fuera de alcance por ahora.
 - Base de datos:
-  - esquema en `prisma/schema.prisma`, con los modelos `ContactRequest`, `Booking` y `Review`;
+  - esquema en `prisma/schema.prisma`, con los modelos `ContactRequest` (con `handledAt`), `Booking`, `Review`, `BlockedSlot`, `AdminUser` y `AdminSession`;
+  - seed de dev en `prisma/seed.ts`, con 3 opiniones provisionales;
   - migraciones en `prisma/migrations/`;
   - configuración en `prisma.config.ts` (Prisma 7: la URL va en la config, no en el schema);
   - el cliente se genera en `server/generated/prisma` y está en gitignore.
@@ -31,7 +42,7 @@ La landing está construida (React + TypeScript + Vite) siguiendo `docs/DESIGN.m
 ```bash
 docker compose up --build   # todo: db (PostgreSQL 17, host :5440) + app (Vite :5173); migra al arrancar
 npm install                 # dependencias (sin Docker)
-npm run dev                 # Vite en http://localhost:5173 (server.host: true ya configurado)
+npm run dev:all             # Vite :5173 + API :3000 (proxy /api); `npm run dev` / `dev:api` por separado
 npm run build               # tsc -b (chequeo de tipos) + build a /dist
 npm run preview             # sirve /dist
 npm run lint                # oxlint
@@ -39,6 +50,8 @@ npm run db:migrate          # prisma migrate dev (nueva migración tras editar e
 npm run db:deploy           # prisma migrate deploy
 npm run db:generate         # prisma generate
 npm run db:studio           # prisma studio
+npm run db:seed             # opiniones de ejemplo (dev)
+npm run admin:create        # alta/cambio de contraseña de un admin (interactivo)
 ```
 
 Dentro de Docker, los comandos de Prisma se corren con `docker compose exec app npm run db:migrate`. Desde el host, `.env` (copia de `.env.example`) apunta a `localhost:5440`.

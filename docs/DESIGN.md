@@ -10,6 +10,7 @@ Especificación **exacta** de la landing de Hathor Frequency, aprobada el 2026-1
 | Landing final — móvil | 7 vistas a 390 px | https://claude.ai/artifact/Jz4ZGFXhuivA8NXm2AGmey |
 | Exploración Servicios | 5 propuestas (se eligió la 03) | https://claude.ai/artifact/LQEiJ6gToqr3XS8w3owYRk |
 | Exploración Contacto/Reservar | 5 + 5 propuestas (se eligieron C2 y R2) | https://claude.ai/artifact/SvgcDXZvw3vXd8JrsReCWt |
+| Panel de admin | A1–A3, L1, O1–O2, B1, C1, D1–D3 (se eligieron A2, L1, O2, B1, C1 y D1) | https://claude.ai/artifact/PQevfwPDA7oRfVuasV4cXF |
 
 Cada vista es un artboard (`Main.dc.html`, `02-Ticker.dc.html` … `07-Footer.dc.html`) con nombres iguales en los dos canvas finales. Si hay duda sobre un valor, manda el artboard.
 
@@ -650,11 +651,47 @@ Cambio del 2026-10-09. Componente `Studio.tsx`, datos en `src/data/studio.ts`.
 
 ## 7.3 Opiniones (`/opiniones`, canvas https://claude.ai/artifact/R7Esqtm9Mbfyo4s5KyY7Du)
 
-Cambio del 2026-10-09. En el nav va después de Artistas (Servicios · Artistas · Opiniones). Datos en `src/data/reviews.ts`.
+Cambio del 2026-10-09. En el nav va después de Artistas (Servicios · Artistas · Opiniones). Textos y límites en `src/data/reviews.ts`; las opiniones vienen de `GET /api/reviews` (hook `useReviews`).
 - **Página** (`Reviews.tsx`): cabecera 7fr / 5fr con eyebrow "Opiniones", h1 "Lo que dicen *quienes ya grabaron.*" y un párrafo; a la derecha, tarjeta de resumen con el promedio (Cinzel 64px dorado), estrellas, total, barras por calificación (5 a 1) y el botón primario "Deja tu opinión ★". Debajo, filtros por servicio (pills `aria-pressed`, "Todas" + los servicios que tengan opiniones) y una grilla de 3 columnas (2 en tablet, 1 en móvil) con tarjetas: estrellas, etiqueta del servicio, cita en Cinzel 18px, nombre y proyecto.
 - **Ventana "Deja tu opinión"** (`ReviewModal.tsx`, portal): "Opiniones" + glifo de temporada, "¿Cómo sonó *tu experiencia?*" y "La revisamos antes de publicarla." Estrellas de 1 a 5 (`radiogroup`, 52px, se iluminan al pasar el mouse, flechas del teclado) con su texto: *Desafinado · Le falta mezcla · Suena bien · Suena muy bien · ¡Disco de oro!*; nombre, banda o proyecto (opcional), servicio (`contactTopics`), opinión (máx. 500 con contador) y "Pueden publicar mi opinión con mi nombre". Sin estrellas no se envía ("Elige cuántas estrellas le das"). Al enviar: estrellas iluminadas, "¡Gracias por *tu frecuencia!*" y botón Cerrar. Se cierra con la ✕, clic fuera o Escape. En móvil sube como hoja desde abajo. En temporada toma el borde, glow y anillos del color del mes, el glifo y el mensaje del mes. `/opiniones?opinar=1` la abre al llegar.
 - **Contacto**: el testimonio fijo se cambió por la rotación de opiniones (`ReviewsRotator.tsx`): cada 6s (`reviewRotateMs`) cambia con fundido; estrellas, cita en Cinzel 20px y "— Nombre · Servicio"; puntos para elegir una (se queda en esa), barra de tiempo, y el link "¿Ya grabaste con nosotros? *Deja tu opinión →*" a `/opiniones?opinar=1`. Se pausa con el mouse encima, con el foco dentro y con reduced-motion.
-- **Datos**: el envío está simulado (`submitReview`); la tabla `reviews` (migración `reviews`) guarda calificación, nombre, proyecto, servicio, texto, permiso y estado `pending/published/rejected`. Solo se muestran las opiniones de `reviews.ts`.
+- **Datos**: `submitReview` guarda en la tabla `reviews` (calificación, nombre, proyecto, servicio, texto, permiso y estado `pending/published/rejected`). La página y la rotación muestran solo las PUBLISHED (`GET /api/reviews`, hook `useReviews`); sin permiso de nombre salen como "Anónimo". Se aprueban en el panel (§7.4).
+
+## 7.4 Panel del estudio (`/admin`, canvas https://claude.ai/artifact/PQevfwPDA7oRfVuasV4cXF)
+
+Cambio del 2026-10-11. Es privado: va fuera del Layout público (sin Nav, Ufo, ticker, bienvenida ni temporadas), lleva `noindex` y se carga aparte (rutas `lazy` en `App.tsx`). Componentes en `src/components/Admin/`, cliente en `src/lib/adminApi.ts` y contexto en `src/lib/useAdmin.ts`. Misma paleta y tipografía del sitio. Sin sesión, cualquier ruta `/admin/*` manda a `/admin/login?next=…`.
+- **L1 · Login** (`/admin/login`, `AdminLogin.tsx`):
+  - tarjeta de 420px centrada sobre los anillos de vinil de Contacto (con el arco dorado);
+  - lockup "HATHOR / FREQUENCY" + "Panel del estudio" en dorado;
+  - correo y contraseña en pills de 52px y botón dorado "Entrar" de 56px con glow;
+  - el error de la API va en dorado ("Correo o contraseña incorrectos"), con "¿Sin acceso? Pídelo a quien administra el estudio." y "← Volver al sitio" al pie.
+- **Estructura** (`AdminLayout.tsx`): barra lateral izquierda de 260px, como en **A1** (cambio del 2026-10-11, reemplaza la barra superior de A2):
+  - va fija al hacer scroll y lleva borde derecho `#333`;
+  - arriba, el lockup "HATHOR / FREQUENCY" + "Panel del estudio" en dorado;
+  - las secciones en pills de 44px (Reservas, Opiniones, Contactos, Bloqueos; la activa en dorado sobre `rgba(242,201,76,.12)`), con contadores: reservas pendientes desde hoy (pastilla dorada rellena), opiniones pendientes (contorno dorado) y contactos sin atender (gris);
+  - abajo, el nombre, el correo y "Cerrar sesión";
+  - **excepción al breakpoint único**: por debajo de 1024px la barra pasa arriba (logo y "Cerrar sesión" en una fila, secciones en fila con scroll horizontal), porque la agenda necesita el ancho.
+- **A2 · Reservas** (`/admin/reservas`, `AdminAgenda.tsx`):
+  - semana de lunes a domingo con flechas y botón "Hoy"; leyenda Pendiente (contorno dorado), Confirmada (dorado relleno) y Bloqueado (trama);
+  - cuadrícula de 72px + 7 columnas por `timeSlots`, con celdas de 64px: reserva activa (proyecto y servicio), bloqueo (trama + motivo, "Cerrado" o "Bloqueado") o libre (borde punteado);
+  - las canceladas no ocupan celda; se cuentan debajo;
+  - a la derecha va el detalle con anillos: proyecto en Cinzel, día, hora y servicio, chip de estado, representante, teléfono (`tel:`), correo (`mailto:`), fecha de recepción y las acciones Confirmar sesión / Cancelar (Reactivar si está cancelada);
+  - un 409 al reactivar se muestra como error.
+- **O2 · Opiniones** (`/admin/opiniones`, `AdminReviews.tsx`):
+  - filtros Todas / Pendientes / Publicadas / Rechazadas con su conteo; abre en Pendientes;
+  - cuadrícula `auto-fill` de tarjetas de 300px: las pendientes con borde dorado y glow, las rechazadas al 60%;
+  - cada tarjeta lleva estrellas, chip de estado, cita en Cinzel, nombre, proyecto, servicio, y "Con su nombre" o "Saldrá como 'Anónimo'" (en dorado);
+  - acciones: Publicar/Rechazar, Ocultar (pasa a rechazada) o "Publicar de todos modos".
+- **C1 · Contactos** (`/admin/contactos`, `AdminContacts.tsx`):
+  - filtro por tema (`contactTopics`);
+  - tabla con Nombre, Tema (chip), Correo, Recibido, Atendido y "Responder" (`mailto:` con asunto "Hathor Frequency · {tema}");
+  - la casilla **Atendido** guarda `handled_at` y apaga la fila al 55%.
+- **B1 · Bloqueos** (`/admin/bloqueos`, `AdminBlocks.tsx`):
+  - calendario del mes (sin meses pasados): día cerrado con trama, punto dorado si tiene horarios bloqueados;
+  - panel del día con "Cerrar el día completo", "O solo algunos horarios" (pills de `timeSlots`, desactivadas si el día está cerrado), motivo (solo lo ve el estudio) y "Guardar bloqueo" (activo solo si hay cambios);
+  - abajo, "Próximos bloqueos" por día: clic para ir al día y ✕ para quitarlo;
+  - bloquear no cancela reservas ya hechas.
+- **D1 · Ocupado en Reservar (público)**: se queda el tachado: el horario o día lleno se apaga en `#444` con `line-through`, igual que los días pasados (§6).
 
 ---
 
@@ -704,10 +741,14 @@ Cambio del 2026-10-09. En el nav va después de Artistas (Servicios · Artistas 
 - **Testimonio**: el texto de Sofía M. es provisional.
 - **Estudio · mapa**: las coordenadas de `studioMap` son un punto de ejemplo (Roma Norte, CDMX); faltan las reales y quitar `example`.
 - **Estudio**: el texto de Nosotros es un borrador hecho con el eslogan y las cifras; falta la historia real (fundadores, año, ciudad). Faltan también las fotos de los espacios y del equipo, videos de muestra (`embed`), medidas, modelos y datos de visita (marcadores `[..]` en `src/data/studio.ts`). "Agendar visita" lleva a `/contacto` mientras no haya un flujo propio.
-- **Envíos**: falta definir a dónde van el formulario de contacto y la reserva (backend o servicio).
-- **Calendario**: la disponibilidad y la navegación entre meses son estáticas en el diseño.
+- **Envíos**: resuelto (2026-10-11). Los tres formularios guardan en PostgreSQL por la API (`server/`). Faltan las notificaciones por correo; se enganchan en los POST públicos y en los cambios de status del panel.
+- **Calendario**: la disponibilidad es real (`GET /api/availability`). Un horario ocupado y un día sin horarios usan el estilo **D1 · Tachado** (apagado + tachado, como los días pasados), elegido en el canvas del panel. Si el horario elegido se ocupa, se pasa al primero libre; si el día está lleno, el botón dice "Sin horarios este día". Un 409 al reservar muestra "Ese horario acaba de ocuparse. Elige otro." y recarga la disponibilidad.
 - **Redes**: Contacto repite los links que también aparecen en el Footer (decisión abierta).
-- **Opiniones**: las 3 de `src/data/reviews.ts` son provisionales (como el testimonio de Sofía M.); hay que reemplazarlas por opiniones reales aprobadas y definir quién las revisa.
+- **Opiniones**: vienen de la API (solo PUBLISHED; sin permiso de nombre salen como "Anónimo"). Las 3 de ejemplo están en `prisma/seed.ts` y son provisionales, solo para dev. Se aprueban desde el panel de admin, cuya UI está pendiente de diseño.
+- **Panel de admin**: construido (§7.4). Pendientes:
+  - las reservas canceladas no tienen vista propia; solo se cuentan en la semana, y se reactivan solo si siguen seleccionadas;
+  - no hay gestión de usuarios admin en la UI (se usa `npm run admin:create`);
+  - faltan los correos de aviso.
 - **Artistas y FAQ**: faltan las bios, redes (links), videos y fotos reales de los artistas, y los datos que faltan en dos respuestas de FAQ (marcadores `[..]` de pago y tiempo de entrega).
 - **Nav**: el rango 768–1199px usa el nav móvil (hamburguesa) porque con FAQs no cabe el nav completo; no hay diseño específico de tablet.
 - **Tablet**: no hay diseño para 768–1200px; se usa el layout desktop fluido.
