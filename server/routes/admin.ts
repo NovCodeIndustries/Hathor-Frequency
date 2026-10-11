@@ -13,7 +13,7 @@ import { rateLimit } from '../lib/rateLimit'
 import { serviceLabel } from '../lib/services'
 import { dashboard } from './dashboard'
 import { adminContent, contentChanges } from './content'
-import { mediaExists } from '../lib/media'
+import { MEDIA_DIR, listMedia, mediaExists, searchMedia } from '../lib/media'
 import { broadcastStats } from '../lib/stats'
 import { adminSite } from './site'
 import { publishedDisabled } from '../lib/site'
@@ -227,6 +227,16 @@ admin.route('/dashboard', dashboard)
 admin.route('/site', adminSite)
 
 // ── Medios (F1: ¿existe la ruta en el HDD?) ───────────────
+
+/** Buscador de archivos: ?dir=/media/artistas para navegar o ?q=ralo para buscar por nombre */
+admin.get('/media/list', async (c) => {
+  if (!MEDIA_DIR) return c.json({ configured: false, dir: '/media', parent: null, entries: [] })
+  const q = c.req.query('q')
+  if (q) return c.json({ configured: true, dir: '/media', parent: null, query: q, entries: await searchMedia(q) })
+  const res = await listMedia(c.req.query('dir') ?? '/media')
+  if (!res) return fail(c, 404, 'Carpeta no encontrada')
+  return c.json({ configured: true, ...res })
+})
 
 admin.get('/media/check', async (c) => {
   const path = c.req.query('path') ?? ''

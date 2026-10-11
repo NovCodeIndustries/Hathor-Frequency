@@ -41,6 +41,23 @@ export interface ContentState {
   issues: FieldIssue[]
 }
 
+export interface MediaEntry {
+  name: string
+  path: string
+  kind: 'dir' | 'image' | 'video' | 'other'
+  size: number
+  modifiedAt: string
+}
+
+/** Respuesta del buscador de archivos del HDD de medios */
+export interface MediaListing {
+  configured: boolean
+  dir: string
+  parent: string | null
+  query?: string
+  entries: MediaEntry[]
+}
+
 export interface ContentVersionInfo {
   id: string
   summary: string
@@ -234,6 +251,8 @@ export const adminApi = {
   discardContent: (key: string) => request<ContentState>('POST', `/content/${key}/discard`, {}),
   contentHistory: (key: string) => request<ContentVersionInfo[]>('GET', `/content/${key}/history`),
   restoreContent: (key: string, id: string) => request<ContentState>('POST', `/content/${key}/restore/${id}`, {}),
+  mediaList: (params: { dir?: string; q?: string }) =>
+    request<MediaListing>('GET', `/media/list${query({ dir: params.dir, q: params.q })}`),
   mediaCheck: (path: string) => request<{ path: string; exists: boolean | null }>('GET', `/media/check?path=${encodeURIComponent(path)}`),
 
   reviews: () => request<AdminReview[]>('GET', '/reviews'),

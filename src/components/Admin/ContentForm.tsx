@@ -1,6 +1,7 @@
 import { useEffect, useId, useState, type ReactNode } from 'react'
 import { adminApi, type FieldIssue } from '../../lib/adminApi'
 import { getAt, keyPath, type Field } from './contentForms'
+import { MediaPicker } from './MediaPicker'
 
 type Path = (string | number)[]
 
@@ -221,6 +222,7 @@ function MediaField({ id, cls, label, help, value, accept, onChange }: { id: str
   const isMedia = v.startsWith('/media/')
   const isUrl = /^https:\/\/\S+$/.test(v)
   const [check, setCheck] = useState<{ path: string; exists: boolean | null } | null>(null)
+  const [picking, setPicking] = useState(false)
 
   // ¿Existe en el HDD? (con una pausa para no preguntar en cada tecla)
   useEffect(() => {
@@ -255,7 +257,23 @@ function MediaField({ id, cls, label, help, value, accept, onChange }: { id: str
   return (
     <label className={`${cls} ${bad ? 'has-error' : ''}`} htmlFor={id}>
       {label}
-      <input id={id} className="hf-cinput" value={value} placeholder={accept === 'image' ? '/media/artistas/ralo/01.jpg' : 'https://www.youtube-nocookie.com/embed/…'} onChange={(e) => onChange(e.target.value)} />
+      <span className="hf-cmedia__row">
+        <input id={id} className="hf-cinput" value={value} placeholder={accept === 'image' ? '/media/artistas/ralo/01.jpg' : 'https://www.youtube-nocookie.com/embed/…'} onChange={(e) => onChange(e.target.value)} />
+        <button type="button" className="hf-admin__btn hf-admin__btn--sm hf-cmedia__browse" onClick={() => setPicking(true)}>
+          Buscar archivo
+        </button>
+      </span>
+      {picking && (
+        <MediaPicker
+          accept={accept}
+          current={v}
+          onClose={() => setPicking(false)}
+          onPick={(path) => {
+            onChange(path)
+            setPicking(false)
+          }}
+        />
+      )}
       <span className="hf-cmedia">
         <span className={`hf-cmedia__thumb ${showImg || showVid ? 'has-media' : ''}`}>
           {showImg ? <img src={v} alt="" loading="lazy" /> : showVid ? <video src={v} muted preload="metadata" /> : <span>{v ? 'Sin vista previa' : 'Marcador'}</span>}

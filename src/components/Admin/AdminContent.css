@@ -184,6 +184,9 @@ select.hf-cinput { background: var(--c-surface-2); }
 .hf-clist__title[aria-expanded="true"] { color: var(--c-gold); }
 
 /* F1 · Medio */
+.hf-cmedia__row { display: flex; gap: 8px; }
+.hf-cmedia__row .hf-cinput { flex: 1; min-width: 0; }
+.hf-cmedia__browse { flex: none; border-color: var(--c-gold); color: var(--c-gold); }
 .hf-cmedia { display: flex; align-items: center; gap: 12px; }
 .hf-cmedia__thumb { flex: none; width: 120px; height: 68px; border-radius: 4px; overflow: hidden; display: grid; place-items: center; border: 1px dashed var(--c-line-2); background: repeating-linear-gradient(135deg, #0d0d0d 0 2px, transparent 2px 7px); font-size: 11px; color: var(--c-text-3); text-align: center; }
 .hf-cmedia__thumb.has-media { border: 1px solid var(--c-gold); background: #000; }
