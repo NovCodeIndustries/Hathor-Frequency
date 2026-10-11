@@ -18,6 +18,7 @@ Esto levanta todo junto:
 |---|---|---|
 | `app` | instala dependencias, genera el cliente Prisma, aplica migraciones y corre Vite + la API | http://localhost:5173 (API en `/api`) |
 | `db` | PostgreSQL 17 con volumen persistente `pgdata` | `localhost:5440` |
+| `umami` + `umami-db` | analítica de visitas (sin cookies) para el dashboard | http://localhost:3100 |
 
 No necesitas `.env`: `docker-compose.yml` trae valores por defecto. Para cambiarlos (puertos, usuario, contraseña), copia `.env.example` a `.env`.
 
@@ -112,6 +113,16 @@ La API vive en `server/` (Hono + Prisma) y el navegador la llama en `/api`; en d
 
 - **Una sesión por horario**: un índice único parcial en `bookings (date, start_time)` para PENDING/CONFIRMED evita reservas dobles, aunque lleguen a la vez. Cancelar libera el horario.
 - **Anti-spam**: campo honeypot (`website`) y límite de envíos por IP en memoria.
-- **Panel del estudio**: en http://localhost:5173/admin (Reservas, Opiniones, Contactos, Bloqueos).
+- **Panel del estudio**: en http://localhost:5173/admin (Inicio/dashboard, Reservas, Opiniones, Contactos, Bloqueos).
 - **Admin**: usuarios en `admin_users` (contraseña con scrypt), sesión por cookie httpOnly `hf_admin` (7 días). No hay registro público: `npm run admin:create`.
 - El cliente Prisma se genera en `server/generated/prisma` (ignorado por git). Prisma nunca se importa desde `src/`.
+
+## Visitas (Umami)
+
+El dashboard del panel lee las visitas de Umami, que corre en el mismo `docker compose`.
+
+1. Abre http://localhost:3100 y entra con **admin / umami**. Cambia la contraseña (Settings → Profile) y ponla también en `UMAMI_PASSWORD` de `.env`.
+2. En Settings → Websites agrega el sitio. Copia su **Website ID** a `UMAMI_WEBSITE_ID` y `VITE_UMAMI_WEBSITE_ID` en `.env`.
+3. `docker compose up -d app` para que tome los cambios.
+
+El sitio público carga el script por `/umami` (proxy de Vite), así que también funciona por el túnel. El panel `/admin` no se cuenta. Cada reserva enviada registra el evento `reserva-enviada`. Sin `VITE_UMAMI_WEBSITE_ID` no se carga nada.

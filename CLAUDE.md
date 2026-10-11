@@ -17,6 +17,7 @@ La landing está construida (React + TypeScript + Vite) siguiendo `docs/DESIGN.m
 - Componentes en `src/components/<Seccion>/` (un `.tsx` + `.css` por componente) y compartidos en `src/components/shared/`.
 - Estilos: CSS plano con prefijo `hf-`, tokens en `src/styles/tokens.css`. Breakpoint único: `@media (max-width: 767px)`.
 - Datos editables en `src/data/*.ts`, con tipos en `src/data/types.ts`.
+- Horas: se guardan en 24 h ("15:00") y se muestran siempre en 12 h ("3:00 p. m.") con `formatTime` de `src/lib/time.ts`, en el sitio y en el panel.
 - Capa lúdica: platillo volador en todas las vistas (`src/components/Ufo/`), temporadas por mes y cumpleaños (`src/data/seasons.ts`, hook `useSeason`) y easter eggs; detalle en DESIGN.
 - API (Hono) en `server/`:
   - `index.ts` monta todo bajo `/api`; las rutas están en `routes/`, la validación con zod en `schemas.ts` (reusa `timeSlots`, `bookingServices` y `contactTopics` de `src/data/`) y la sesión de admin en `auth.ts`;
@@ -27,8 +28,22 @@ La landing está construida (React + TypeScript + Vite) siguiendo `docs/DESIGN.m
 - Opiniones: vienen de `GET /api/reviews` (`useReviews`), solo las PUBLISHED; sin consentimiento, el nombre sale como "Anónimo".
 - Panel del estudio en `/admin` (DESIGN §7.4):
   - fuera del Layout público, con rutas `lazy` en `src/App.tsx`, componentes en `src/components/Admin/`, cliente `src/lib/adminApi.ts` y contexto `src/lib/useAdmin.ts`;
-  - la API está en `/api/admin/*` y los usuarios se crean con `npm run admin:create`.
+  - la API está en `/api/admin/*` y los usuarios se crean con `npm run admin:create`;
+  - Inicio (`/admin`) es el dashboard D4 (`AdminDashboard.tsx`, `server/routes/dashboard.ts`); el cobro de una reserva (`amountCents`, `paymentStatus`, `depositCents`) se captura en la ventana `ChargeModal.tsx`.
+- Visitas: Umami en docker-compose (`umami` + `umami-db`, host :3100):
+  - el sitio público lo carga desde `src/lib/analytics.ts`, solo si existe `VITE_UMAMI_WEBSITE_ID`, por el proxy `/umami` de Vite;
+  - la API lee sus cifras en `server/lib/umami.ts`;
+  - el panel no se cuenta.
 - Correos: fuera de alcance por ahora.
+- Módulos del sitio (panel · Sitio), para apagar cosas sin borrarlas:
+  - registro en `src/data/modules.ts`, con páginas, secciones, elementos de listas y globales; **los ids publicados no se cambian**;
+  - la web los lee con `src/lib/siteModules.ts` (`useModule`, `useModuleFilter`, `useVisibleLinks`) y `<Module id>` / `PageLink`; se cargan antes de pintar, en `main.tsx`;
+  - `Button` con `to` se oculta solo si su página está apagada; una página apagada muestra "Próximamente" (`PageGate` en `pages.tsx`);
+  - en la BD están `SiteDraft` (borrador) y `SiteVersion` (publicaciones);
+  - la API es `GET /api/site` y `/api/admin/site/*`, y los formularios de páginas apagadas responden 403;
+  - **en vivo**: al publicar, `GET /api/site/events` (SSE, `server/lib/siteEvents.ts`, en memoria del proceso) avisa a las páginas abiertas y cambian sin recargar. Si SSE no responde en 6 s (el túnel rápido de Cloudflare no lo soporta), la web consulta cada 15 s, y también al volver a la pestaña;
+  - al agregar un bloque, un artista o una pregunta nuevos, dale su id y envuélvelo o fíltralo;
+  - en `/admin/sitio` (`AdminSite.tsx`) la web va en un iframe con `?modo=edicion`, que solo se activa con sesión de admin dentro del panel. `<Module>` pinta ahí el marco y el switch (`shared/EditFrame.tsx`), y `EditItem` el de cada elemento; el iframe y el panel se hablan por `postMessage` (mismo origen) y el panel guarda el borrador.
 - Base de datos:
   - esquema en `prisma/schema.prisma`, con los modelos `ContactRequest` (con `handledAt`), `Booking`, `Review`, `BlockedSlot`, `AdminUser` y `AdminSession`;
   - seed de dev en `prisma/seed.ts`, con 3 opiniones provisionales;
@@ -40,7 +55,7 @@ La landing está construida (React + TypeScript + Vite) siguiendo `docs/DESIGN.m
 ## Comandos
 
 ```bash
-docker compose up --build   # todo: db (PostgreSQL 17, host :5440) + app (Vite :5173); migra al arrancar
+docker compose up --build   # todo: db (PostgreSQL 17, host :5440) + app (Vite :5173) + umami (:3100); migra al arrancar
 npm install                 # dependencias (sin Docker)
 npm run dev:all             # Vite :5173 + API :3000 (proxy /api); `npm run dev` / `dev:api` por separado
 npm run build               # tsc -b (chequeo de tipos) + build a /dist

@@ -11,6 +11,8 @@ Especificación **exacta** de la landing de Hathor Frequency, aprobada el 2026-1
 | Exploración Servicios | 5 propuestas (se eligió la 03) | https://claude.ai/artifact/LQEiJ6gToqr3XS8w3owYRk |
 | Exploración Contacto/Reservar | 5 + 5 propuestas (se eligieron C2 y R2) | https://claude.ai/artifact/SvgcDXZvw3vXd8JrsReCWt |
 | Panel de admin | A1–A3, L1, O1–O2, B1, C1, D1–D3 (se eligieron A2, L1, O2, B1, C1 y D1) | https://claude.ai/artifact/PQevfwPDA7oRfVuasV4cXF |
+| Dashboard del panel | D1–D4 y M1–M2 (se eligieron D4 y M2) | https://claude.ai/artifact/7wwLUsR6SBNYJoY88dma8W |
+| Panel · Sitio (módulos) | S1–S3, H1/H2, L, G, P (se eligieron S1, H2, L, G y P) | https://claude.ai/artifact/D4NYHBREuqQbBVTPLUe3cS |
 
 Cada vista es un artboard (`Main.dc.html`, `02-Ticker.dc.html` … `07-Footer.dc.html`) con nombres iguales en los dos canvas finales. Si hay duda sobre un valor, manda el artboard.
 
@@ -490,10 +492,10 @@ Las miniaturas tienen fondo `#0a0a0a`, borde `#333` y trazos dorados con `stroke
 
 ## 6. Vista 5 — Reservar · "Calendario" (`05-Reservar.dc.html`, `id="reservar"`) — interactiva
 
-**Estado**: `selectedDay` (inicial 17) y `selectedSlot` (inicial 2, que corresponde a las 15:00).
+**Estado**: `selectedDay` (inicial 17) y `selectedSlot` (inicial 2, que corresponde a las 3:00 p. m.).
 - Mes de ejemplo: **noviembre de 2026**. La semana empieza en lunes; el 1 de noviembre cae en domingo, así que hay 6 celdas vacías al inicio.
 - En la implementación real el mes debe ser dinámico, con navegación funcional y la disponibilidad tomada de su fuente.
-- Horarios (`src/data`): `10:00, 12:00, 15:00, 17:00, 19:00, 21:00`.
+- Horarios (`src/data`): `10:00, 12:00, 15:00, 17:00, 19:00, 21:00`, guardados en 24 h. **En todo el sitio y el panel se muestran en 12 h** con `formatTime` (`src/lib/time.ts`): "10:00 a. m.", "3:00 p. m.", con espacios de no separación para que no se partan. Cambio del 2026-10-11.
 - Servicios del select: Grabación, Mezcla, Masterización, Video, Live Sessions.
 
 **Estados de un día:**
@@ -508,7 +510,7 @@ Las miniaturas tienen fondo `#0a0a0a`, borde `#333` y trazos dorados con `stroke
 
 **Textos dinámicos:**
 - Fecha mostrada: "{Díasemana} {d} de noviembre", con `aria-live="polite"`.
-- Botón: "Reservar {HH:MM} h".
+- Botón: "Reservar {hora en 12 h}" (por ejemplo, "Reservar 3:00 p. m.").
 
 ### Desktop (1440 × 1000)
 - Grid `7fr 5fr`, gap de 64px, padding 88px 80px.
@@ -531,7 +533,7 @@ Las miniaturas tienen fondo `#0a0a0a`, borde `#333` y trazos dorados con `stroke
      - `<fieldset>` "Representante": dos pills de 48px en 2 columnas, "Integrante de la banda" / "Externo" (`aria-pressed`, mismo estilo que los horarios), el input del nombre (placeholder según el tipo) y una ayuda de 13px #888 que cambia: "La persona de la banda a la que contactaremos." / "Alguien fuera de la banda que coordina la sesión: mánager, productor o similar.";
      - "Número de contacto" (`type="tel"`, mínimo 8 dígitos) y "Correo" (`type="email"`).
      - Los cuatro datos son obligatorios (validación nativa del navegador). Textos en `representativeTypes` de `src/data/booking.ts`.
-  5. Botón primario a todo el ancho, de 56px de alto y con `margin-top: auto`: "Reservar 15:00 h".
+  5. Botón primario a todo el ancho, de 56px de alto y con `margin-top: auto`: "Reservar 3:00 p. m.".
   6. **Modal de confirmación** (`BookingModal.tsx`) al enviar con éxito, sobre un fondo negro al 80%:
      - tarjeta de `min(560px, 100%)`, borde dorado, fondo `#050505`, glow, padding 48px 44px 40px y anillos dorados en la esquina superior derecha; ✕ redonda de 44px arriba a la derecha;
      - palomita en círculo dorado de 56px, "Solicitud enviada" (12px, tracking 0.3em, dorado), H2 Cinzel 36px "Tu sesión *está en camino.*" y "Un asesor se pondrá en contacto contigo para continuar con los siguientes pasos." (17px);
@@ -671,9 +673,32 @@ Cambio del 2026-10-11. Es privado: va fuera del Layout público (sin Nav, Ufo, t
   - las secciones en pills de 44px (Reservas, Opiniones, Contactos, Bloqueos; la activa en dorado sobre `rgba(242,201,76,.12)`), con contadores: reservas pendientes desde hoy (pastilla dorada rellena), opiniones pendientes (contorno dorado) y contactos sin atender (gris);
   - abajo, el nombre, el correo y "Cerrar sesión";
   - **excepción al breakpoint único**: por debajo de 1024px la barra pasa arriba (logo y "Cerrar sesión" en una fila, secciones en fila con scroll horizontal), porque la agenda necesita el ancho.
+- **D4 · Inicio** (`/admin`, `AdminDashboard.tsx`; datos de `GET /api/admin/dashboard?range=week|month|quarter|year`). Es la combinación de D2 y D3, la primera sección de la barra y adonde lleva el login. Cambio del 2026-10-11.
+  - **Hoy primero** (D2):
+    - fecha y saludo según la hora ("Buenas tardes, {nombre}."), con el resumen de sesiones de hoy y reservas por confirmar;
+    - tarjeta **Hoy**: línea de tiempo de los 6 horarios en 12 h. Libre en gris, punto con contorno dorado para pendiente, dorado con glow para confirmada y trama para bloqueado, más la lista de mañana;
+    - tarjeta **Espera tu respuesta**: hasta 5 reservas pendientes (Confirmar abre la ventana M2, Ver va a la agenda), 3 opiniones (Revisar) y 3 contactos (Responder con `mailto:`).
+  - **Master del periodo** (D3):
+    - selector tipo perilla (Semana / Mes / 3 meses / Año; el elegido en dorado relleno), con el rango y el periodo con el que se compara;
+    - medidores en pantalla dorada (Cinzel con glow):
+      - **Ocupación**: anillo de vinil; reservas activas entre horarios disponibles, descontando los bloqueos, más la diferencia en puntos;
+      - **Reservas**: total, 20 LEDs encendidos según el % confirmado, y confirmadas, pendientes y canceladas;
+      - **Ingresos**: lo cobrado y una barra de cobrado (relleno) contra por cobrar (trama), solo de reservas confirmadas con monto;
+      - **Visitas · Umami**: visitantes, cambio y conversión a reserva; sin Umami muestra "—";
+    - **Canales**: barras verticales por servicio, con la lectura del hover arriba;
+    - **Matriz**: LEDs de días × horarios que crecen en tamaño y brillo (5 niveles relativos al máximo);
+    - **De la visita a la reserva**: embudo de visitantes, vistas de /reservar y reservas recibidas;
+    - **Opiniones y contactos**: promedio publicado, contactos, tema más pedido, tiempo promedio en atender y sin atender.
+- **M2 · Ventana de cobro** (`ChargeModal.tsx`, portal; en móvil sube como hoja):
+  - "Confirmar sesión" (agenda o Inicio) la abre; en reservas confirmadas, "Editar cobro" la abre sin cambiar el estado;
+  - lleva el monto en MXN, prellenado con el precio base del servicio (`servicePrices` en `src/data/booking.ts`);
+  - atajos: precio base, −10% y paquetes con precio numérico;
+  - pago Pendiente / Anticipo / Pagado; con Anticipo aparece "Anticipo recibido";
+  - el botón dice "Confirmar · $X" o "Confirmar sin monto";
+  - el detalle de la agenda muestra "Cobro: $X · Anticipo ($Y recibido)".
 - **A2 · Reservas** (`/admin/reservas`, `AdminAgenda.tsx`):
   - semana de lunes a domingo con flechas y botón "Hoy"; leyenda Pendiente (contorno dorado), Confirmada (dorado relleno) y Bloqueado (trama);
-  - cuadrícula de 72px + 7 columnas por `timeSlots`, con celdas de 64px: reserva activa (proyecto y servicio), bloqueo (trama + motivo, "Cerrado" o "Bloqueado") o libre (borde punteado);
+  - cuadrícula de 96px + 7 columnas por `timeSlots` (horas en 12 h), con celdas de 64px: reserva activa (proyecto y servicio), bloqueo (trama + motivo, "Cerrado" o "Bloqueado") o libre (borde punteado);
   - las canceladas no ocupan celda; se cuentan debajo;
   - a la derecha va el detalle con anillos: proyecto en Cinzel, día, hora y servicio, chip de estado, representante, teléfono (`tel:`), correo (`mailto:`), fecha de recepción y las acciones Confirmar sesión / Cancelar (Reactivar si está cancelada);
   - un 409 al reactivar se muestra como error.
@@ -691,6 +716,23 @@ Cambio del 2026-10-11. Es privado: va fuera del Layout público (sin Nav, Ufo, t
   - panel del día con "Cerrar el día completo", "O solo algunos horarios" (pills de `timeSlots`, desactivadas si el día está cerrado), motivo (solo lo ve el estudio) y "Guardar bloqueo" (activo solo si hay cambios);
   - abajo, "Próximos bloqueos" por día: clic para ir al día y ✕ para quitarlo;
   - bloquear no cancela reservas ya hechas.
+- **Sitio** (`/admin/sitio`, `AdminSite.tsx`): apagar módulos del sitio sin borrarlos. Diseños S1 + H2 + L + G + P, cambio del 2026-10-11.
+  - **Barra (S1)**:
+    - "Sitio *en modo edición*" con el estado ("N cambios sin publicar: la web pública aún no cambia" / "Todo publicado");
+    - Historial, Descartar y "Publicar · N" (dorado; apagado sin cambios);
+    - debajo, una pill con las pestañas de página (Inicio + las 7 apagables; una página oculta va tachada con "· oculta"), "Globales · 6" y Escritorio / Móvil (iframe de 390px).
+  - **Vista previa**: la web real en un iframe (`?modo=edicion`). Arriba, la URL y el switch de la página actual; abajo, el contenido:
+    - cada sección (`<Module>`) lleva un marco punteado dorado, su nombre en una pill arriba a la izquierda y el switch a la derecha;
+    - **H2 · oculto**: conserva su tamaño, al 35% con trama, etiqueta "Oculto" (o "Oculto por {padre}") y contenido inerte;
+    - una página oculta muestra el aviso "Quien entre aquí verá 'Próximamente'";
+    - en modo edición no se muestran la bienvenida, el platillo ni los easter eggs, y Umami no cuenta.
+  - **L · Elementos**: artistas, paquetes, canales de la consola y preguntas llevan un switch pequeño en la esquina; ocultos, se atenúan con trama.
+  - **G · Globales**: tarjetas con nombre, descripción y switch (ticker, platillo, bienvenida, temporadas, easter eggs, redes y WhatsApp).
+  - **P · Publicar e historial**:
+    - "¿Publicar N cambios?" lista cada cambio ("Estudio · Equipo → oculto"), con Seguir editando / Publicar;
+    - el historial muestra fecha, quién, qué ocultó o mostró y "Restaurar", que copia esa versión al borrador.
+  - El contador de cambios sin publicar va en la pestaña "Sitio" de la barra lateral.
+  - **Al publicar, la web abierta cambia al instante**, sin recargar: si estás viendo una página que se oculta, pasa a "Próximamente". Por el túnel temporal tarda hasta ~15 s.
 - **D1 · Ocupado en Reservar (público)**: se queda el tachado: el horario o día lleno se apaga en `#444` con `line-through`, igual que los días pasados (§6).
 
 ---
@@ -745,9 +787,12 @@ Cambio del 2026-10-11. Es privado: va fuera del Layout público (sin Nav, Ufo, t
 - **Calendario**: la disponibilidad es real (`GET /api/availability`). Un horario ocupado y un día sin horarios usan el estilo **D1 · Tachado** (apagado + tachado, como los días pasados), elegido en el canvas del panel. Si el horario elegido se ocupa, se pasa al primero libre; si el día está lleno, el botón dice "Sin horarios este día". Un 409 al reservar muestra "Ese horario acaba de ocuparse. Elige otro." y recarga la disponibilidad.
 - **Redes**: Contacto repite los links que también aparecen en el Footer (decisión abierta).
 - **Opiniones**: vienen de la API (solo PUBLISHED; sin permiso de nombre salen como "Anónimo"). Las 3 de ejemplo están en `prisma/seed.ts` y son provisionales, solo para dev. Se aprueban desde el panel de admin, cuya UI está pendiente de diseño.
+- **Módulos del sitio**: construido (§7.4 · Sitio). En modo edición, los botones y links que llevan a una página oculta se siguen viendo (en la web pública no). El Inicio no tiene switch de página.
 - **Panel de admin**: construido (§7.4). Pendientes:
   - las reservas canceladas no tienen vista propia; solo se cuentan en la semana, y se reactivan solo si siguen seleccionadas;
   - no hay gestión de usuarios admin en la UI (se usa `npm run admin:create`);
+  - **precios base**: `servicePrices` está en `null` (faltan los reales), así que el monto se escribe a mano. Los paquetes tampoco tienen precio numérico todavía;
+  - **Umami**: el acceso inicial es admin / umami (hay que cambiarlo); en producción necesita su propio subdominio;
   - faltan los correos de aviso.
 - **Artistas y FAQ**: faltan las bios, redes (links), videos y fotos reales de los artistas, y los datos que faltan en dos respuestas de FAQ (marcadores `[..]` de pago y tiempo de entrega).
 - **Nav**: el rango 768–1199px usa el nav móvil (hamburguesa) porque con FAQs no cabe el nav completo; no hay diseño específico de tablet.
