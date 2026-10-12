@@ -1,4 +1,4 @@
-import { useId, useRef, useState, type FormEvent } from 'react'
+import { useCallback, useId, useRef, useState, type FormEvent } from 'react'
 import { PageLink } from '../shared/PageLink'
 import { contactTopics } from '../../data/site'
 import { useContent } from '../../lib/content'
@@ -13,6 +13,7 @@ import { WhatsAppIcon } from '../shared/SocialIcon'
 import { VinylRings } from '../shared/VinylRings'
 import './Contact.css'
 import { Module } from '../shared/Module'
+import { ContactModal } from './ContactModal'
 
 type Status = 'idle' | 'sending' | 'sent' | 'error'
 
@@ -30,12 +31,16 @@ export function Contact() {
   const [status, setStatus] = useState<Status>('idle')
   const [error, setError] = useState('')
   const trap = useRef<HTMLInputElement>(null)
+  // Copia de lo enviado para el modal de confirmación (solo informativo)
+  const [sent, setSent] = useState<{ name: string; topic: string; email: string } | null>(null)
+  const closeSent = useCallback(() => setSent(null), [])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setStatus('sending')
     try {
       await submitContact({ name: name.trim(), topic, email: email.trim(), website: trap.current?.value })
+      setSent({ name: name.trim(), topic, email: email.trim() })
       setStatus('sent')
       setName('')
       setTopic('')
@@ -191,6 +196,7 @@ export function Contact() {
           ))}
         </nav>
       </Module>
+      {sent && <ContactModal {...sent} onClose={closeSent} />}
     </section>
   )
 }
