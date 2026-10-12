@@ -39,3 +39,8 @@
 @media (max-width: 767px) {
   .hf-ausers__grid--two { grid-template-columns: 1fr; }
 }
+/* Rol: dos pills (Admin / Agenda) */
+.hf-ausers__roles { display: flex; gap: 6px; padding: 4px; border: 1px solid var(--c-line-2); border-radius: var(--radius-pill); }
+.hf-ausers__role { flex: 1; height: 38px; border: 0; border-radius: var(--radius-pill); background: none; color: var(--c-text-2); font-family: var(--font-body); font-size: 14px; letter-spacing: .08em; text-transform: none; cursor: pointer; }
+.hf-ausers__role[aria-checked="true"] { background: var(--c-gold); color: #000; font-weight: 600; }
+.hf-ausers__role:hover:not([aria-checked="true"]) { color: var(--c-gold); }

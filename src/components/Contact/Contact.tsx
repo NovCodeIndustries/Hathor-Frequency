@@ -25,25 +25,28 @@ export function Contact() {
   const nameId = useId()
   const topicId = useId()
   const emailId = useId()
+  const phoneId = useId()
   const [name, setName] = useState('')
   const [topic, setTopic] = useState('')
   const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
   const [status, setStatus] = useState<Status>('idle')
   const [error, setError] = useState('')
   const trap = useRef<HTMLInputElement>(null)
   // Copia de lo enviado para el modal de confirmación (solo informativo)
-  const [sent, setSent] = useState<{ name: string; topic: string; email: string } | null>(null)
+  const [sent, setSent] = useState<{ name: string; topic: string; phone: string; email: string } | null>(null)
   const closeSent = useCallback(() => setSent(null), [])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setStatus('sending')
     try {
-      await submitContact({ name: name.trim(), topic, email: email.trim(), website: trap.current?.value })
-      setSent({ name: name.trim(), topic, email: email.trim() })
+      await submitContact({ name: name.trim(), topic, phone: phone.trim(), email: email.trim(), website: trap.current?.value })
+      setSent({ name: name.trim(), topic, phone: phone.trim(), email: email.trim() })
       setStatus('sent')
       setName('')
       setTopic('')
+      setPhone('')
       setEmail('')
     } catch (err) {
       setError(submitErrorText(err, 'No pudimos enviar tus datos. Intenta de nuevo.'))
@@ -83,8 +86,8 @@ export function Contact() {
           <path d="M12 11v6M12 7.5v.01" />
         </svg>
         <p>
-          Este formulario es para <strong>pedir información</strong>. Déjanos tu correo y un asesor se pondrá en
-          contacto contigo.
+          Este formulario es para <strong>pedir información</strong>. Déjanos tu teléfono y tu correo, y un asesor se
+          pondrá en contacto contigo.
         </p>
       </div>
 
@@ -131,6 +134,27 @@ export function Contact() {
           <svg className="hf-contact__chevron" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M3 6l5 5 5-5" />
           </svg>
+        </div>
+        <label htmlFor={phoneId} className="sr-only">Tu teléfono</label>
+        <div className="hf-contact__pill hf-contact__pill--name">
+          <input
+            id={phoneId}
+            className="hf-contact__input"
+            type="tel"
+            inputMode="tel"
+            name="phone"
+            placeholder="Tu teléfono"
+            autoComplete="tel"
+            required
+            pattern="[0-9+()\s\-]{8,20}"
+            title="Escribe un número de al menos 8 dígitos"
+            maxLength={20}
+            value={phone}
+            onChange={(e) => {
+              setPhone(e.target.value)
+              if (status !== 'sending') setStatus('idle')
+            }}
+          />
         </div>
         <label htmlFor={emailId} className="sr-only">Tu correo</label>
         <div className="hf-contact__pill">

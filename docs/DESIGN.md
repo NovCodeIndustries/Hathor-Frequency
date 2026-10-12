@@ -584,6 +584,7 @@ Las miniaturas tienen fondo `#0a0a0a`, borde `#333` y trazos dorados con `stroke
   3c. **Nombre y tema** (agregados el 2026-10-09), arriba de la pill del correo y con su mismo estilo (pill de 60px, borde `#444`, fondo `rgba(0,0,0,0.8)`, padding 6px 28px, labels sr-only), con 12px entre pills:
      - "Tu nombre" (`autocomplete="name"`, obligatorio);
      - selector "¿Sobre qué quieres información?" (obligatorio; el texto de ejemplo en #888 hasta elegir, flecha dorada a la derecha): Grabación, Mezcla, Masterización, Video, Live Sessions, Paquetes, Visita al estudio y Otro (`contactTopics` en `src/data/site.ts`).
+     - "Tu teléfono" (cambio del 2026-10-12): otra pill igual a la del nombre, `type="tel"`, `autocomplete="tel"`, obligatorio, 8 a 20 caracteres (dígitos, +, espacios, guiones o paréntesis). El aviso de arriba dice "Déjanos tu teléfono y tu correo…", y la ventana de confirmación también lo muestra;
      - En móvil van apilados como el correo: pills propias de 54px con el texto centrado.
      - Se guardan en `ContactRequest.name` y `ContactRequest.topic` (migración `contact_name_topic`); el envío sigue simulado en `submitContact`.
   4. Formulario de 560px de ancho, con padding-top de 8px. El label "Tu correo" queda oculto visualmente (clase sr-only). El correo va dentro de **una sola pill**:
@@ -726,11 +727,14 @@ Cambio del 2026-10-11. Es privado y, desde el 2026-10-12, **es otra app y otro s
   - cuadrícula `auto-fill` de tarjetas de 300px: las pendientes con borde dorado y glow, las rechazadas al 60%;
   - cada tarjeta lleva estrellas, chip de estado, cita en Cinzel, nombre, proyecto, servicio, y "Con su nombre" o "Saldrá como 'Anónimo'" (en dorado);
   - acciones: Publicar/Rechazar, Ocultar (pasa a rechazada) o "Publicar de todos modos", más "Borrar" en todas (`DELETE /api/admin/reviews/:id`), que pide confirmación en una ventana y borra para siempre; si estaba publicada, sale del sitio en vivo.
+- **Buscadores de Agenda y Contactos** (cambio del 2026-10-12; la misma pill con lupa de Contenido, `.hf-admin__search`):
+  - **Agenda** (`BookingSearch.tsx`, `GET /api/admin/bookings/search?q=`): en escritorio, a la izquierda de "+ Agendar sesión"; en móvil, arriba de todo. Busca en reservas de cualquier fecha por proyecto, nombre, correo, servicio o teléfono (desde 3 dígitos), sin importar acentos. Debajo se abre una lista (460px; a todo el ancho en móvil) con fecha y hora, proyecto, quién y servicio, y el chip de estado: primero las próximas y luego las pasadas, hasta 20. Al elegir una, la Agenda va a ese día y abre la reserva (en móvil, la hoja);
+  - **Contactos**: "Buscar" junto al filtro de Tema; filtra la tabla por nombre, correo o tema mientras escribes ("Ningún contacto coincide con …").
 - **C1 · Contactos** (`/admin/contactos`, `AdminContacts.tsx`):
   - filtro por tema (`contactTopics`);
-  - tabla con Nombre, Tema (chip), Correo, Recibido, Atendido y "Responder" (`mailto:` con asunto "Hathor Frequency · {tema}");
+  - tabla con Nombre, Tema (chip), **Teléfono** (link `tel:` dorado; "Sin teléfono" en los anteriores al 2026-10-12), Correo, Recibido, Atendido y "Responder" (`mailto:` con asunto "Hathor Frequency · {tema}");
   - la casilla **Atendido** guarda `handled_at` y apaga la fila al 55%.
-  - **en móvil** cada fila es una tarjeta: el nombre arriba y cada dato con su etiqueta (Tema, Correo, Recibido, Atendido), sin scroll lateral. Accesos al panel (Usuarios) usa la misma tabla, con estilos compartidos en `AdminLayout.css`.
+  - **en móvil** cada fila es una tarjeta: el nombre arriba y cada dato con su etiqueta (Tema, Teléfono, Correo, Recibido, Atendido), sin scroll lateral. Accesos al panel (Usuarios) usa la misma tabla, con estilos compartidos en `AdminLayout.css`.
 - **Sitio** (`/admin/sitio`, `AdminSite.tsx`): apagar módulos del sitio sin borrarlos. Diseños S1 + H2 + L + G + P, cambio del 2026-10-11.
   - **Barra (S1)**:
     - "Sitio *en modo edición*" con el estado ("N cambios sin publicar: la web pública aún no cambia" / "Todo publicado");
@@ -763,6 +767,7 @@ Cambio del 2026-10-11. Es privado y, desde el 2026-10-12, **es otra app y otro s
     - Precios base, FAQs, Estudio (por grupos: espacios, Nosotros, videos, equipo, visita y mapa) y Datos del sitio (eslogan, cifras, WhatsApp, redes).
   - **C1**:
     - a la izquierda, la lista: "General" con los textos de la sección y luego cada elemento, con ↑↓ y "+ Agregar";
+    - **buscador en Artistas** (cambio del 2026-10-12): pill de 44px con lupa bajo "General", "Buscar artista por nombre o género". Filtra mientras escribes por nombre, género o código, sin importar acentos ni mayúsculas, y muestra "N de M" (o "Ningún artista coincide con …"). Mientras buscas no hay ↑↓, porque los vecinos de la lista completa no se ven. ✕ o Esc borran la búsqueda, y "+ Agregar" también la borra;
     - a la derecha, el formulario con Duplicar / Eliminar y "Ver en Sitio";
     - el borrador **se guarda solo** (0.6 s después de escribir).
   - **Vista previa (C2)**: abierta por defecto (si la cierras, el navegador lo recuerda); muestra a la derecha la página real en un iframe (`?modo=vista`, solo con sesión de admin) que muestra el borrador mientras escribes. Sin bienvenida ni platillo, y no cuenta en Umami.
@@ -782,8 +787,9 @@ Cambio del 2026-10-11. Es privado y, desde el 2026-10-12, **es otra app y otro s
   - La web recibe la cifra nueva al instante (SSE `stats`).
 - **Usuarios** (`/admin/usuarios`, `AdminUsers.tsx`; sin ronda de diseño, mismo estilo de tabla que Contactos):
   - el **usuario principal** ve la tabla de accesos (nombre, correo y teléfono, rol Principal/Admin, alta; "Editar", "Cambiar contraseña" en línea y "Quitar acceso" con confirmación);
+  - **Roles** (cambio del 2026-10-12): **Admin** ve todo el panel; **Staff** solo ve Agenda, Contactos y Mi cuenta (entra directo a la Agenda, cualquier otra ruta lo regresa ahí, sin "Editar horas de inicio" y sin los botones del aviso de mantenimiento). Se elige al dar de alta ("Nuevo usuario", Admin por defecto) y al editar, con dos pills (Admin / Staff; la elegida en dorado) y su descripción debajo. En la tabla, el chip dice Principal, Admin o Staff (apagado). El principal siempre es Admin. Si cambias el rol de alguien, su panel abierto cambia sin recargar;
   - **Editar** (cambio del 2026-10-12) abre una ventana de 640px (la de confirmación, más ancha; una columna en móvil) con los cuatro campos del nombre y el teléfono, y el correo actual en la pill punteada. Si el nombre nuevo ya no cuadra con el correo, aparece la casilla "Cambiar su correo a …" (apagada por defecto): entrará con el correo nuevo y se cierran sus sesiones. El correo del principal no cambia. Esc o el fondo cierran la ventana;
-  - "Nuevo usuario admin" pide primer nombre, segundo nombre (opcional), primer apellido, segundo apellido (opcional), teléfono, contraseña con Mostrar y **repetir contraseña**. Mientras escribes dice si coinciden, y no deja crear si no coinciden;
+  - "Nuevo usuario" pide primer nombre, segundo nombre (opcional), primer apellido, segundo apellido (opcional), teléfono, contraseña con Mostrar y **repetir contraseña**. Mientras escribes dice si coinciden, y no deja crear si no coinciden;
   - **el correo no se escribe: se genera** (cambio del 2026-10-12) con la inicial del primer nombre + el primer apellido + `@hathorfrequency.mx`, en minúsculas y sin acentos, ñ, espacios ni signos ("José" + "Núñez" → `jnunez@hathorfrequency.mx`). Se ve mientras escribes, en una pill punteada (dorada; gris mientras falta el nombre). Si ya existe, la API le agrega un número (`jnunez2`), y el aviso dice cuál quedó ("Usuario creado: …");
   - cualquier admin ve **"Mi cuenta"**: contraseña actual, nueva y repetir (con el mismo aviso);
   - el saludo de Inicio y la barra usan **primer nombre + primer apellido** ("Buenas tardes, Xavier Ruiz.").

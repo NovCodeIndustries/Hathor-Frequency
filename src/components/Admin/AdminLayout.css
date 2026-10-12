@@ -158,6 +158,15 @@
   text-transform: none;
 }
 .hf-admin__input:focus { outline: none; border-color: var(--c-gold); }
+/* Buscador (pill con lupa): Contenido · Artistas, Agenda y Contactos */
+.hf-admin__search { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 12px 0 16px; border: 1px solid var(--c-line-2); border-radius: var(--radius-pill); background: #000; color: var(--c-text-3); flex: none; }
+.hf-admin__search:focus-within { border-color: var(--c-gold); color: var(--c-gold); }
+.hf-admin__search-input { flex: 1; min-width: 0; height: 100%; border: 0; background: none; color: var(--c-text); font-family: var(--font-body); font-size: 15px; outline: none; }
+.hf-admin__search-input::placeholder { color: var(--c-text-3); }
+.hf-admin__search-input::-webkit-search-cancel-button { display: none; }
+.hf-admin__search-clear { flex: none; width: 28px; height: 28px; padding: 0; border: 1px solid var(--c-line); border-radius: 50%; background: transparent; color: var(--c-text-2); display: grid; place-items: center; cursor: pointer; }
+.hf-admin__search-clear:hover { border-color: var(--c-gold); color: var(--c-gold); }
+
 select.hf-admin__input { min-width: 220px; height: 44px; background: var(--c-surface); }
 
 /* Botón hamburguesa (solo móvil y tablet) */

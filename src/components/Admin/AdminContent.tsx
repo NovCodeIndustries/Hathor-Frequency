@@ -44,6 +44,8 @@ function SectionEditor({ sectionKey: key, onSection }: { sectionKey: ContentKey;
   const [panel, setPanel] = useState<'history' | null>(null)
   const [history, setHistory] = useState<ContentVersionInfo[] | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null)
+  // Buscador de la lista (Artistas): filtra por nombre, género o código, sin acentos
+  const [query, setQuery] = useState('')
   // Vista previa abierta por defecto; si la cierras, se recuerda en este navegador
   const [preview, setPreviewState] = useState(() => {
     try {
@@ -146,6 +148,9 @@ function SectionEditor({ sectionKey: key, onSection }: { sectionKey: ContentKey;
 
   const items = form.type === 'items' && draft ? ((draft.items as Obj[]) ?? []) : []
   const setItems = (list: Obj[]) => onChange(['items'], list)
+  const needle = fold(query.trim())
+  const searching = form.type === 'items' && !!form.searchOf && needle.length > 0
+  const matches = searching && form.type === 'items' ? items.flatMap((it, i) => (fold(form.searchOf!(it)).includes(needle) ? [i] : [])) : []
 
   const publish = async () => {
     await flush()
@@ -288,7 +293,33 @@ function SectionEditor({ sectionKey: key, onSection }: { sectionKey: ContentKey;
                 {form.general.length > 0 && (
                   <ListRow active={selected === 'general'} title="General" sub="Textos de la sección" onPick={() => setSelected('general')} />
                 )}
-                {items.map((it, i) => (
+                {form.searchOf && (
+                  <div className="hf-admin__search" role="search">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><circle cx="7" cy="7" r="5" /><path d="m11 11 3.5 3.5" /></svg>
+                    <label className="sr-only" htmlFor={`${key}-search`}>Buscar {form.itemLabel}</label>
+                    <input
+                      id={`${key}-search`}
+                      type="search"
+                      className="hf-admin__search-input"
+                      placeholder={`Buscar ${form.itemLabel} por nombre o género`}
+                      autoComplete="off"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Escape' && setQuery('')}
+                    />
+                    {query && (
+                      <button type="button" className="hf-admin__search-clear" aria-label="Borrar búsqueda" onClick={() => setQuery('')}>
+                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" /></svg>
+                      </button>
+                    )}
+                  </div>
+                )}
+                {searching && (
+                  <p className="hf-acontent__search-count" role="status">
+                    {matches.length ? `${matches.length} de ${items.length}` : `Ningún ${form.itemLabel} coincide con “${query.trim()}”.`}
+                  </p>
+                )}
+                {items.map((it, i) => (searching && !matches.includes(i) ? null : (
                   <ListRow
                     key={String(it.id ?? it.code ?? i)}
                     active={selected === i}
@@ -296,10 +327,11 @@ function SectionEditor({ sectionKey: key, onSection }: { sectionKey: ContentKey;
                     sub={form.subOf(it)}
                     errors={issues.filter((x) => x.path[0] === 'items' && x.path[1] === i).length}
                     onPick={() => setSelected(i)}
-                    onUp={i > 0 ? () => (setItems(swap(items, i, i - 1)), setSelected(i - 1)) : undefined}
-                    onDown={i < items.length - 1 ? () => (setItems(swap(items, i, i + 1)), setSelected(i + 1)) : undefined}
+                    // Buscando no se ordena: los vecinos de la lista completa no se ven
+                    onUp={!searching && i > 0 ? () => (setItems(swap(items, i, i - 1)), setSelected(i - 1)) : undefined}
+                    onDown={!searching && i < items.length - 1 ? () => (setItems(swap(items, i, i + 1)), setSelected(i + 1)) : undefined}
                   />
-                ))}
+                )))}
                 {form.canAdd && form.newItem && (
                   <button
                     type="button"
@@ -307,6 +339,7 @@ function SectionEditor({ sectionKey: key, onSection }: { sectionKey: ContentKey;
                     onClick={() => {
                       setItems([...items, form.newItem!(items)])
                       setSelected(items.length)
+                      setQuery('')
                     }}
                   >
                     + Agregar {form.itemLabel}
@@ -412,6 +445,9 @@ function swap<T>(list: T[], a: number, b: number): T[] {
 }
 
 /** Copia de un elemento con id (o código de artista) nuevo y "(copia)" en el nombre */
+/** Minúsculas y sin acentos, para buscar "Sofia" y encontrar "Sofía" */
+const fold = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+
 function duplicate(form: ItemsForm, items: Obj[], i: number): Obj {
   const fresh = form.newItem!(items)
   const copy: Obj = { ...items[i] }

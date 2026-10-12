@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { timePattern } from '../../../src/data/booking'
-import { DUMMY_HASH, endSession, requireAdmin, startSession, userAgentOf, verifyPassword, type AdminVariables } from '../auth'
+import { DUMMY_HASH, endSession, requireAdmin, requireRole, startSession, userAgentOf, verifyPassword, type AdminVariables } from '../auth'
 import { prisma } from '../../shared/db'
 import { BookingStatus, PaymentStatus, ReviewStatus } from '../../generated/prisma/enums'
 import type { Booking } from '../../generated/prisma/client'
@@ -68,7 +68,7 @@ admin.post('/login', rateLimit({ max: 10, windowMs: 15 * 60_000 }), async (c) =>
   // El registro guarda 90 días
   void prisma.adminLoginEvent.deleteMany({ where: { createdAt: { lt: new Date(Date.now() - 90 * 86_400_000) } } }).catch(() => {})
   emitAdmin('users')
-  return c.json({ id: user.id, email: user.email, name: user.name, firstName: user.firstName, lastName: user.lastName, isRoot: user.isRoot })
+  return c.json({ id: user.id, email: user.email, name: user.name, firstName: user.firstName, lastName: user.lastName, isRoot: user.isRoot, role: user.role })
 })
 
 admin.post('/logout', async (c) => {
@@ -76,8 +76,9 @@ admin.post('/logout', async (c) => {
   return c.json({ ok: true })
 })
 
-// Todo lo de abajo exige sesión
+// Todo lo de abajo exige sesión, y el rol STAFF solo llega a Agenda, Contactos y su cuenta
 admin.use('*', requireAdmin)
+admin.use('*', requireRole)
 
 admin.get('/me', (c) => c.json(c.get('admin')))
 
@@ -121,6 +122,8 @@ admin.get('/summary', async (c) => {
   // Cambios del panel · Sitio sin publicar
   const d = draft?.disabled ?? published.disabled
   const siteChanges = d.filter((id) => !published.disabled.includes(id)).length + published.disabled.filter((id) => !d.includes(id)).length
+  // El rol STAFF solo ve sus contadores
+  if (c.get('admin').role === 'STAFF') return c.json({ pendingBookings, openContacts, pendingReviews: 0, siteChanges: 0, contentChanges: 0, maintenance })
   return c.json({ pendingBookings, pendingReviews, openContacts, siteChanges, contentChanges: contentDirty.length, maintenance })
 })
 
@@ -139,6 +142,30 @@ export const toAdminBooking = ({ amountCents, depositCents, ...b }: Booking) => 
   service: serviceLabel[b.service],
   amount: amountCents === null ? null : amountCents / 100,
   deposit: depositCents === null ? null : depositCents / 100,
+})
+
+/** Minúsculas y sin acentos, para buscar "sofia" y encontrar "Sofía" */
+const fold = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+
+/**
+ * GET /api/admin/bookings/search?q=: reservas de cualquier fecha por proyecto, nombre, teléfono, correo o servicio
+ * (sin importar acentos). Primero las próximas (de la más cercana) y luego las pasadas (de la más reciente); máx. 20.
+ */
+admin.get('/bookings/search', async (c) => {
+  const q = z.string().trim().min(2, 'Escribe al menos 2 letras').max(80).safeParse(c.req.query('q') ?? '')
+  if (!q.success) return invalid(c, q.error)
+  const needle = fold(q.data)
+  const digits = q.data.replace(/\D/g, '')
+  const rows = await prisma.booking.findMany({ orderBy: [{ date: 'desc' }, { startTime: 'desc' }], take: 5000 })
+  const hits = rows.filter(
+    (b) =>
+      fold(`${b.project} ${b.representativeName} ${b.email} ${serviceLabel[b.service]}`).includes(needle) ||
+      (digits.length >= 3 && b.phone.replace(/\D/g, '').includes(digits)),
+  )
+  const today = dateFromISO(todayISO()).getTime()
+  const upcoming = hits.filter((b) => b.date.getTime() >= today).reverse()
+  const past = hits.filter((b) => b.date.getTime() < today)
+  return c.json([...upcoming, ...past].slice(0, 20).map(toAdminBooking))
 })
 
 admin.get('/bookings', async (c) => {

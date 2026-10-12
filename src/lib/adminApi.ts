@@ -19,7 +19,17 @@ export interface AdminUser {
   lastName: string
   /** Usuario principal: no se puede borrar y administra a los demás */
   isRoot: boolean
+  role: AdminRole
 }
+
+/** ADMIN: todo el panel · STAFF: solo Agenda, Contactos y Mi cuenta */
+export type AdminRole = 'ADMIN' | 'STAFF'
+
+export const ROLE_LABEL: Record<AdminRole, string> = { ADMIN: 'Admin', STAFF: 'Staff' }
+export const ROLE_HINT: Record<AdminRole, string> = { ADMIN: 'Todo el panel', STAFF: 'Solo Agenda, Contactos y Mi cuenta' }
+
+/** Rutas del panel que ve el rol STAFF (el servidor también lo exige) */
+export const STAFF_ROUTES = ['/admin/reservas', '/admin/contactos', '/admin/usuarios']
 
 export interface AdminUserRow extends AdminUser {
   middleName: string | null
@@ -39,6 +49,7 @@ export interface NewAdminUser {
   lastName: string
   secondLastName?: string
   phone: string
+  role: AdminRole
   password: string
 }
 
@@ -176,7 +187,7 @@ export interface Dashboard {
   todo: {
     bookings: { id: string; date: string; time: string; project: string; service: string; rep: string }[]
     reviews: { id: string; name: string; rating: number; text: string }[]
-    contacts: { id: string; name: string; topic: string; email: string; createdAt: string }[]
+    contacts: { id: string; name: string; topic: string; email: string; phone: string | null; createdAt: string }[]
   }
   bookings: {
     total: number
@@ -225,6 +236,8 @@ export interface AdminContact {
   name: string
   topic: string
   email: string
+  /** null en los contactos anteriores al 2026-10-12 */
+  phone: string | null
   handledAt: string | null
   createdAt: string
 }
@@ -323,6 +336,7 @@ export const adminApi = {
   setBookingStatus: (id: string, status: BookingStatus) => request<AdminBooking>('PATCH', `/bookings/${id}`, { status }),
   updateBooking: (id: string, patch: BookingPatch) => request<AdminBooking>('PATCH', `/bookings/${id}`, patch),
   createBooking: (b: NewBooking) => request<AdminBooking>('POST', '/bookings', b),
+  searchBookings: (q: string) => request<AdminBooking[]>('GET', `/bookings/search${query({ q })}`),
 
   dashboard: (range: DashboardRange) => request<Dashboard>('GET', `/dashboard?range=${range}`),
 

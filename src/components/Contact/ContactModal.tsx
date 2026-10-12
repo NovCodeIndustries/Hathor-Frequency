@@ -8,6 +8,7 @@ import '../Booking/BookingModal.css'
 interface ContactModalProps {
   name: string
   topic: string
+  phone: string
   email: string
   onClose: () => void
 }
@@ -16,7 +17,7 @@ interface ContactModalProps {
  * Confirmación informativa al enviar Contacto (mismo estilo que la de Reservar): solo avisa que llegó.
  * Se cierra con "Entendido", la X, clic fuera o Escape; bloquea el scroll y devuelve el foco al cerrar.
  */
-export function ContactModal({ name, topic, email, onClose }: ContactModalProps) {
+export function ContactModal({ name, topic, phone, email, onClose }: ContactModalProps) {
   const okRef = useRef<HTMLButtonElement>(null)
   const season = useSeason()
   const titleId = useId()
@@ -74,6 +75,8 @@ export function ContactModal({ name, topic, email, onClose }: ContactModalProps)
           <dd>{name}</dd>
           <dt>Tema</dt>
           <dd>{topic}</dd>
+          <dt>Teléfono</dt>
+          <dd>{phone}</dd>
           <dt>Correo</dt>
           <dd>{email}</dd>
         </dl>

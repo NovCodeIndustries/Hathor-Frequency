@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from 'react'
-import { adminApi, describeDevice, formatStamp, type AccessLogRow, type AdminSessionRow, type AdminUserProfile, type AdminUserRow, type NewAdminUser } from '../../lib/adminApi'
+import { ROLE_HINT, ROLE_LABEL, adminApi, describeDevice, formatStamp, type AccessLogRow, type AdminRole, type AdminSessionRow, type AdminUserProfile, type AdminUserRow, type NewAdminUser } from '../../lib/adminApi'
 import { staffEmail, staffEmailLocal } from '../../data/staff'
 import { useAdmin } from '../../lib/useAdmin'
 import './AdminSite.css'
@@ -41,7 +41,7 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
   const [list, setList] = useState<AdminUserRow[] | null>(null)
   const [error, setError] = useState('')
   const [msg, setMsg] = useState('')
-  const EMPTY: NewAdminUser & { repeat: string } = { firstName: '', middleName: '', lastName: '', secondLastName: '', phone: '', password: '', repeat: '' }
+  const EMPTY: NewAdminUser & { repeat: string } = { firstName: '', middleName: '', lastName: '', secondLastName: '', phone: '', role: 'ADMIN', password: '', repeat: '' }
   const [form, setForm] = useState(EMPTY)
   const [show, setShow] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -114,7 +114,11 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
                     {u.phone && <span className="hf-ausers__phone">{u.phone}</span>}
                   </td>
                   <td data-label="Rol">
-                    {u.isRoot ? <span className="hf-chip hf-chip--done">Principal</span> : <span className="hf-chip hf-chip--tag">Admin</span>}
+                    {u.isRoot ? (
+                      <span className="hf-chip hf-chip--done">Principal</span>
+                    ) : (
+                      <span className={`hf-chip ${u.role === 'STAFF' ? 'hf-chip--off' : 'hf-chip--tag'}`} title={ROLE_HINT[u.role]}>{ROLE_LABEL[u.role]}</span>
+                    )}
                     {u.lockedUntil && (
                       <span className="hf-chip hf-chip--pending hf-ausers__lock" title="Por intentos fallidos; una contraseña nueva lo quita">
                         Bloqueada hasta {formatStamp(u.lockedUntil).split(', ')[1]}
@@ -157,7 +161,7 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
       </section>
 
       <form className="hf-ausers__card" aria-labelledby={`${id}-new`} onSubmit={create}>
-        <h2 id={`${id}-new`} className="hf-ausers__title">Nuevo usuario admin</h2>
+        <h2 id={`${id}-new`} className="hf-ausers__title">Nuevo usuario</h2>
         <div className="hf-ausers__grid">
           {(
             [
@@ -183,6 +187,7 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
             </output>
             <span className="hf-ausers__match">Inicial del primer nombre + primer apellido. Si ya existe, se le agrega un número.</span>
           </div>
+          <RolePicker value={form.role} onChange={(role) => setForm({ ...form, role })} />
           <label className="hf-admin__field" htmlFor={`${id}-pwd`}>
             Contraseña (mín. 10)
             <span className="hf-ausers__pwd">
@@ -307,6 +312,24 @@ function MyPassword({ name, email, onError }: { name: string; email: string; onE
   )
 }
 
+/** Rol de un usuario: dos pills con su descripción debajo */
+function RolePicker({ value, onChange }: { value: AdminRole; onChange: (r: AdminRole) => void }) {
+  const id = useId()
+  return (
+    <div className="hf-admin__field">
+      <span id={`${id}-label`}>Rol</span>
+      <div className="hf-ausers__roles" role="radiogroup" aria-labelledby={`${id}-label`}>
+        {(['ADMIN', 'STAFF'] as const).map((r) => (
+          <button key={r} type="button" role="radio" aria-checked={value === r} className="hf-ausers__role" onClick={() => onChange(r)}>
+            {ROLE_LABEL[r]}
+          </button>
+        ))}
+      </div>
+      <span className="hf-ausers__match">{ROLE_HINT[value]}.</span>
+    </div>
+  )
+}
+
 /** Parte local del correo sin el número que se agrega cuando ya existía ("jnunez2" → "jnunez") */
 const emailBase = (email: string) => email.split('@')[0].replace(/\d+$/, '')
 
@@ -319,6 +342,7 @@ function EditUser({ user, busy, onCancel, onSave }: { user: AdminUserRow; busy: 
     lastName: user.lastName,
     secondLastName: user.secondLastName ?? '',
     phone: user.phone ?? '',
+    role: user.role,
   })
   const [regenerate, setRegenerate] = useState(false)
   const first = useRef<HTMLInputElement>(null)
@@ -378,7 +402,11 @@ function EditUser({ user, busy, onCancel, onSave }: { user: AdminUserRow; busy: 
             <output className="hf-ausers__email is-empty">{user.email}</output>
           </div>
         </div>
-        {user.isRoot && <p className="hf-ausers__muted">El correo del usuario principal no cambia: es el de ROOT_ADMIN_EMAIL en .env.</p>}
+        {user.isRoot ? (
+          <p className="hf-ausers__muted">El usuario principal siempre es Admin, y su correo no cambia: es el de ROOT_ADMIN_EMAIL en .env.</p>
+        ) : (
+          <RolePicker value={f.role} onChange={(role) => setF({ ...f, role })} />
+        )}
         {canRegenerate && (
           <label className="hf-ausers__check">
             <input type="checkbox" checked={regenerate} onChange={(e) => setRegenerate(e.target.checked)} />

@@ -148,7 +148,7 @@ dashboard.get('/', async (c) => {
     todo: {
       bookings: pendingBookings.map((b) => ({ id: b.id, date: isoFromDate(b.date), time: b.startTime, project: b.project, service: serviceLabel[b.service], rep: b.representativeName })),
       reviews: pendingReviews.map((r) => ({ id: r.id, name: r.name, rating: r.rating, text: r.text })),
-      contacts: openContacts.map((x) => ({ id: x.id, name: x.name, topic: x.topic, email: x.email, createdAt: x.createdAt })),
+      contacts: openContacts.map((x) => ({ id: x.id, name: x.name, topic: x.topic, email: x.email, phone: x.phone, createdAt: x.createdAt })),
     },
     bookings: {
       total: bookings.length,

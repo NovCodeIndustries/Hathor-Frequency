@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router'
 import { sortSlots } from '../../data/booking'
@@ -10,6 +10,7 @@ import { useAdmin } from '../../lib/useAdmin'
 import { useAdminLive } from '../../lib/useAdminLive'
 import { useMediaQuery } from '../../lib/useMediaQuery'
 import { BookingDetail } from './BookingDetail'
+import { BookingSearch } from './BookingSearch'
 import { STATUS_LABEL } from './bookingStatus'
 import { ChargeModal } from './ChargeModal'
 import { MonthPair, type DayMark } from './MonthPair'
@@ -32,7 +33,7 @@ type Show = { bookings: boolean; blocks: boolean; free: boolean }
  * - móvil, R1 · Agenda única: tira de días (o el mes), los horarios del día y el detalle en una hoja inferior.
  */
 export function AdminAgenda() {
-  const { refreshSummary, onError } = useAdmin()
+  const { refreshSummary, onError, admin } = useAdmin()
   const mobile = useMediaQuery('(max-width: 767px)')
   const [today] = useState(() => startOfDay(new Date()))
   const todayISO = toISODate(today)
@@ -126,6 +127,16 @@ export function AdminAgenda() {
     return () => block(iso, time)
   }
 
+  /** Resultado del buscador: lleva la vista a ese día y abre la reserva */
+  const goTo = (b: AdminBooking) => {
+    if (mobile) {
+      setMonthOpen(false)
+      setDay(b.date)
+    } else if (b.date < toISODate(start) || b.date > toISODate(addDays(start, range - 1))) setStart(dateFromISO(b.date))
+    setPickedId(b.id)
+  }
+  const search = <BookingSearch onPick={goTo} onError={onError} />
+
   const chargeModal = charge && picked && (
     <ChargeModal
       booking={picked}
@@ -188,6 +199,8 @@ export function AdminAgenda() {
           onStatus={setStatus}
           onCharge={setCharge}
           onNew={() => setNewOn(day)}
+          search={search}
+          canEditSlots={admin.role === 'ADMIN'}
         />
         {chargeModal}
         {newModal}
@@ -214,10 +227,11 @@ export function AdminAgenda() {
             Reservas <span className="hf-agenda__gold">y bloqueos.</span>
           </h1>
           <p className="hf-admin__lead">Cada día es una pista con sus horarios. Clic en un hueco para bloquearlo, en un bloqueo para liberarlo y en una sesión para verla.{' '}
-            <Link to="/admin/contenido?seccion=horarios" className="hf-agenda__edit">Editar horas de inicio →</Link>
+            {admin.role === 'ADMIN' && <Link to="/admin/contenido?seccion=horarios" className="hf-agenda__edit">Editar horas de inicio →</Link>}
           </p>
         </div>
         <div className="hf-pistas__tools">
+          {search}
           <button type="button" className="hf-admin__btn hf-admin__btn--primary hf-admin__btn--sm" onClick={() => setNewOn(todayISO)}>+ Agendar sesión</button>
           <div className="hf-pistas__nav">
             <button type="button" className="hf-admin__arrow" aria-label="Días anteriores" onClick={() => setStart((s) => addDays(s, -range))}>
@@ -363,6 +377,10 @@ export function AdminAgenda() {
 // ── Móvil · R1 Agenda única ──
 
 interface MobileProps {
+  /** Buscador de reservas (arriba de todo) */
+  search: ReactNode
+  /** El rol STAFF no edita las horas de inicio (Contenido) */
+  canEditSlots: boolean
   slots: string[]
   today: Date
   day: string
@@ -409,6 +427,7 @@ function MobileAgenda(p: MobileProps) {
 
   return (
     <div className="hf-magenda">
+      {p.search}
       <div className="hf-magenda__top">
         <h1 className="hf-magenda__month">
           {MONTHS[sel.getMonth()][0].toUpperCase() + MONTHS[sel.getMonth()].slice(1)} {sel.getFullYear()}
@@ -503,7 +522,7 @@ function MobileAgenda(p: MobileProps) {
           )
         })}
       </ol>
-      <Link to="/admin/contenido?seccion=horarios" className="hf-agenda__edit hf-magenda__edit">Editar horas de inicio →</Link>
+      {p.canEditSlots && <Link to="/admin/contenido?seccion=horarios" className="hf-agenda__edit hf-magenda__edit">Editar horas de inicio →</Link>}
 
       {p.picked &&
         createPortal(

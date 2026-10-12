@@ -1,1 +1,9 @@
 /* Contactos (diseño C1): la tabla usa los estilos compartidos .hf-acontacts* de AdminLayout.css */
+
+/* Buscador + tema, en la misma fila */
+.hf-acontacts__filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+.hf-acontacts__search { width: 280px; height: 48px; box-sizing: border-box; }
+@media (max-width: 767px) {
+  .hf-acontacts__filters { width: 100%; flex-direction: column; align-items: stretch; }
+  .hf-acontacts__search { width: 100%; }
+}

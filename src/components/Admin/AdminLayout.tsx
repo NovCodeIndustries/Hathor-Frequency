@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
-import { AdminApiError, adminApi, formatStamp, shortName, type AdminSummary, type AdminUser } from '../../lib/adminApi'
+import { Link, Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
+import { STAFF_ROUTES, AdminApiError, adminApi, formatStamp, shortName, type AdminSummary, type AdminUser } from '../../lib/adminApi'
 import type { AdminContext } from '../../lib/useAdmin'
 import './AdminLayout.css'
 import './MaintenanceModal.css'
@@ -67,6 +67,8 @@ export function AdminLayout() {
     return stopAdminLive
   }, [admin])
   useAdminLive('all', refreshSummary)
+  // Si el principal te cambia el nombre o el rol, se nota sin recargar
+  useAdminLive(['users'], refreshMe)
 
   const onError = useCallback(
     (err: unknown) => {
@@ -90,8 +92,14 @@ export function AdminLayout() {
     )
   }
 
+  // Rol STAFF: solo Agenda, Contactos y Mi cuenta; cualquier otra ruta lleva a la Agenda
+  const staffOnly = admin.role === 'STAFF'
+  if (staffOnly && !STAFF_ROUTES.some((r) => location.pathname === r || location.pathname.startsWith(`${r}/`))) {
+    return <Navigate to="/admin/reservas" replace />
+  }
+
   const pendingTotal = (summary?.pendingBookings ?? 0) + (summary?.pendingReviews ?? 0) + (summary?.openContacts ?? 0)
-  const tabs = [
+  const allTabs = [
     { to: '/admin', label: 'Inicio', end: true },
     { to: '/admin/reservas', label: 'Agenda', count: summary?.pendingBookings, kind: 'fill' },
     { to: '/admin/opiniones', label: 'Opiniones', count: summary?.pendingReviews, kind: 'gold' },
@@ -100,6 +108,7 @@ export function AdminLayout() {
     { to: '/admin/contenido', label: 'Contenido', count: summary?.contentChanges, kind: 'gold' },
     { to: '/admin/usuarios', label: admin.isRoot ? 'Usuarios' : 'Mi cuenta' },
   ]
+  const tabs = staffOnly ? allTabs.filter((t) => STAFF_ROUTES.includes(t.to)) : allTabs
 
   return (
     <div className="hf-admin">
@@ -154,6 +163,7 @@ export function AdminLayout() {
               {summary.maintenance.startedAt && ` desde el ${formatStamp(summary.maintenance.startedAt)}`}
               {summary.maintenance.updatedByName && ` · la apagó ${summary.maintenance.updatedByName}`}. Los visitantes ven la pantalla de mantenimiento.
             </span>
+            {!staffOnly && (
             <span className="hf-admin__maint-actions">
               {location.pathname !== '/admin/sitio' && (
                 <Link to="/admin/sitio?mantenimiento=1" className="hf-admin__btn hf-admin__btn--sm">Ajustar</Link>
@@ -162,6 +172,7 @@ export function AdminLayout() {
                 Encender la web
               </button>
             </span>
+            )}
           </div>
         )}
         <Outlet context={{ admin, summary, refreshSummary, refreshMe, onError } satisfies AdminContext} />

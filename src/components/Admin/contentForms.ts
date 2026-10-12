@@ -33,6 +33,8 @@ export interface ItemsForm {
   moduleOf?: (x: Record<string, unknown>) => string
   /** Después de agregar/quitar/ordenar (p. ej. renumerar) */
   normalize?: (list: Record<string, unknown>[]) => Record<string, unknown>[]
+  /** Con esto la lista lleva buscador: el texto en el que se busca cada elemento */
+  searchOf?: (x: Record<string, unknown>) => string
 }
 
 /** Sección por grupos (la columna izquierda son grupos de campos) */
@@ -167,6 +169,7 @@ export const sectionForms: Record<ContentKey, SectionForm> = {
     titleOf: (x) => String(x.name || 'Nuevo artista'),
     subOf: (x) => `${x.code} · ${x.genre || 'Sin género'}`,
     moduleOf: (x) => `artistas.${String(x.code).toLowerCase()}`,
+    searchOf: (x) => `${x.name} ${x.genre} ${x.code}`,
     newItem: (list) => {
       // "Tu banda" (B14) es la fila fija: su código no se usa
       const taken = new Set([...list.map((a) => String(a.code)), 'B14'])

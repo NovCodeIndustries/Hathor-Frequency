@@ -48,6 +48,8 @@ model ContactRequest {
   /// Tema sobre el que pide información (src/data/site.ts · contactTopics)
   topic     String    @db.VarChar(40)
   email     String    @db.VarChar(254)
+  /// Teléfono para que el asesor llame (desde el 2026-10-12; los anteriores no lo tienen)
+  phone     String?   @db.VarChar(20)
   /// Cuándo lo marcó como atendido el estudio (panel · Contactos); null = sin atender
   handledAt DateTime? @map("handled_at") @db.Timestamptz(6)
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -151,6 +153,8 @@ model AdminUser {
   passwordHash   String            @map("password_hash") @db.VarChar(200)
   /// Usuario principal (ROOT_ADMIN_EMAIL): siempre existe, no se puede borrar y es el único que administra usuarios
   isRoot         Boolean           @default(false) @map("is_root")
+  /// Qué ve en el panel: ADMIN todo; STAFF solo Agenda, Contactos y Mi cuenta (el principal siempre es ADMIN)
+  role           AdminRole         @default(ADMIN)
   /// Intentos fallidos seguidos; al llegar a 5 la cuenta se bloquea 15 min (vengan de la IP que vengan)
   failedLogins   Int               @default(0) @map("failed_logins")
   lockedUntil    DateTime?         @map("locked_until") @db.Timestamptz(6)
@@ -159,6 +163,14 @@ model AdminUser {
   loginEvents    AdminLoginEvent[]
 
   @@map("admin_users")
+}
+
+/// Rol de un usuario del panel
+enum AdminRole {
+  ADMIN @map("admin")
+  STAFF @map("staff")
+
+  @@map("admin_role")
 }
 
 /// Sesión del panel; solo se guarda el hash del token de la cookie

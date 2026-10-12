@@ -1,0 +1,52 @@
+/* Buscador de la Agenda: pill de búsqueda (la de Contenido) y lista de resultados debajo */
+.hf-bsearch { position: relative; width: 300px; max-width: 100%; }
+.hf-bsearch__field { width: 100%; box-sizing: border-box; }
+.hf-bsearch__list {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 40;
+  width: 460px;
+  max-width: calc(100vw - 32px);
+  max-height: 420px;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 8px;
+  border: 1px solid var(--c-line-2);
+  border-radius: var(--radius-card);
+  background: var(--c-surface);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.hf-bsearch__item {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: var(--c-text);
+  font-family: var(--font-body);
+  text-align: left;
+  cursor: pointer;
+}
+.hf-bsearch__item:hover,
+.hf-bsearch__item:focus-visible { border-color: var(--c-gold); background: rgba(242,201,76,0.06); outline: none; }
+.hf-bsearch__when { display: flex; flex-direction: column; font-size: 13px; color: var(--c-text-2); }
+.hf-bsearch__when span { font-size: 12px; color: var(--c-text-3); }
+.hf-bsearch__who { display: flex; flex-direction: column; min-width: 0; font-size: 15px; }
+.hf-bsearch__who,
+.hf-bsearch__who span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hf-bsearch__who span { font-size: 12px; color: var(--c-text-3); }
+.hf-bsearch__empty { margin: 0; padding: 12px; font-size: 13px; color: var(--c-text-3); }
+
+@media (max-width: 767px) {
+  .hf-bsearch { width: 100%; }
+  .hf-bsearch__list { left: 0; right: 0; width: auto; max-width: none; }
+  .hf-bsearch__item { grid-template-columns: 76px minmax(0, 1fr); }
+  .hf-bsearch__item .hf-chip { grid-column: 2; justify-self: start; }
+}

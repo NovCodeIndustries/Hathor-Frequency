@@ -14,9 +14,13 @@ const isoDate = z.iso.date('Fecha inválida')
  */
 export const honeypot = { website: z.string().optional() }
 
+/** Teléfono: al menos 8 dígitos, con +, espacios, guiones o paréntesis */
+const phone = z.string('Escribe tu teléfono').trim().regex(/^[\d+()\s-]{8,20}$/, 'Teléfono inválido')
+
 export const contactSchema = z.object({
   name: text(120),
   topic: z.enum(contactTopics, 'Elige un tema'),
+  phone,
   email,
   ...honeypot,
 })
@@ -29,7 +33,7 @@ export const bookingSchema = z.object({
   project: text(120),
   representativeType: z.enum(['integrante', 'externo']),
   representativeName: text(120),
-  phone: z.string().trim().regex(/^[\d+()\s-]{8,20}$/, 'Teléfono inválido'),
+  phone,
   email,
   ...honeypot,
 })

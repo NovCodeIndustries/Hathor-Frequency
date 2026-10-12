@@ -6,6 +6,7 @@ import { parseBody } from '../../shared/lib/body'
 import { fail } from '../../shared/lib/errors'
 import { emitAdmin } from '../../shared/lib/siteEvents'
 import { staffDomain, staffEmailLocal } from '../../../src/data/staff'
+import { AdminRole } from '../../generated/prisma/enums'
 
 /** /api/admin/users: el principal administra usuarios; cualquiera cambia su propia contraseña */
 export const users = new Hono<{ Variables: AdminVariables }>()
@@ -16,7 +17,7 @@ const onlyRoot: MiddlewareHandler<{ Variables: AdminVariables }> = async (c, nex
 }
 
 const password = z.string().min(10, 'Mínimo 10 caracteres').max(200)
-const select = { id: true, email: true, name: true, firstName: true, middleName: true, lastName: true, secondLastName: true, phone: true, isRoot: true, lockedUntil: true, createdAt: true } as const
+const select = { id: true, email: true, name: true, firstName: true, middleName: true, lastName: true, secondLastName: true, phone: true, isRoot: true, role: true, lockedUntil: true, createdAt: true } as const
 const part = (max: number) => z.string().trim().max(max)
 /** Nombre completo: primer nombre, segundo nombre, primer apellido, segundo apellido */
 const fullName = (u: { firstName: string; middleName?: string; lastName: string; secondLastName?: string }) =>
@@ -78,6 +79,8 @@ const profileSchema = z.object({
   lastName: part(60).min(1, 'Escribe el primer apellido'),
   secondLastName: part(60).optional(),
   phone: z.string().trim().regex(/^[\d+()\s-]{8,20}$/, 'Teléfono inválido'),
+  /** ADMIN: todo el panel · STAFF: solo Agenda, Contactos y Mi cuenta */
+  role: z.enum(AdminRole).optional(),
 })
 
 /** Correo libre para "jnunez": jnunez@…, o jnunez2@…, jnunez3@… (sin contar el del propio usuario) */
@@ -115,6 +118,7 @@ users.post('/', onlyRoot, async (c) => {
       phone: body.phone,
       name: fullName({ ...body, middleName: body.middleName || undefined, secondLastName: body.secondLastName || undefined }),
       email,
+      role: body.role ?? AdminRole.ADMIN,
       passwordHash: await hashPassword(body.password),
     },
     select,
@@ -152,6 +156,8 @@ users.patch('/:id', onlyRoot, async (c) => {
       phone: body.phone,
       name: fullName({ ...body, middleName: middleName ?? undefined, secondLastName: secondLastName ?? undefined }),
       email,
+      // El principal siempre es ADMIN; el rol nuevo vale desde su siguiente petición
+      role: user.isRoot ? AdminRole.ADMIN : (body.role ?? user.role),
     },
     select,
   })

@@ -86,6 +86,7 @@
 .hf-acontent__row-sub { font-size: 12px; color: var(--c-text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hf-acontent__row-move { display: flex; flex-direction: column; gap: 4px; }
 .hf-acontent__add { height: 48px; }
+.hf-acontent__search-count { margin: 0 4px; font-size: 12px; color: var(--c-text-3); }
 
 .hf-acontent__form {
   min-width: 0;

@@ -74,6 +74,7 @@ export interface ContactRequest extends Trap {
   name: string
   /** Tema sobre el que quiere información (`contactTopics`) */
   topic: string
+  phone: string
   email: string
 }
 

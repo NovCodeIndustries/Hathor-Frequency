@@ -5,11 +5,15 @@ import { useAdmin } from '../../lib/useAdmin'
 import './AdminContacts.css'
 import { useAdminLive } from '../../lib/useAdminLive'
 
-/** Contactos (diseño C1): quién pidió información, sobre qué tema y si ya se atendió */
+/** Minúsculas y sin acentos, para buscar "maria" y encontrar "María" */
+const fold = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+
+/** Contactos (diseño C1): quién pidió información, sobre qué tema y si ya se atendió; con buscador */
 export function AdminContacts() {
   const { refreshSummary, onError } = useAdmin()
   const [contacts, setContacts] = useState<AdminContact[] | null>(null)
   const [topic, setTopic] = useState('')
+  const [query, setQuery] = useState('')
   const [error, setError] = useState('')
 
   const load = useCallback(() => {
@@ -29,7 +33,9 @@ export function AdminContacts() {
     }
   }
 
-  const shown = (contacts ?? []).filter((c) => !topic || c.topic === topic)
+  const needle = fold(query.trim())
+  const digits = query.replace(/\D/g, '')
+  const shown = (contacts ?? []).filter((c) => (!topic || c.topic === topic) && (!needle || (fold(`${c.name} ${c.email} ${c.topic}`).includes(needle) || (digits.length >= 3 && !!c.phone?.replace(/\D/g, '').includes(digits)))))
 
   return (
     <>
@@ -38,6 +44,28 @@ export function AdminContacts() {
         <div>
           <h1 className="hf-admin__title">Contactos</h1>
           <p className="hf-admin__lead">Personas que pidieron información desde Contacto.</p>
+        </div>
+        <div className="hf-acontacts__filters">
+        <div className="hf-admin__field">
+          Buscar
+          <div className="hf-admin__search hf-acontacts__search" role="search">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><circle cx="7" cy="7" r="5" /><path d="m11 11 3.5 3.5" /></svg>
+            <input
+              type="search"
+              className="hf-admin__search-input"
+              aria-label="Buscar contactos por nombre, correo o teléfono"
+              placeholder="Nombre, correo o teléfono"
+              autoComplete="off"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Escape' && setQuery('')}
+            />
+            {query && (
+              <button type="button" className="hf-admin__search-clear" aria-label="Borrar búsqueda" onClick={() => setQuery('')}>
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" /></svg>
+              </button>
+            )}
+          </div>
         </div>
         <label className="hf-admin__field">
           Tema
@@ -48,6 +76,7 @@ export function AdminContacts() {
             ))}
           </select>
         </label>
+        </div>
       </div>
 
       {error && <p className="hf-admin__error" role="alert">{error}</p>}
@@ -58,6 +87,7 @@ export function AdminContacts() {
             <tr>
               <th scope="col">Nombre</th>
               <th scope="col">Tema</th>
+              <th scope="col">Teléfono</th>
               <th scope="col">Correo</th>
               <th scope="col">Recibido</th>
               <th scope="col">Atendido</th>
@@ -69,6 +99,9 @@ export function AdminContacts() {
               <tr key={c.id} className={c.handledAt ? 'is-done' : ''}>
                 <td>{c.name}</td>
                 <td data-label="Tema"><span className="hf-chip hf-chip--tag">{c.topic}</span></td>
+                <td data-label="Teléfono">
+                  {c.phone ? <a href={`tel:${c.phone.replace(/[^\d+]/g, '')}`}>{c.phone}</a> : <span className="hf-acontacts__muted">Sin teléfono</span>}
+                </td>
                 <td data-label="Correo"><a href={`mailto:${c.email}`}>{c.email}</a></td>
                 <td data-label="Recibido" className="hf-acontacts__muted">{formatStamp(c.createdAt)}</td>
                 <td data-label="Atendido">
@@ -90,7 +123,9 @@ export function AdminContacts() {
             ))}
           </tbody>
         </table>
-        {contacts && shown.length === 0 && <p className="hf-admin__empty">No hay contactos aquí.</p>}
+        {contacts && shown.length === 0 && (
+          <p className="hf-admin__empty">{query.trim() ? `Ningún contacto coincide con “${query.trim()}”.` : 'No hay contactos aquí.'}</p>
+        )}
       </div>
     </>
   )

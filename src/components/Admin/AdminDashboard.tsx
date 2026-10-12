@@ -168,9 +168,10 @@ export function AdminDashboard() {
               <div className="hf-dash__item-text">
                 <span className="hf-dash__item-kind">Contacto</span>
                 <span>{x.name} · {x.topic}</span>
-                <span className="hf-dash__muted">{x.email} · {formatStamp(x.createdAt)}</span>
+                <span className="hf-dash__muted">{x.email}{x.phone && ` · ${x.phone}`} · {formatStamp(x.createdAt)}</span>
               </div>
               <div className="hf-dash__item-actions">
+                {x.phone && <a href={`tel:${x.phone.replace(/[^\d+]/g, '')}`} className="hf-admin__btn hf-admin__btn--ghost hf-admin__btn--sm">Llamar</a>}
                 <a href={`mailto:${x.email}?subject=${encodeURIComponent(`Hathor Frequency · ${x.topic}`)}`} className="hf-admin__btn hf-admin__btn--sm">
                   Responder
                 </a>
