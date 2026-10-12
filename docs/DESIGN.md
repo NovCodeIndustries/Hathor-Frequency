@@ -664,7 +664,7 @@ Cambio del 2026-10-09. En el nav va después de Artistas (Servicios · Artistas 
 
 ## 7.4 Panel del estudio (`/admin`, canvas https://claude.ai/artifact/PQevfwPDA7oRfVuasV4cXF)
 
-Cambio del 2026-10-11. Es privado: va fuera del Layout público (sin Nav, Ufo, ticker, bienvenida ni temporadas), lleva `noindex` y se carga aparte (rutas `lazy` en `App.tsx`). Componentes en `src/components/Admin/`, cliente en `src/lib/adminApi.ts` y contexto en `src/lib/useAdmin.ts`. Misma paleta y tipografía del sitio. Sin sesión, cualquier ruta `/admin/*` manda a `/admin/login?next=…`.
+Cambio del 2026-10-11. Es privado y, desde el 2026-10-12, **es otra app y otro servicio**: su propio build (`src/panel/`, `vite.panel.config.ts`), su API (`server/panel/`) y su subdominio en producción (en dev, :5180). Va sin Nav, Ufo, ticker, bienvenida ni temporadas, lleva `noindex` y no se deja meter en iframes. La web no contiene nada del panel; los dos solo se conectan por PostgreSQL, así que la web sigue funcionando aunque el panel esté detenido. Componentes en `src/components/Admin/`, cliente en `src/lib/adminApi.ts` y contexto en `src/lib/useAdmin.ts`. Misma paleta y tipografía del sitio. Sin sesión, cualquier ruta `/admin/*` manda a `/admin/login?next=…`.
 - **L1 · Login** (`/admin/login`, `AdminLogin.tsx`):
   - tarjeta de 420px centrada sobre los anillos de vinil de Contacto (con el arco dorado);
   - lockup "HATHOR / FREQUENCY" + "Panel del estudio" en dorado;
@@ -747,7 +747,7 @@ Cambio del 2026-10-11. Es privado: va fuera del Layout público (sin Nav, Ufo, t
     - "¿Publicar N cambios?" lista cada cambio ("Estudio · Equipo → oculto"), con Seguir editando / Publicar;
     - el historial muestra fecha, quién, qué ocultó o mostró y "Restaurar", que copia esa versión al borrador.
   - El contador de cambios sin publicar va en la pestaña "Sitio" de la barra lateral.
-  - **Al publicar, la web abierta cambia al instante**, sin recargar: si estás viendo una página que se oculta, pasa a "Próximamente". Por el túnel temporal tarda hasta ~15 s.
+  - **Al publicar, la web abierta cambia al instante**, sin recargar: si estás viendo una página que se oculta, pasa a "Próximamente". Por el túnel temporal, que no deja pasar el SSE, llega por long-polling: tarda unos 6 s en cambiar de modo al abrir la página y después cada aviso llega en menos de 1 s.
 - **Contenido** (`/admin/contenido`, `AdminContent.tsx`, `ContentForm.tsx`, `contentForms.ts`): editar textos, precios y listas sin tocar código. Diseños C1 + vista previa de C2 + F1–F6, cambio del 2026-10-11.
   - **Secciones** (pestañas, con punto dorado si tienen cambios):
     - Servicios: solo textos; los 5 canales son fijos;
@@ -779,6 +779,8 @@ Cambio del 2026-10-11. Es privado: va fuera del Layout público (sin Nav, Ufo, t
   - cualquier admin ve **"Mi cuenta"**: contraseña actual, nueva y repetir (con el mismo aviso);
   - el saludo de Inicio y la barra usan **primer nombre + primer apellido** ("Buenas tardes, Xavier Ruiz.").
   - la pestaña dice "Usuarios" para el principal y "Mi cuenta" para los demás.
+  - **Sesiones abiertas** (todos): cada sesión con navegador, IP, último uso y cuándo se abrió; "Esta sesión" en dorado. Las demás se cierran una por una o con "Cerrar las demás (n)". Cambio del 2026-10-12.
+  - **Registro de accesos** (solo el principal): tabla con los últimos 100 intentos de login (cuándo, cuenta, resultado y desde dónde). Resultado: chip dorado "Entró", o apagado con "Contraseña incorrecta", "Correo sin cuenta" o "Cuenta bloqueada". En Accesos al panel, una cuenta bloqueada lleva el chip "Bloqueada hasta …".
 - **D1 · Ocupado en Reservar (público)**: se queda el tachado: el horario o día lleno se apaga en `#444` con `line-through`, igual que los días pasados (§6).
 
 ---

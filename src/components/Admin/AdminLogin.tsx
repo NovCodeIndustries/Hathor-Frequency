@@ -1,5 +1,6 @@
 import { useId, useState, type FormEvent } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
+import { WEB_URL } from '../../lib/origins'
 import { adminApi } from '../../lib/adminApi'
 import { LoginAlien, type AlienMood } from './LoginAlien'
 import './AdminLayout.css'
@@ -97,7 +98,7 @@ export function AdminLogin() {
         </form>
       </div>
 
-      <Link to="/" className="hf-login__back">← Volver al sitio</Link>
+      <a href={WEB_URL} className="hf-login__back">← Volver al sitio</a>
     </div>
   )
 }

@@ -2,11 +2,12 @@ import { useSyncExternalStore } from 'react'
 import { contentDefaults, type ContentKey, type ContentMap } from '../data/content'
 import type { Stat } from '../data/types'
 import { onLive, onRefresh } from './live'
+import { PANEL_ORIGIN } from './origins'
 
 /**
  * Contenido de la web (panel · Contenido): lo publicado de cada sección o, si nunca se publicó,
- * el contenido inicial de `src/data`. En la vista previa del panel (`?modo=vista`, solo con sesión de admin)
- * se muestra el borrador que manda el panel por postMessage.
+ * el contenido inicial de `src/data`. En la vista previa del panel (`?modo=vista`, dentro del iframe del panel,
+ * que vive en PANEL_ORIGIN) se muestra el borrador que manda el panel por postMessage.
  */
 
 type Partial_ = { [K in ContentKey]?: ContentMap[K] }
@@ -46,17 +47,16 @@ const inFrame = () => {
 /** ¿Es la vista previa del panel · Contenido? */
 export const isPreviewFrame = () => inFrame() && new URLSearchParams(window.location.search).get('modo') === 'vista'
 
-async function startPreview() {
-  const res = await fetch('/api/admin/me').catch(() => null)
-  if (!res?.ok) return
+function startPreview() {
   window.addEventListener('message', (e: MessageEvent<PreviewMessage>) => {
-    if (e.origin !== window.location.origin || e.source !== window.parent) return
+    if (e.origin !== PANEL_ORIGIN || e.source !== window.parent) return
     if (e.data?.type === 'hf-preview-draft') {
       drafts = { ...drafts, [e.data.key]: e.data.data }
       emit()
     }
   })
-  window.parent.postMessage({ type: 'hf-preview-ready' } satisfies PreviewMessage, window.location.origin)
+  // Con targetOrigin, el saludo solo llega si quien nos contiene es el panel
+  window.parent.postMessage({ type: 'hf-preview-ready' } satisfies PreviewMessage, PANEL_ORIGIN)
 }
 
 // ── Cifras que salen de la base (Inicio y Estudio) ──
@@ -88,7 +88,7 @@ export async function loadContent(): Promise<void> {
     emit()
   })
   onRefresh(() => void fetchPublished())
-  if (isPreviewFrame()) await startPreview()
+  if (isPreviewFrame()) startPreview()
 }
 
 const subscribe = (l: () => void) => {

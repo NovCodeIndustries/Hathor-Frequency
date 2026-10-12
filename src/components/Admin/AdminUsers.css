@@ -24,3 +24,8 @@
 .hf-ausers__match.is-bad { color: var(--c-text); text-decoration: underline wavy var(--c-gold); }
 .hf-admin__input.is-bad { border-color: var(--c-gold); }
 .hf-ausers__phone { display: block; font-size: 12px; color: var(--c-text-3); }
+.hf-ausers__lock { margin-left: 6px; }
+.hf-ausers__sessions { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; }
+.hf-ausers__session { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 0; border-top: 1px solid var(--c-line-3); font-size: 15px; }
+.hf-ausers__session:first-child { border-top: 0; }
+.hf-ausers__here { margin-left: 8px; }

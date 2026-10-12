@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useId, useState, type FormEvent } from 'react'
-import { adminApi, formatStamp, type AdminUserRow, type NewAdminUser } from '../../lib/adminApi'
+import { adminApi, describeDevice, formatStamp, type AccessLogRow, type AdminSessionRow, type AdminUserRow, type NewAdminUser } from '../../lib/adminApi'
 import { useAdmin } from '../../lib/useAdmin'
 import './AdminSite.css'
 import './AdminUsers.css'
 import { useAdminLive } from '../../lib/useAdminLive'
 
 /**
- * Usuarios del panel: cualquiera cambia su contraseña; el usuario principal además crea admins,
- * les pone contraseña nueva y los borra (el principal no se puede borrar).
+ * Usuarios del panel: cualquiera cambia su contraseña y ve o cierra sus sesiones; el usuario principal además
+ * crea admins, les pone contraseña nueva (eso también quita el bloqueo por intentos), los borra
+ * (el principal no se puede borrar) y ve el registro de accesos.
  */
 export function AdminUsers() {
   const { admin, onError } = useAdmin()
@@ -27,6 +28,8 @@ export function AdminUsers() {
       <div className="hf-ausers">
         {admin.isRoot && <UsersAdmin meId={admin.id} onError={onError} />}
         <MyPassword name={admin.name} email={admin.email} onError={onError} />
+        <MySessions onError={onError} />
+        {admin.isRoot && <AccessLog onError={onError} />}
       </div>
     </>
   )
@@ -106,7 +109,14 @@ function UsersAdmin({ meId, onError }: { meId: string; onError: (e: unknown) => 
                     {u.email}
                     {u.phone && <span className="hf-ausers__phone">{u.phone}</span>}
                   </td>
-                  <td data-label="Rol">{u.isRoot ? <span className="hf-chip hf-chip--done">Principal</span> : <span className="hf-chip hf-chip--tag">Admin</span>}</td>
+                  <td data-label="Rol">
+                    {u.isRoot ? <span className="hf-chip hf-chip--done">Principal</span> : <span className="hf-chip hf-chip--tag">Admin</span>}
+                    {u.lockedUntil && (
+                      <span className="hf-chip hf-chip--pending hf-ausers__lock" title="Por intentos fallidos; una contraseña nueva lo quita">
+                        Bloqueada hasta {formatStamp(u.lockedUntil).split(', ')[1]}
+                      </span>
+                    )}
+                  </td>
                   <td data-label="Alta" className="hf-acontacts__muted">{formatStamp(u.createdAt)}</td>
                   <td className="hf-acontacts__right">
                     {resetId === u.id ? (
@@ -269,6 +279,128 @@ function MyPassword({ name, email, onError }: { name: string; email: string; onE
       {msg && <p className="hf-ausers__ok" role="status">{msg}</p>}
       <button type="submit" className="hf-admin__btn hf-admin__btn--primary hf-ausers__submit" disabled={busy || f.next.length < 10 || f.next !== f.repeat}>Cambiar contraseña</button>
     </form>
+  )
+}
+
+/** Mis sesiones abiertas: dónde está abierta mi cuenta, y cerrar las que no reconozca */
+function MySessions({ onError }: { onError: (e: unknown) => string }) {
+  const id = useId()
+  const [list, setList] = useState<AdminSessionRow[] | null>(null)
+  const [error, setError] = useState('')
+  const [msg, setMsg] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  const load = useCallback(() => {
+    adminApi.mySessions().then(setList).catch((err) => setError(onError(err)))
+  }, [onError])
+  useEffect(load, [load])
+
+  const run = async (fn: () => Promise<unknown>, ok: string) => {
+    setBusy(true)
+    setMsg('')
+    try {
+      await fn()
+      setError('')
+      setMsg(ok)
+      load()
+    } catch (err) {
+      setError(onError(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const others = list?.filter((s) => !s.current).length ?? 0
+
+  return (
+    <section className="hf-ausers__card" aria-labelledby={`${id}-sessions`}>
+      <h2 id={`${id}-sessions`} className="hf-ausers__title">Sesiones abiertas</h2>
+      <p className="hf-ausers__muted">Se cierran solas tras 12 h sin uso, o a los 7 días. Si ves una que no reconoces, ciérrala y cambia tu contraseña.</p>
+      {error && <p className="hf-admin__error" role="alert">{error}</p>}
+      {msg && <p className="hf-ausers__ok" role="status">{msg}</p>}
+      <ul className="hf-ausers__sessions">
+        {list?.map((s) => (
+          <li key={s.id} className="hf-ausers__session">
+            <span>
+              {describeDevice(s.userAgent)}
+              {s.current && <span className="hf-chip hf-chip--done hf-ausers__here">Esta sesión</span>}
+              <span className="hf-ausers__phone">
+                {s.ip ?? 'IP desconocida'} · último uso {formatStamp(s.lastSeenAt)} · abierta {formatStamp(s.createdAt)}
+              </span>
+            </span>
+            {!s.current && (
+              <button type="button" className="hf-admin__btn hf-admin__btn--ghost hf-admin__btn--sm" disabled={busy} onClick={() => run(() => adminApi.closeSession(s.id), 'Sesión cerrada.')}>
+                Cerrar
+              </button>
+            )}
+          </li>
+        ))}
+      </ul>
+      {others > 0 && (
+        <button type="button" className="hf-admin__btn hf-ausers__submit" disabled={busy} onClick={() => run(() => adminApi.closeOtherSessions(), 'Se cerraron las demás sesiones.')}>
+          Cerrar las demás ({others})
+        </button>
+      )}
+    </section>
+  )
+}
+
+const REASON: Record<NonNullable<AccessLogRow['reason']>, string> = {
+  password: 'Contraseña incorrecta',
+  unknown: 'Correo sin cuenta',
+  locked: 'Cuenta bloqueada',
+}
+
+/** Registro de accesos (solo el principal): los últimos 100 intentos de login, buenos y fallidos */
+function AccessLog({ onError }: { onError: (e: unknown) => string }) {
+  const id = useId()
+  const [list, setList] = useState<AccessLogRow[] | null>(null)
+  const [error, setError] = useState('')
+  const load = useCallback(() => {
+    adminApi.accessLog().then(setList).catch((err) => setError(onError(err)))
+  }, [onError])
+  useEffect(load, [load])
+  useAdminLive(['users'], load)
+
+  return (
+    <section className="hf-ausers__card" aria-labelledby={`${id}-log`}>
+      <h2 id={`${id}-log`} className="hf-ausers__title">Registro de accesos</h2>
+      <p className="hf-ausers__muted">Últimos 100 intentos de entrar al panel; se guardan 90 días. Tras 5 fallidos seguidos, la cuenta se bloquea 15 min.</p>
+      {error && <p className="hf-admin__error" role="alert">{error}</p>}
+      {list && list.length === 0 && <p className="hf-ausers__muted">Aún no hay intentos.</p>}
+      {list && list.length > 0 && (
+        <div className="hf-acontacts">
+          <table className="hf-acontacts__table">
+            <thead>
+              <tr>
+                <th scope="col">Cuándo</th>
+                <th scope="col">Cuenta</th>
+                <th scope="col">Resultado</th>
+                <th scope="col">Desde</th>
+              </tr>
+            </thead>
+            <tbody>
+              {list.map((e) => (
+                <tr key={e.id}>
+                  <td className="hf-acontacts__muted">{formatStamp(e.createdAt)}</td>
+                  <td data-label="Cuenta">
+                    {e.user?.name ?? e.email}
+                    {e.user && <span className="hf-ausers__phone">{e.email}</span>}
+                  </td>
+                  <td data-label="Resultado">
+                    {e.success ? <span className="hf-chip hf-chip--done">Entró</span> : <span className="hf-chip hf-chip--off">{e.reason ? REASON[e.reason] : 'Falló'}</span>}
+                  </td>
+                  <td data-label="Desde" className="hf-acontacts__muted">
+                    {e.ip ?? 'IP desconocida'}
+                    <span className="hf-ausers__phone">{describeDevice(e.userAgent)}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   )
 }
 

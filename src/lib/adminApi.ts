@@ -25,6 +25,8 @@ export interface AdminUserRow extends AdminUser {
   middleName: string | null
   secondLastName: string | null
   phone: string | null
+  /** Bloqueada por intentos fallidos hasta esa hora, solo si sigue vigente (se quita sola o con una contraseña nueva) */
+  lockedUntil: string | null
   createdAt: string
 }
 
@@ -222,6 +224,36 @@ export interface AdminBlock {
   reason: string | null
 }
 
+/** Una sesión abierta de mi cuenta (Mi cuenta · Sesiones) */
+export interface AdminSessionRow {
+  id: string
+  createdAt: string
+  lastSeenAt: string
+  ip: string | null
+  userAgent: string | null
+  current: boolean
+}
+
+/** Un intento de login (Usuarios · Registro de accesos) */
+export interface AccessLogRow {
+  id: string
+  email: string
+  success: boolean
+  reason: 'password' | 'unknown' | 'locked' | null
+  ip: string | null
+  userAgent: string | null
+  createdAt: string
+  user: { name: string } | null
+}
+
+/** "Chrome · Android" a partir del user-agent */
+export function describeDevice(ua: string | null): string {
+  if (!ua) return 'Navegador desconocido'
+  const browser = /Edg\//.test(ua) ? 'Edge' : /OPR\//.test(ua) ? 'Opera' : /Firefox\//.test(ua) ? 'Firefox' : /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : /curl|node|python/i.test(ua) ? 'Script' : 'Navegador'
+  const os = /iPhone|iPad/.test(ua) ? 'iPhone/iPad' : /Android/.test(ua) ? 'Android' : /Windows/.test(ua) ? 'Windows' : /Mac OS X/.test(ua) ? 'Mac' : /Linux/.test(ua) ? 'Linux' : ''
+  return os ? `${browser} · ${os}` : browser
+}
+
 /** Error de la API del panel; `status` 401 = sin sesión */
 export class AdminApiError extends Error {
   status: number
@@ -298,6 +330,10 @@ export const adminApi = {
   createUser: (user: NewAdminUser) => request<AdminUserRow>('POST', '/users', user),
   setUserPassword: (id: string, password: string) => request<{ ok: true }>('PATCH', `/users/${id}/password`, { password }),
   deleteUser: (id: string) => request<{ ok: true }>('DELETE', `/users/${id}`),
+  mySessions: () => request<AdminSessionRow[]>('GET', '/users/me/sessions'),
+  closeSession: (id: string) => request<{ ok: true }>('DELETE', `/users/me/sessions/${id}`),
+  closeOtherSessions: () => request<{ ok: true; closed: number }>('DELETE', '/users/me/sessions'),
+  accessLog: () => request<AccessLogRow[]>('GET', '/users/access-log'),
   changeMyPassword: (current: string, next: string) => request<{ ok: true }>('PATCH', '/users/me/password', { current, next }),
 
   mediaList: (params: { dir?: string; q?: string }) =>

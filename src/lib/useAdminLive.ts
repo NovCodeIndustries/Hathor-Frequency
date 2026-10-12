@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react'
+import { longPoll } from './longPoll'
 
 /**
  * Avisos en vivo del panel (`GET /api/admin/events`, solo con sesión): cada reserva, contacto u opinión nueva,
  * o un cambio hecho en otra pestaña, avisa qué cambió y la barra lateral y la vista se recargan solas.
- * Sin SSE (p. ej. el túnel rápido de Cloudflare) se avisa "todo" cada 20 s.
+ * Sin SSE (p. ej. el túnel rápido de Cloudflare) los avisos llegan por long-polling (`/api/admin/events/poll`).
  */
 
 export type AdminEventKind = 'booking' | 'contact' | 'review' | 'block' | 'site' | 'content' | 'users'
@@ -12,22 +13,22 @@ const ALL: AdminEventKind[] = ['booking', 'contact', 'review', 'block', 'site', 
 type Listener = (kind: AdminEventKind) => void
 const listeners = new Set<Listener>()
 let source: EventSource | null = null
-let poll: number | undefined
+let stopPoll: (() => void) | null = null
 
 const emit = (kind: AdminEventKind) => listeners.forEach((l) => l(kind))
 
 export function startAdminLive() {
-  if (source || poll || typeof window === 'undefined') return
+  if (source || stopPoll || typeof window === 'undefined') return
   const startPolling = () => {
-    poll ??= window.setInterval(() => {
-      if (document.visibilityState === 'visible') ALL.forEach(emit)
-    }, 20_000)
+    stopPoll ??= longPoll<AdminEventKind>('/api/admin/events/poll', (kinds) => new Set(kinds).forEach(emit), () => ALL.forEach(emit))
   }
   if (typeof EventSource === 'undefined') return startPolling()
   source = new EventSource('/api/admin/events')
   const fallback = window.setTimeout(() => {
     source?.close()
     source = null
+    // Lo que cambió mientras se esperaba al SSE no llegó por ningún lado
+    ALL.forEach(emit)
     startPolling()
   }, 6000)
   let first = true
@@ -43,8 +44,8 @@ export function startAdminLive() {
 export function stopAdminLive() {
   source?.close()
   source = null
-  window.clearInterval(poll)
-  poll = undefined
+  stopPoll?.()
+  stopPoll = null
 }
 
 /** Llama `onChange` cuando llega un aviso de alguno de esos tipos (o de cualquiera si `kinds` es "all") */

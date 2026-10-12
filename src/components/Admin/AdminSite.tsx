@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { globalModules, moduleById, pageModuleOf, pageModules } from '../../data/modules'
 import { adminApi, formatStamp, type SiteState, type SiteVersionInfo } from '../../lib/adminApi'
+import { WEB_ORIGIN, WEB_URL } from '../../lib/origins'
 import type { EditMessage } from '../../lib/siteModules'
 import { useAdmin } from '../../lib/useAdmin'
 import './AdminSite.css'
@@ -39,7 +40,7 @@ function moduleTitle(id: string): string {
 }
 
 const diff = (a: string[], b: string[]) => a.filter((id) => !b.includes(id))
-const withEdit = (path: string) => `${path}${path.includes('?') ? '&' : '?'}modo=edicion`
+const withEdit = (path: string) => `${WEB_URL}${path}${path.includes('?') ? '&' : '?'}modo=edicion`
 
 /**
  * Panel · Sitio (diseño S1 + H2 + L + G + P, canvas https://claude.ai/artifact/D4NYHBREuqQbBVTPLUe3cS):
@@ -59,7 +60,7 @@ export function AdminSite() {
   const [error, setError] = useState('')
 
   const sendDraft = useCallback((disabled: string[]) => {
-    frameRef.current?.contentWindow?.postMessage({ type: 'hf-edit-draft', disabled } satisfies EditMessage, window.location.origin)
+    frameRef.current?.contentWindow?.postMessage({ type: 'hf-edit-draft', disabled } satisfies EditMessage, WEB_ORIGIN)
   }, [])
 
   const apply = useCallback(
@@ -96,7 +97,7 @@ export function AdminSite() {
   // Mensajes del iframe: lista para recibir el borrador, cambio de ruta y switches
   useEffect(() => {
     const onMessage = (e: MessageEvent<EditMessage>) => {
-      if (e.origin !== window.location.origin || e.source !== frameRef.current?.contentWindow) return
+      if (e.origin !== WEB_ORIGIN || e.source !== frameRef.current?.contentWindow) return
       const msg = e.data
       if (msg?.type === 'hf-edit-ready') {
         setPath(msg.path.replace(/[?&]modo=edicion/, '').replace(/\?$/, '') || '/')

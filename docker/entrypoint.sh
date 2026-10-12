@@ -1,6 +1,11 @@
 #!/bin/sh
-# Arranque del contenedor app: dependencias al día, cliente Prisma y migraciones.
+# Arranque de los contenedores. Con HF_SETUP=1 (servicio `migrate`): dependencias al día, cliente Prisma
+# y migraciones. `web` y `panel` arrancan después de `migrate` y solo ejecutan su comando.
 set -e
+
+if [ "$HF_SETUP" != "1" ]; then
+  exec "$@"
+fi
 
 # node_modules vive en un volumen; si package-lock.json cambió, se reinstala.
 LOCK_HASH="$(sha256sum package-lock.json | cut -d' ' -f1)"

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { contentSections, type ContentKey } from '../../data/content'
 import { adminApi, formatStamp, type ContentState, type ContentVersionInfo, type FieldIssue } from '../../lib/adminApi'
+import { WEB_ORIGIN, WEB_URL } from '../../lib/origins'
 import type { PreviewMessage } from '../../lib/content'
 import { useAdmin } from '../../lib/useAdmin'
 import { ContentForm } from './ContentForm'
@@ -14,7 +15,7 @@ type Phase = 'idle' | 'saving' | 'publishing' | 'published'
 
 const isKey = (k: string | null): k is ContentKey => contentSections.some((s) => s.key === k)
 const PREVIEW_KEY = 'hf-content-preview'
-const withPreview = (path: string) => `${path}${path.includes('?') ? '&' : '?'}modo=vista`
+const withPreview = (path: string) => `${WEB_URL}${path}${path.includes('?') ? '&' : '?'}modo=vista`
 
 /**
  * Panel · Contenido (diseño C1 + vista previa C2 + F1–F6, canvas https://claude.ai/artifact/1m6tKaTUujXp6FNuj1q4fL):
@@ -92,13 +93,13 @@ function SectionEditor({ sectionKey: key, onSection }: { sectionKey: ContentKey;
   const sendPreview = useCallback(
     (data: Obj | null) => {
       if (!data) return
-      frameRef.current?.contentWindow?.postMessage({ type: 'hf-preview-draft', key, data } satisfies PreviewMessage, window.location.origin)
+      frameRef.current?.contentWindow?.postMessage({ type: 'hf-preview-draft', key, data } satisfies PreviewMessage, WEB_ORIGIN)
     },
     [key],
   )
   useEffect(() => {
     const onMessage = (e: MessageEvent<PreviewMessage>) => {
-      if (e.origin !== window.location.origin || e.source !== frameRef.current?.contentWindow) return
+      if (e.origin !== WEB_ORIGIN || e.source !== frameRef.current?.contentWindow) return
       if (e.data?.type === 'hf-preview-ready') sendPreview(draft)
     }
     window.addEventListener('message', onMessage)

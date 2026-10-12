@@ -1,13 +1,15 @@
 import { useSyncExternalStore } from 'react'
 import { isModuleOn, linkModuleOf, moduleById, parentOf } from '../data/modules'
 import { onLive, onRefresh } from './live'
+import { PANEL_ORIGIN } from './origins'
 
 /**
  * Módulos apagados del sitio (panel · Sitio). Se cargan antes de pintar la app (main.tsx)
  * para que lo oculto no aparezca un instante. Si la API falla, se usa la última copia guardada.
  *
- * Modo edición: la web dentro del iframe de /admin/sitio (`?modo=edicion`, solo con sesión de admin).
- * Ahí se muestra todo (lo apagado atenuado, diseño H2) y cada módulo lleva su switch; el borrador
+ * Modo edición: la web dentro del iframe de /admin/sitio (`?modo=edicion`). Solo se activa si el panel
+ * (PANEL_ORIGIN, otro origen) contesta el saludo; la web solo deja que la meta en un iframe el panel
+ * (CSP frame-ancestors) y el panel exige sesión. Ahí se muestra todo (lo apagado atenuado, diseño H2) y cada módulo lleva su switch; el borrador
  * lo manda el panel por postMessage y los cambios se piden al panel, que es quien los guarda.
  */
 
@@ -55,18 +57,26 @@ const inFrame = () => {
 
 /** Manda un mensaje al panel (solo en modo edición) */
 export function postToPanel(msg: EditMessage) {
-  if (snap.edit) window.parent.postMessage(msg, window.location.origin)
+  if (snap.edit) window.parent.postMessage(msg, PANEL_ORIGIN)
 }
 
-async function startEditMode() {
-  const res = await fetch('/api/admin/me').catch(() => null)
-  if (!res?.ok) return
-  update({ edit: true })
-  window.addEventListener('message', (e: MessageEvent<EditMessage>) => {
-    if (e.origin !== window.location.origin || e.source !== window.parent) return
-    if (e.data?.type === 'hf-edit-draft') update({ disabled: new Set(e.data.disabled) })
+/** Lo que se espera a que el panel conteste el saludo antes de pintar la web normal */
+const HANDSHAKE_MS = 2500
+
+/** Saluda al panel y entra en modo edición cuando contesta con el borrador */
+function startEditMode(): Promise<void> {
+  return new Promise((resolve) => {
+    const timer = window.setTimeout(resolve, HANDSHAKE_MS)
+    window.addEventListener('message', (e: MessageEvent<EditMessage>) => {
+      if (e.origin !== PANEL_ORIGIN || e.source !== window.parent) return
+      if (e.data?.type !== 'hf-edit-draft') return
+      update({ edit: true, disabled: new Set(e.data.disabled) })
+      window.clearTimeout(timer)
+      resolve()
+    })
+    // Con targetOrigin, el mensaje solo llega si quien nos contiene es el panel
+    window.parent.postMessage({ type: 'hf-edit-ready', path: window.location.pathname + window.location.search } satisfies EditMessage, PANEL_ORIGIN)
   })
-  postToPanel({ type: 'hf-edit-ready', path: window.location.pathname + window.location.search })
 }
 
 function applyPublished(ids: string[]) {

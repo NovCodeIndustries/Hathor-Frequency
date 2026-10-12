@@ -1,8 +1,11 @@
 /**
  * Canal en vivo de la web pública: `GET /api/site/events` (SSE). El servidor manda `site` al publicar
  * módulos (panel · Sitio) y `content` al publicar una sección (panel · Contenido).
- * Si SSE no responde en 6 s (p. ej. el túnel rápido de Cloudflare, que lo retiene), se consulta cada 15 s.
+ * Si SSE no responde en 6 s (p. ej. el túnel rápido de Cloudflare, que lo retiene), los mismos avisos llegan
+ * por long-polling (`/api/site/events/poll`, `longPoll.ts`).
  */
+
+import { longPoll } from './longPoll'
 
 type Handler = (data: unknown) => void
 
@@ -10,7 +13,6 @@ const handlers = new Map<string, Set<Handler>>()
 const refreshers = new Set<() => void>()
 let started = false
 
-const POLL_MS = 15_000
 const SSE_TIMEOUT_MS = 6_000
 
 /** Escucha un evento del canal (`site`, `content`, `stats`, `availability`, `reviews`); devuelve cómo dejar de escuchar */
@@ -22,9 +24,12 @@ export function onLive(event: string, handler: Handler): () => void {
   }
 }
 
-/** Función para volver a pedir los datos: al reconectar, al volver a la pestaña y en el respaldo sin SSE */
-export function onRefresh(fn: () => void) {
+/** Función para volver a pedir los datos: al reconectar, al volver a la pestaña o si se perdieron avisos */
+export function onRefresh(fn: () => void): () => void {
   refreshers.add(fn)
+  return () => {
+    refreshers.delete(fn)
+  }
 }
 
 const refreshAll = () => refreshers.forEach((fn) => fn())
@@ -32,11 +37,9 @@ const refreshAll = () => refreshers.forEach((fn) => fn())
 export function startLive() {
   if (started) return
   started = true
-  let poll: number | undefined
+  const dispatch = (name: string, data: unknown) => handlers.get(name)?.forEach((h) => h(data))
   const startPolling = () => {
-    poll ??= window.setInterval(() => {
-      if (document.visibilityState === 'visible') refreshAll()
-    }, POLL_MS)
+    longPoll<{ event: string; data: unknown }>('/api/site/events/poll', (items) => items.forEach((i) => dispatch(i.event, i.data)), refreshAll)
   }
 
   document.addEventListener('visibilitychange', () => {
@@ -47,6 +50,8 @@ export function startLive() {
   const events = new EventSource('/api/site/events')
   const fallback = window.setTimeout(() => {
     events.close()
+    // Lo que cambió mientras se esperaba al SSE no llegó por ningún lado
+    refreshAll()
     startPolling()
   }, SSE_TIMEOUT_MS)
 
@@ -58,7 +63,7 @@ export function startLive() {
       } catch {
         return refreshAll()
       }
-      handlers.get(name)?.forEach((h) => h(data))
+      dispatch(name, data)
     })
   }
   // "hello" llega en cada conexión, también al reconectar tras un corte

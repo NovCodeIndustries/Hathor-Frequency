@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate, RouterProvider } from 'react-router'
+import { createBrowserRouter, RouterProvider } from 'react-router'
 import { Layout } from './components/Layout/Layout'
 import {
   ArtistsPage,
@@ -12,6 +12,7 @@ import {
   StudioPage,
 } from './pages/pages'
 
+// El panel del estudio es otra app (src/panel/, su propio subdominio): aquí no hay nada de /admin
 const router = createBrowserRouter([
   {
     element: <Layout />,
@@ -25,27 +26,6 @@ const router = createBrowserRouter([
       { path: 'estudio', element: <StudioPage /> },
       { path: 'faq', element: <FaqPage /> },
       { path: '*', element: <NotFoundPage /> },
-    ],
-  },
-  // Panel del estudio: fuera del Layout público (sin Nav, Ufo ni ticker) y cargado solo al entrar
-  {
-    path: 'admin/login',
-    lazy: async () => ({ Component: (await import('./components/Admin/AdminLogin')).AdminLogin }),
-  },
-  {
-    path: 'admin',
-    lazy: async () => ({ Component: (await import('./components/Admin/AdminLayout')).AdminLayout }),
-    children: [
-      { index: true, lazy: async () => ({ Component: (await import('./components/Admin/AdminDashboard')).AdminDashboard }) },
-      { path: 'reservas', lazy: async () => ({ Component: (await import('./components/Admin/AdminAgenda')).AdminAgenda }) },
-      { path: 'opiniones', lazy: async () => ({ Component: (await import('./components/Admin/AdminReviews')).AdminReviews }) },
-      { path: 'contactos', lazy: async () => ({ Component: (await import('./components/Admin/AdminContacts')).AdminContacts }) },
-      // Bloqueos vive dentro de la Agenda (reservas + bloqueos)
-      { path: 'bloqueos', element: <Navigate to="/admin/reservas" replace /> },
-      { path: 'usuarios', lazy: async () => ({ Component: (await import('./components/Admin/AdminUsers')).AdminUsers }) },
-      { path: 'contenido', lazy: async () => ({ Component: (await import('./components/Admin/AdminContent')).AdminContent }) },
-      { path: 'sitio', lazy: async () => ({ Component: (await import('./components/Admin/AdminSite')).AdminSite }) },
-      { path: '*', element: <Navigate to="/admin" replace /> },
     ],
   },
 ])

@@ -16,7 +16,9 @@ Esto levanta todo junto:
 
 | Servicio | Qué hace | URL / puerto |
 |---|---|---|
-| `app` | instala dependencias, genera el cliente Prisma, aplica migraciones y corre Vite + la API | http://localhost:5173 (API en `/api`) |
+| `migrate` | corre una vez: instala dependencias, genera el cliente Prisma y aplica migraciones | — |
+| `web` | sitio público + su API (`server/web`) | http://localhost:5173 (API en `/api`) |
+| `panel` | panel del estudio + su API (`server/panel`), servicio aparte | http://localhost:5180/admin |
 | `db` | PostgreSQL 17 con volumen persistente `pgdata` | `localhost:5440` |
 | `umami` + `umami-db` | analítica de visitas (sin cookies) para el dashboard | http://localhost:3100 |
 
@@ -26,11 +28,12 @@ Comandos útiles:
 
 ```bash
 docker compose up -d                          # en segundo plano
-docker compose logs -f app                    # logs de Vite / Prisma
-docker compose exec app npm run db:migrate    # crear una migración tras editar el schema
-docker compose exec app npm run db:studio     # Prisma Studio (añade el puerto 5555 si lo usas)
-docker compose exec app npm run db:seed       # opiniones de ejemplo (solo dev)
-docker compose exec app npm run admin:create  # alta de una persona del panel de admin
+docker compose logs -f web panel              # logs de Vite y de las APIs
+docker compose stop panel                     # mantenimiento del panel: la web sigue funcionando
+docker compose exec panel npm run db:migrate    # crear una migración tras editar el schema
+docker compose exec panel npm run db:studio     # Prisma Studio (añade el puerto 5555 si lo usas)
+docker compose exec panel npm run db:seed       # opiniones de ejemplo (solo dev)
+docker compose exec panel npm run admin:create  # alta de una persona del panel de admin
 docker compose down                           # detener (conserva los datos)
 docker compose down -v                        # detener y borrar la base
 ```
@@ -43,7 +46,7 @@ Con el stack levantado (`docker compose up -d`):
 
 ```bash
 docker run -d --name hathor-tunnel --network hathor-frequency_default \
-  cloudflare/cloudflared:latest tunnel --no-autoupdate --url http://app:5173
+  cloudflare/cloudflared:latest tunnel --no-autoupdate --url http://web:5173
 docker logs hathor-tunnel 2>&1 | grep trycloudflare.com   # muestra el link público
 docker rm -f hathor-tunnel                                 # cerrar el link
 ```
@@ -57,7 +60,7 @@ Requisitos: Node 22+. La base es opcional para el frontend.
 
 ```bash
 npm install
-npm run dev:all   # Vite (http://localhost:5173) + API (:3000, en /api por el proxy)
+npm run dev:all   # web (http://localhost:5173, API :3000) + panel (http://localhost:5180/admin, API :3001)
 npm run dev       # solo Vite (los formularios fallan sin la API)
 npm run build     # chequeo de tipos + build a /dist
 npm run preview   # sirve /dist
@@ -74,7 +77,10 @@ prisma/schema.prisma     modelos: ContactRequest, Booking, Review, BlockedSlot, 
 prisma/seed.ts           opiniones de ejemplo para dev
 prisma/migrations/       migraciones SQL versionadas
 prisma.config.ts         configuración de Prisma 7 (DATABASE_URL, seed)
-server/                  API (Hono): index.ts, routes/, schemas.ts (zod), auth.ts, scripts/create-admin.ts
+server/web/              API de la web (Hono): index.ts, routes/ (formularios y avisos en vivo)
+server/panel/            API del panel: index.ts, auth.ts, routes/, lib/, scripts/create-admin.ts
+server/shared/           lo común: db.ts, lib/, schemas.ts (zod), http.ts, routes/read.ts (lecturas públicas)
+src/panel/               app del panel (index.html, main.tsx, App.tsx); vite.panel.config.ts
 src/
   data/                  contenido editable: servicios, artistas, cifras, horarios, links
   pages/                 una página por ruta (/, /servicios, /artistas, /reservar, /contacto, /estudio)
@@ -83,7 +89,7 @@ src/
   lib/submit.ts          punto único de envío de formularios (fetch a /api)
   lib/useReviews.ts      opiniones publicadas · lib/useAvailability.ts  horarios ocupados
   styles/                tokens.css (:root) y base.css
-docker/entrypoint.sh     arranque del contenedor app
+docker/entrypoint.sh     arranque de los contenedores (el servicio migrate prepara todo)
 ```
 
 ## Editar contenido
@@ -101,7 +107,7 @@ Todo el texto y los datos están en `src/data/`:
 
 ## API y base de datos
 
-La API vive en `server/` (Hono + Prisma) y el navegador la llama en `/api`; en dev, Vite hace de proxy.
+Hay dos APIs (Hono + Prisma), una por servicio, y cada navegador llama a la suya en `/api`; en dev, Vite hace de proxy. Se avisan entre sí por PostgreSQL (`LISTEN/NOTIFY`).
 
 | Endpoint | Para qué |
 |---|---|
@@ -109,13 +115,15 @@ La API vive en `server/` (Hono + Prisma) y el navegador la llama en `/api`; en d
 | `POST /api/bookings` | guarda una reserva PENDING (`bookings`); 409 si el horario está ocupado o bloqueado |
 | `GET /api/availability?month=YYYY-MM` | horarios ocupados y días cerrados del mes (sin datos personales) |
 | `POST /api/reviews` · `GET /api/reviews` | guarda una opinión PENDING · lista las PUBLISHED |
-| `/api/admin/*` | panel: login/logout/me, summary, reservas, opiniones, contactos (atendido) y bloqueos (requiere sesión) |
+| `/api/admin/*` | **solo en el panel** (en la web da 404): login/logout/me, summary, reservas, opiniones, contactos, bloqueos, contenido, sitio, usuarios, sesiones y registro de accesos (requiere sesión) |
 
 - **Una sesión por horario**: un índice único parcial en `bookings (date, start_time)` para PENDING/CONFIRMED evita reservas dobles, aunque lleguen a la vez. Cancelar libera el horario.
 - **Anti-spam**: campo honeypot (`website`) y límite de envíos por IP en memoria.
-- **Panel del estudio**: en http://localhost:5173/admin (Inicio/dashboard, Agenda con reservas y bloqueos, Opiniones, Contactos, Sitio, Contenido, Usuarios).
+- **Panel del estudio**: en http://localhost:5180/admin, un servicio aparte de la web (Inicio/dashboard, Agenda con reservas y bloqueos, Opiniones, Contactos, Sitio, Contenido, Usuarios).
 - **Usuario principal**: `ROOT_ADMIN_EMAIL` / `ROOT_ADMIN_PASSWORD` en `.env`. La API lo crea al arrancar si no existe. Es el único que crea o quita admins en **/admin/usuarios**, y no se puede borrar.
-- **Admin**: usuarios en `admin_users` (contraseña con scrypt), sesión por cookie httpOnly `hf_admin` (7 días). No hay registro público: `npm run admin:create`.
+- **Admin**: usuarios en `admin_users` (contraseña con scrypt), sesión por cookie httpOnly `hf_admin` (se cierra tras 12 h sin uso o a los 7 días). No hay registro público: `npm run admin:create`.
+- **Login**: 10 intentos por IP cada 15 min y 5 fallidos seguidos bloquean la cuenta 15 min. Cada intento queda en el registro de accesos (Usuarios).
+- **Producción**: `VITE_WEB_URL` y `VITE_PANEL_URL` en `.env` (p. ej. `https://hathorfrequency.mx` y `https://panel.hathorfrequency.mx`) antes de `npm run build`.
 - El cliente Prisma se genera en `server/generated/prisma` (ignorado por git). Prisma nunca se importa desde `src/`.
 
 ## Visitas (Umami)
@@ -124,9 +132,9 @@ El dashboard del panel lee las visitas de Umami, que corre en el mismo `docker c
 
 1. Abre http://localhost:3100 y entra con **admin / umami**. Cambia la contraseña (Settings → Profile) y ponla también en `UMAMI_PASSWORD` de `.env`.
 2. En Settings → Websites agrega el sitio. Copia su **Website ID** a `UMAMI_WEBSITE_ID` y `VITE_UMAMI_WEBSITE_ID` en `.env`.
-3. `docker compose up -d app` para que tome los cambios.
+3. `docker compose up -d web panel` para que tome los cambios.
 
-El sitio público carga el script por `/umami` (proxy de Vite), así que también funciona por el túnel. El panel `/admin` no se cuenta. Cada reserva enviada registra el evento `reserva-enviada`. Sin `VITE_UMAMI_WEBSITE_ID` no se carga nada.
+El sitio público carga el script por `/umami` (proxy de Vite), así que también funciona por el túnel. El panel no se cuenta. Cada reserva enviada registra el evento `reserva-enviada`. Sin `VITE_UMAMI_WEBSITE_ID` no se carga nada.
 
 ## Contenido editable y medios
 
@@ -135,5 +143,5 @@ En **/admin/contenido** se editan servicios, paquetes, precios base, artistas, F
 Las fotos y videos no se suben al panel: viven en un **disco aparte**.
 
 1. En `.env`, pon `MEDIA_DIR=/ruta/del/hdd` (por defecto `./media`).
-2. `docker compose up -d app`: Docker la monta en solo lectura y la API la sirve en `/media/...`.
+2. `docker compose up -d web panel`: Docker la monta en solo lectura y la API la sirve en `/media/...`.
 3. En los formularios escribe la ruta (`/media/artistas/ralo/01.jpg`) o una URL externa (`https://…`). El panel revisa que exista y muestra la miniatura.

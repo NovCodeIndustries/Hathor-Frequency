@@ -1,4 +1,4 @@
-# Imagen de desarrollo: Vite + API (Hono) + Prisma CLI
+# Imagen de desarrollo para los servicios web y panel (Vite + API Hono) y migrate (Prisma CLI)
 FROM node:22-bookworm-slim
 
 # OpenSSL lo usa el motor de Prisma
@@ -13,7 +13,7 @@ RUN npm ci --no-audit --no-fund
 
 COPY . .
 
-EXPOSE 5173
+EXPOSE 5173 5180
 
 ENTRYPOINT ["sh", "docker/entrypoint.sh"]
-CMD ["npm", "run", "dev:all"]
+CMD ["npm", "run", "dev:web-all"]

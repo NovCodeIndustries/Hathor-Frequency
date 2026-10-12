@@ -2,7 +2,7 @@
  * Datos de ejemplo para desarrollo: `npx prisma db seed`.
  * Las 3 opiniones son PROVISIONALES (antes vivían en src/data/reviews.ts); no usar en producción.
  */
-import { prisma } from '../server/db'
+import { prisma } from '../server/shared/db'
 import { testimonial } from '../src/data/site'
 
 const reviews = [
