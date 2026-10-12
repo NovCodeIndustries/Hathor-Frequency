@@ -1,5 +1,7 @@
 import { useEffect, useId, useState, type ReactNode } from 'react'
+import { sortSlots } from '../../data/booking'
 import { adminApi, type FieldIssue } from '../../lib/adminApi'
+import { formatTime } from '../../lib/time'
 import { getAt, keyPath, type Field } from './contentForms'
 import { MediaPicker } from './MediaPicker'
 
@@ -36,7 +38,7 @@ function FieldView({ field, data, path, issues, onChange }: { field: Field; data
   const id = useId()
   const value = getAt(data, path)
   const error = issueAt(issues, path)
-  const wide = field.kind === 'textarea' || field.kind === 'lines' || field.kind === 'list' || ('wide' in field && field.wide)
+  const wide = field.kind === 'textarea' || field.kind === 'lines' || field.kind === 'times' || field.kind === 'list' || ('wide' in field && field.wide)
   const cls = `hf-cfield ${wide ? 'hf-cfield--wide' : ''} ${error ? 'has-error' : ''}`
   const label = (
     <span className="hf-cfield__label">
@@ -119,6 +121,8 @@ function FieldView({ field, data, path, issues, onChange }: { field: Field; data
       return <MediaField id={id} cls={cls} label={label} help={help} value={String(value ?? '')} accept={field.accept} onChange={(v) => onChange(path, v)} />
     case 'lines':
       return <LinesField field={field} cls={cls} value={(value as string[]) ?? []} path={path} issues={issues} onChange={onChange} />
+    case 'times':
+      return <TimesField field={field} cls={cls} value={(value as string[]) ?? []} path={path} issues={issues} help={help} onChange={onChange} />
     case 'list':
       return <ListField field={field} cls={cls} data={data} value={(value as Record<string, unknown>[]) ?? []} path={path} issues={issues} onChange={onChange} />
   }
@@ -166,6 +170,54 @@ function LinesField({ field, cls, value, path, issues, onChange }: { field: Extr
         })}
         <button type="button" className="hf-cadd" onClick={() => onChange(path, [...value, ''])}>+ Agregar {field.itemLabel}</button>
       </div>
+    </fieldset>
+  )
+}
+
+// ── Horas de inicio (chips en 12 h + agregar) ──
+
+function TimesField({ field, cls, value, path, issues, help, onChange }: { field: Extract<Field, { kind: 'times' }>; cls: string; value: string[]; path: Path; issues: FieldIssue[]; help: ReactNode; onChange: FormProps['onChange'] }) {
+  const id = useId()
+  const [time, setTime] = useState('')
+  const exists = value.includes(time)
+  const full = value.length >= field.max
+  const add = () => {
+    if (!time || exists || full) return
+    onChange(path, sortSlots([...value, time]))
+    setTime('')
+  }
+  return (
+    <fieldset className={cls}>
+      <legend className="hf-cfield__label">{field.label} · {value.length}/{field.max}</legend>
+      <ul className="hf-ctimes">
+        {value.map((t, i) => (
+          <li key={t} className={`hf-ctime ${issueAt(issues, [...path, i]) ? 'has-error' : ''}`}>
+            <span>{formatTime(t)}</span>
+            <IconBtn label={`Quitar ${formatTime(t)}`} disabled={value.length === 1} onClick={() => onChange(path, value.filter((x) => x !== t))}><X /></IconBtn>
+          </li>
+        ))}
+      </ul>
+      <div className="hf-ctimes__add">
+        <label htmlFor={id} className="sr-only">Nueva hora de inicio</label>
+        <input
+          id={id}
+          className="hf-cinput"
+          type="time"
+          step={900}
+          value={time}
+          onChange={(e) => setTime(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              add()
+            }
+          }}
+        />
+        <button type="button" className="hf-cadd" disabled={!time || exists || full} onClick={add}>
+          {exists ? 'Ya está en la lista' : full ? `Máximo ${field.max}` : time ? `+ Agregar ${formatTime(time)}` : '+ Agregar hora'}
+        </button>
+      </div>
+      {help}
     </fieldset>
   )
 }

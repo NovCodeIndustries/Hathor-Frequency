@@ -14,6 +14,7 @@ Especificación **exacta** de la landing de Hathor Frequency, aprobada el 2026-1
 | Dashboard del panel | D1–D4 y M1–M2 (se eligieron D4 y M2) | https://claude.ai/artifact/7wwLUsR6SBNYJoY88dma8W |
 | Panel · Sitio (módulos) | S1–S3, H1/H2, L, G, P (se eligieron S1, H2, L, G y P) | https://claude.ai/artifact/D4NYHBREuqQbBVTPLUe3cS |
 | Panel · Contenido | C1–C3, F1–F6 (se eligieron C1 + vista previa de C2 y F1–F6) | https://claude.ai/artifact/1m6tKaTUujXp6FNuj1q4fL |
+| Login · alien con audífonos | A1–A4, M1 (se eligieron A4 y M1) | https://claude.ai/artifact/MsECB7ghAYeBR5EqPQaWMD |
 
 Cada vista es un artboard (`Main.dc.html`, `02-Ticker.dc.html` … `07-Footer.dc.html`) con nombres iguales en los dos canvas finales. Si hay duda sobre un valor, manda el artboard.
 
@@ -669,11 +670,18 @@ Cambio del 2026-10-11. Es privado: va fuera del Layout público (sin Nav, Ufo, t
   - lockup "HATHOR / FREQUENCY" + "Panel del estudio" en dorado;
   - correo y contraseña en pills de 52px y botón dorado "Entrar" de 56px con glow;
   - el error de la API va en dorado ("Correo o contraseña incorrectos"), con "¿Sin acceso? Pídelo a quien administra el estudio." y "← Volver al sitio" al pie.
+  - **Alien A4 · M1** (`LoginAlien.tsx`, cambio del 2026-10-11): el alien de RockAlien (piel `#2a2d31`, contorno dorado, ojos negros almendrados) se asoma tras el borde superior de la tarjeta, de la nariz para arriba, con audífonos dorados de diadema. La cabeza va detrás de la tarjeta (que es opaca) y las manos delante, agarradas al borde. Reacciona al formulario:
+    - en reposo escucha música: cabecea, los pads laten y salen dos notas;
+    - con el foco en el correo mira hacia abajo, al campo;
+    - con el foco en la contraseña sube las manos y se tapa los ojos;
+    - si el login falla, se asusta: ojos redondos, tiembla, se le cae el audífono izquierdo y sale un "?";
+    - si entra, brinca 650 ms antes de pasar al panel.
+  - En móvil (M1) es el mismo alien al 81 %, anclado al borde de la tarjeta. Con `prefers-reduced-motion` no hay animaciones ni transiciones.
 - **Tiempo real en el panel**: cada reserva, contacto u opinión nueva, y cada cambio desde otra pestaña, llega por `GET /api/admin/events` (SSE). Los contadores de la barra lateral y la vista abierta se actualizan solos. Contenido solo actualiza los puntos de las pestañas, para no pisar el borrador que estás editando.
 - **Estructura** (`AdminLayout.tsx`): barra lateral izquierda de 260px, como en **A1** (cambio del 2026-10-11, reemplaza la barra superior de A2):
   - va fija al hacer scroll y lleva borde derecho `#333`;
   - arriba, el lockup "HATHOR / FREQUENCY" + "Panel del estudio" en dorado;
-  - las secciones en pills de 44px (Reservas, Opiniones, Contactos, Bloqueos; la activa en dorado sobre `rgba(242,201,76,.12)`), con contadores: reservas pendientes desde hoy (pastilla dorada rellena), opiniones pendientes (contorno dorado) y contactos sin atender (gris);
+  - las secciones en pills de 44px (Inicio, Agenda, Opiniones, Contactos, Sitio, Contenido, Usuarios; la activa en dorado sobre `rgba(242,201,76,.12)`), con contadores: reservas pendientes desde hoy en Agenda (pastilla dorada rellena), opiniones pendientes (contorno dorado) y contactos sin atender (gris);
   - abajo, el nombre, el correo y "Cerrar sesión";
   - **excepción al breakpoint único**: por debajo de 1024px, la barra pasa arriba con el logo y un **menú hamburguesa** (como la web). El botón muestra cuántos pendientes hay en total; al abrirlo, las secciones y la sesión salen en lista, y se cierra al elegir, con la X o con Escape.
 - **D4 · Inicio** (`/admin`, `AdminDashboard.tsx`; datos de `GET /api/admin/dashboard?range=week|month|quarter|year`). Es la combinación de D2 y D3, la primera sección de la barra y adonde lleva el login. Cambio del 2026-10-11.
@@ -699,25 +707,30 @@ Cambio del 2026-10-11. Es privado: va fuera del Layout público (sin Nav, Ufo, t
   - pago Pendiente / Anticipo / Pagado; con Anticipo aparece "Anticipo recibido";
   - el botón dice "Confirmar · $X" o "Confirmar sin monto";
   - el detalle de la agenda muestra "Cobro: $X · Anticipo ($Y recibido)".
-- **Reservas** (`/admin/reservas`, `AdminAgenda.tsx`; cambio del 2026-10-12, reemplaza la semana de A2):
-  - **dos meses en pantalla, uno debajo del otro** (el actual y el siguiente; `MonthPair.tsx`, igual que Bloqueos), con flechas;
-  - cada día lleva una marca por reserva: contorno = pendiente, dorado = confirmada, dorado oscuro = terminada; trama si está cerrado y punto gris si tiene horarios bloqueados;
-  - a la derecha, **el día elegido** con sus 6 horarios en 12 h (reserva, bloqueado o libre) y las canceladas de ese día; debajo, el detalle de la reserva (datos, cobro y acciones: Confirmar, Marcar como terminada, Editar cobro, Cancelar, Reactivar o Reabrir);
-  - en móvil, todo en una columna.
+- **Agenda** (`/admin/reservas`, `AdminAgenda.tsx` + `BookingDetail.tsx`; canvas https://claude.ai/artifact/Hs52MAuY1x4ELRaWkmRagk, cambio del 2026-10-11). Reservas y Bloqueos son **una sola sección**: `/admin/bloqueos` redirige aquí. Reemplaza la agenda de dos meses y B1.
+  - **Escritorio · R2 Pistas por día**:
+    - arriba, ‹ Hoy ›, el rango (7 / 14 / 30 días; 14 por defecto) y los filtros Reservas / Bloqueos / Libres (lo filtrado queda al 15%);
+    - cada día es una fila (pista) con 6 celdas de 50px, una por horario en 12 h. La columna del día lleva el nombre en Cinzel, "Hoy" / "Cerrado" / "N sesiones" / "Libre" y "Cerrar día" / "Abrir día". Hoy lleva una barra dorada a la izquierda; el fin de semana, un fondo un poco más claro;
+    - celdas: libre = borde punteado "+ bloquear" (clic la bloquea); bloqueada = trama "Bloqueado · liberar" (clic la libera); pendiente = contorno dorado; confirmada = dorado; terminada = dorado oscuro con ✓. Los días pasados no se pueden bloquear;
+    - a la derecha, el panel de **Sesión** con el detalle (datos, cobro y acciones: Confirmar, Marcar como terminada, Editar cobro, Cancelar, Reactivar o Reabrir) y el **resumen del rango** (sesiones, por confirmar, horarios bloqueados);
+    - por debajo de 1024px el panel baja debajo del tablero; el tablero hace scroll lateral si no cabe.
+  - **Móvil · R1 Agenda única**:
+    - mes en Cinzel y "Ver mes" / "Ver semana": tira de días de 54×74px con scroll (el elegido en dorado; trama si está cerrado; marcas de reservas) o los dos meses de `MonthPair.tsx`;
+    - el día elegido con "Cerrar el día" / "Abrir el día" y sus 6 horarios en filas (hora dorada + celda): tocar libre bloquea, tocar bloqueado libera;
+    - tocar una sesión abre el detalle en una **hoja inferior** (borde superior dorado, se cierra con el fondo o "Cerrar").
+  - Bloquear no cancela reservas ya hechas.
+  - **Agendar sesión** (`NewBookingModal.tsx`, mismo marco que M2; cambio del 2026-10-11): para sesiones pedidas por llamada, WhatsApp o en persona, sin pasar por la web. Se abre con "+ Agendar sesión" (dorado, primero en la barra de herramientas) en escritorio y "+ Agendar" junto a "Cerrar el día" en móvil. Pide día (desde hoy), servicio, hora de inicio (pills; las ocupadas tachadas y desactivadas), banda o proyecto, representante (Integrante / Externo) y nombre, teléfono, correo opcional y estado (Confirmada por defecto, o Por confirmar). El botón dice "Agendar · {hora}". Al guardar, la sesión queda elegida en la agenda; el cobro se captura después con "Editar cobro".
+  - **Horas de inicio**: las columnas son las de Contenido · Horarios, más la hora de cualquier reserva activa a una hora que se quitó. "Editar horas de inicio →" (dorado) lleva a esa sección.
 - **O2 · Opiniones** (`/admin/opiniones`, `AdminReviews.tsx`):
   - filtros Todas / Pendientes / Publicadas / Rechazadas con su conteo; abre en Pendientes;
   - cuadrícula `auto-fill` de tarjetas de 300px: las pendientes con borde dorado y glow, las rechazadas al 60%;
   - cada tarjeta lleva estrellas, chip de estado, cita en Cinzel, nombre, proyecto, servicio, y "Con su nombre" o "Saldrá como 'Anónimo'" (en dorado);
-  - acciones: Publicar/Rechazar, Ocultar (pasa a rechazada) o "Publicar de todos modos".
+  - acciones: Publicar/Rechazar, Ocultar (pasa a rechazada) o "Publicar de todos modos", más "Borrar" en todas (`DELETE /api/admin/reviews/:id`), que pide confirmación en una ventana y borra para siempre; si estaba publicada, sale del sitio en vivo.
 - **C1 · Contactos** (`/admin/contactos`, `AdminContacts.tsx`):
   - filtro por tema (`contactTopics`);
   - tabla con Nombre, Tema (chip), Correo, Recibido, Atendido y "Responder" (`mailto:` con asunto "Hathor Frequency · {tema}");
   - la casilla **Atendido** guarda `handled_at` y apaga la fila al 55%.
-- **B1 · Bloqueos** (`/admin/bloqueos`, `AdminBlocks.tsx`):
-  - **dos meses en pantalla, uno debajo del otro** (el actual y el siguiente, `MonthPair.tsx`; sin días pasados): día cerrado con trama, punto si tiene horarios bloqueados;
-  - panel del día con "Cerrar el día completo", "O solo algunos horarios" (pills de `timeSlots`, desactivadas si el día está cerrado), motivo (solo lo ve el estudio) y "Guardar bloqueo" (activo solo si hay cambios);
-  - abajo, "Próximos bloqueos" por día: clic para ir al día y ✕ para quitarlo;
-  - bloquear no cancela reservas ya hechas.
+  - **en móvil** cada fila es una tarjeta: el nombre arriba y cada dato con su etiqueta (Tema, Correo, Recibido, Atendido), sin scroll lateral. Accesos al panel (Usuarios) usa la misma tabla, con estilos compartidos en `AdminLayout.css`.
 - **Sitio** (`/admin/sitio`, `AdminSite.tsx`): apagar módulos del sitio sin borrarlos. Diseños S1 + H2 + L + G + P, cambio del 2026-10-11.
   - **Barra (S1)**:
     - "Sitio *en modo edición*" con el estado ("N cambios sin publicar: la web pública aún no cambia" / "Todo publicado");
@@ -739,6 +752,7 @@ Cambio del 2026-10-11. Es privado: va fuera del Layout público (sin Nav, Ufo, t
   - **Secciones** (pestañas, con punto dorado si tienen cambios):
     - Servicios: solo textos; los 5 canales son fijos;
     - Paquetes y Artistas: agregar, duplicar, ordenar y eliminar;
+    - **Horarios**: las horas de inicio como chips dorados en 12 h con ✕ (la última no se puede quitar), y abajo un selector de hora con "+ Agregar {hora}" (Enter también agrega); se ordenan solas, sin repetir, máximo 10. Quitar una hora no cancela las reservas ya hechas a esa hora: siguen en la agenda;
     - Precios base, FAQs, Estudio (por grupos: espacios, Nosotros, videos, equipo, visita y mapa) y Datos del sitio (eslogan, cifras, WhatsApp, redes).
   - **C1**:
     - a la izquierda, la lista: "General" con los textos de la sección y luego cada elemento, con ↑↓ y "+ Agregar";

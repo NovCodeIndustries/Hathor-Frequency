@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useId, useState } from 'react'
 import { adminApi, formatStamp, type AdminReview, type ReviewStatus } from '../../lib/adminApi'
 import { Stars } from '../Reviews/Stars'
 import '../Reviews/Reviews.css'
 import { useAdmin } from '../../lib/useAdmin'
+import './AdminSite.css'
 import './AdminReviews.css'
 import { useAdminLive } from '../../lib/useAdminLive'
 
@@ -26,6 +27,8 @@ export function AdminReviews() {
   const [filter, setFilter] = useState<ReviewStatus | null>('PENDING')
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState('')
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const id = useId()
 
   const load = useCallback(() => {
     adminApi.reviews().then(setReviews).catch((err) => setError(onError(err)))
@@ -47,7 +50,23 @@ export function AdminReviews() {
     }
   }
 
+  const remove = async (reviewId: string) => {
+    setBusyId(reviewId)
+    try {
+      await adminApi.deleteReview(reviewId)
+      setReviews((list) => list?.filter((r) => r.id !== reviewId) ?? null)
+      setError('')
+      refreshSummary()
+    } catch (err) {
+      setError(onError(err))
+    } finally {
+      setBusyId(null)
+      setDeleteId(null)
+    }
+  }
+
   const all = reviews ?? []
+  const target = all.find((r) => r.id === deleteId)
   const shown = filter ? all.filter((r) => r.status === filter) : all
 
   return (
@@ -118,11 +137,34 @@ export function AdminReviews() {
                     Publicar de todos modos
                   </button>
                 )}
+                <button type="button" className="hf-admin__btn hf-admin__btn--ghost hf-admin__btn--sm hf-areviews__delete" disabled={busy} onClick={() => setDeleteId(r.id)}>
+                  Borrar
+                </button>
               </div>
             </article>
           )
         })}
       </div>
+
+      {target && (
+        <div className="hf-asite__modal">
+          <button type="button" className="hf-asite__backdrop" aria-label="Cerrar" tabIndex={-1} onClick={() => setDeleteId(null)} />
+          <div className="hf-asite__confirm" role="dialog" aria-modal="true" aria-labelledby={`${id}-del`}>
+            <h2 id={`${id}-del`} className="hf-asite__confirm-title">
+              ¿Borrar la opinión de <span className="hf-asite__gold">{target.name}?</span>
+            </h2>
+            <p className="hf-areviews__muted">
+              Se borra para siempre{target.status === 'PUBLISHED' ? ' y deja de aparecer en el sitio' : ''}. Si solo quieres quitarla del sitio, usa “Ocultar”.
+            </p>
+            <div className="hf-asite__confirm-actions">
+              <button type="button" className="hf-admin__btn" onClick={() => setDeleteId(null)}>Cancelar</button>
+              <button type="button" className="hf-admin__btn hf-admin__btn--primary" disabled={busyId === target.id} onClick={() => remove(target.id)}>
+                Borrar opinión
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

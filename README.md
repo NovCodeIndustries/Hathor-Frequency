@@ -113,7 +113,7 @@ La API vive en `server/` (Hono + Prisma) y el navegador la llama en `/api`; en d
 
 - **Una sesión por horario**: un índice único parcial en `bookings (date, start_time)` para PENDING/CONFIRMED evita reservas dobles, aunque lleguen a la vez. Cancelar libera el horario.
 - **Anti-spam**: campo honeypot (`website`) y límite de envíos por IP en memoria.
-- **Panel del estudio**: en http://localhost:5173/admin (Inicio/dashboard, Reservas, Opiniones, Contactos, Bloqueos).
+- **Panel del estudio**: en http://localhost:5173/admin (Inicio/dashboard, Agenda con reservas y bloqueos, Opiniones, Contactos, Sitio, Contenido, Usuarios).
 - **Usuario principal**: `ROOT_ADMIN_EMAIL` / `ROOT_ADMIN_PASSWORD` en `.env`. La API lo crea al arrancar si no existe. Es el único que crea o quita admins en **/admin/usuarios**, y no se puede borrar.
 - **Admin**: usuarios en `admin_users` (contraseña con scrypt), sesión por cookie httpOnly `hf_admin` (7 días). No hay registro público: `npm run admin:create`.
 - El cliente Prisma se genera en `server/generated/prisma` (ignorado por git). Prisma nunca se importa desde `src/`.

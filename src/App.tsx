@@ -40,7 +40,8 @@ const router = createBrowserRouter([
       { path: 'reservas', lazy: async () => ({ Component: (await import('./components/Admin/AdminAgenda')).AdminAgenda }) },
       { path: 'opiniones', lazy: async () => ({ Component: (await import('./components/Admin/AdminReviews')).AdminReviews }) },
       { path: 'contactos', lazy: async () => ({ Component: (await import('./components/Admin/AdminContacts')).AdminContacts }) },
-      { path: 'bloqueos', lazy: async () => ({ Component: (await import('./components/Admin/AdminBlocks')).AdminBlocks }) },
+      // Bloqueos vive dentro de la Agenda (reservas + bloqueos)
+      { path: 'bloqueos', element: <Navigate to="/admin/reservas" replace /> },
       { path: 'usuarios', lazy: async () => ({ Component: (await import('./components/Admin/AdminUsers')).AdminUsers }) },
       { path: 'contenido', lazy: async () => ({ Component: (await import('./components/Admin/AdminContent')).AdminContent }) },
       { path: 'sitio', lazy: async () => ({ Component: (await import('./components/Admin/AdminSite')).AdminSite }) },

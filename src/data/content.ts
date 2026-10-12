@@ -1,5 +1,5 @@
 import { artists, artistsIntro } from './artists'
-import { servicePrices, type bookingServices } from './booking'
+import { servicePrices, timeSlots, type bookingServices } from './booking'
 import { faqs } from './faq'
 import { packages, packagesDisclaimer, packagesIntro, packagesNote } from './packages'
 import { services, servicesIntro } from './services'
@@ -21,6 +21,8 @@ export interface ContentMap {
   servicios: { intro: string; items: { id: string; name: string; description: string }[] }
   paquetes: { intro: string; note: string; disclaimer: { title: string; detail: string }; items: Package[] }
   precios: { prices: Record<BookingService, number | null> }
+  /** Horas de inicio de las sesiones (24 h, ordenadas) */
+  horarios: { slots: string[] }
   /** Sin la fila "Tu banda" (es fija y la agrega la página) */
   artistas: { intro: string; items: Artist[] }
   faq: { items: Faq[] }
@@ -47,6 +49,7 @@ export const contentDefaults: ContentMap = {
   servicios: { intro: servicesIntro, items: services.map(({ id, name, description }) => ({ id, name, description })) },
   paquetes: { intro: packagesIntro, note: packagesNote, disclaimer: { ...packagesDisclaimer }, items: packages },
   precios: { prices: { ...servicePrices } },
+  horarios: { slots: [...timeSlots] },
   artistas: { intro: artistsIntro, items: artists.filter((a) => !a.cta) },
   faq: { items: faqs },
   estudio: {
@@ -66,6 +69,7 @@ export const contentSections: { key: ContentKey; label: string; preview: string 
   { key: 'servicios', label: 'Servicios', preview: '/servicios' },
   { key: 'paquetes', label: 'Paquetes', preview: '/servicios?vista=paquetes' },
   { key: 'precios', label: 'Precios base', preview: '/reservar' },
+  { key: 'horarios', label: 'Horarios', preview: '/reservar' },
   { key: 'artistas', label: 'Artistas', preview: '/artistas' },
   { key: 'faq', label: 'FAQs', preview: '/faq' },
   { key: 'estudio', label: 'Estudio', preview: '/estudio' },

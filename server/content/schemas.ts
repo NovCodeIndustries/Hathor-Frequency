@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { bookingServices } from '../../src/data/booking'
+import { bookingServices, maxSlots, timePattern } from '../../src/data/booking'
 import type { ContentKey } from '../../src/data/content'
 import { services } from '../../src/data/services'
 
@@ -67,6 +67,14 @@ export const contentSchemas: Record<ContentKey, z.ZodType> = {
         z.ZodType
       >,
     ),
+  }),
+
+  horarios: z.object({
+    slots: z
+      .array(z.string().regex(timePattern, 'Hora inválida'))
+      .min(1, 'Deja al menos una hora de inicio')
+      .max(maxSlots, `Máximo ${maxSlots} horas de inicio`)
+      .superRefine(unique((t: string) => t, 'Hora repetida')),
   }),
 
   artistas: z.object({

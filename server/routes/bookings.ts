@@ -6,6 +6,7 @@ import { dateFromISO, monthRange } from '../lib/dates'
 import { fail, invalid } from '../lib/errors'
 import { isUniqueViolation } from '../lib/prismaErrors'
 import { serviceFromLabel } from '../lib/services'
+import { bookingSlots } from '../lib/slots'
 import { bookingSchema, monthSchema } from '../schemas'
 import { emitAdmin, emitAvailability } from '../lib/siteEvents'
 
@@ -19,6 +20,8 @@ bookings.post('/', async (c) => {
   if (body instanceof Response) return body
   const { website, date, time, service, representativeType, ...contact } = body
   if (website) return c.json({ ok: true }, 201)
+
+  if (!(await bookingSlots()).includes(time)) return fail(c, 400, 'Datos inválidos', { time: 'Ese horario ya no está disponible. Elige otro.' })
 
   const day = dateFromISO(date)
   if (await isBlocked(day, time)) return fail(c, 409, SLOT_TAKEN)

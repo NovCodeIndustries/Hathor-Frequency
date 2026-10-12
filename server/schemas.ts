@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { bookingServices, timeSlots } from '../src/data/booking'
+import { bookingServices, timePattern } from '../src/data/booking'
 import { reviewMaxLength } from '../src/data/reviews'
 import { contactTopics } from '../src/data/site'
 import { todayISO } from './lib/dates'
@@ -23,7 +23,8 @@ export const contactSchema = z.object({
 
 export const bookingSchema = z.object({
   date: isoDate.refine((d) => d >= todayISO(), 'La fecha ya pasó'),
-  time: z.enum(timeSlots, 'Horario inválido'),
+  /** Que sea una hora de inicio publicada lo revisa la ruta (`bookingSlots`) */
+  time: z.string().regex(timePattern, 'Horario inválido'),
   service: z.enum(bookingServices, 'Servicio inválido'),
   project: text(120),
   representativeType: z.enum(['integrante', 'externo']),
@@ -31,6 +32,12 @@ export const bookingSchema = z.object({
   phone: z.string().trim().regex(/^[\d+()\s-]{8,20}$/, 'Teléfono inválido'),
   email,
   ...honeypot,
+})
+
+/** Sesión que agenda el estudio desde el panel (llamada, WhatsApp, en persona): sin honeypot, correo opcional */
+export const adminBookingSchema = bookingSchema.omit({ website: true }).extend({
+  email: z.union([z.literal(''), email]).optional(),
+  status: z.enum(['PENDING', 'CONFIRMED']).default('CONFIRMED'),
 })
 
 export const reviewSchema = z.object({

@@ -79,10 +79,9 @@ export function AdminLayout() {
   const pendingTotal = (summary?.pendingBookings ?? 0) + (summary?.pendingReviews ?? 0) + (summary?.openContacts ?? 0)
   const tabs = [
     { to: '/admin', label: 'Inicio', end: true },
-    { to: '/admin/reservas', label: 'Reservas', count: summary?.pendingBookings, kind: 'fill' },
+    { to: '/admin/reservas', label: 'Agenda', count: summary?.pendingBookings, kind: 'fill' },
     { to: '/admin/opiniones', label: 'Opiniones', count: summary?.pendingReviews, kind: 'gold' },
     { to: '/admin/contactos', label: 'Contactos', count: summary?.openContacts, kind: 'muted' },
-    { to: '/admin/bloqueos', label: 'Bloqueos' },
     { to: '/admin/sitio', label: 'Sitio', count: summary?.siteChanges, kind: 'gold' },
     { to: '/admin/contenido', label: 'Contenido', count: summary?.contentChanges, kind: 'gold' },
     { to: '/admin/usuarios', label: admin.isRoot ? 'Usuarios' : 'Mi cuenta' },

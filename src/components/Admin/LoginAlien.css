@@ -1,0 +1,80 @@
+/* Alien del login (A4 escritorio · M1 móvil). Se posiciona sobre .hf-login__stage */
+.hf-lalien,
+.hf-lalien-hands {
+  position: absolute;
+  left: calc(50% - 105px);
+  width: 210px;
+  pointer-events: none;
+}
+
+/* Cabeza: detrás de la tarjeta (z 1), solo asoma de la nariz para arriba */
+.hf-lalien { top: -108px; height: 160px; z-index: 1; }
+.hf-lalien__svg { display: block; width: 210px; height: 160px; overflow: visible; }
+
+.hf-lalien__head { transform-box: fill-box; transform-origin: 50% 90%; }
+.hf-lalien[data-mood="listen"] .hf-lalien__head { animation: hf-lalien-bob 1.1s ease-in-out infinite; }
+.hf-lalien[data-mood="error"] .hf-lalien__head { animation: hf-lalien-shake .5s ease-in-out 2; }
+.hf-lalien[data-mood="ok"] .hf-lalien__head { animation: hf-lalien-jump .6s ease-in-out infinite; }
+
+.hf-lalien__skin { fill: #2a2d31; stroke: var(--c-gold); stroke-width: 2; }
+.hf-lalien__eye { fill: #000; stroke: var(--c-gold); stroke-width: 2; }
+.hf-lalien__glint { fill: #fff; fill-opacity: .85; }
+.hf-lalien__glint--wide { fill-opacity: 1; }
+.hf-lalien__line { fill: none; stroke: var(--c-gold); stroke-width: 3; stroke-linecap: round; }
+.hf-lalien__band { fill: none; stroke: var(--c-gold); stroke-width: 5; stroke-linecap: round; }
+.hf-lalien__shell { fill: #111; stroke: var(--c-gold); stroke-width: 2; }
+.hf-lalien__pad { fill: var(--c-gold); }
+.hf-lalien[data-mood="listen"] .hf-lalien__pad { animation: hf-lalien-pad .55s ease-in-out infinite; }
+.hf-lalien__huh { fill: var(--c-gold); font-family: var(--font-display); font-size: 22px; font-weight: 700; }
+
+/* Notas que salen de los audífonos */
+.hf-lalien__note { position: absolute; fill: var(--c-gold); animation: hf-lalien-note 2.8s ease-out infinite; }
+.hf-lalien__note--a { left: -9px; top: 68px; width: 16px; height: 22px; --dx: -40px; }
+.hf-lalien__note--b { left: 205px; top: 60px; width: 12px; height: 20px; --dx: 36px; fill: var(--c-gold-2); animation-delay: 1.2s; }
+
+/* Manos: delante de la tarjeta (z 3); con la contraseña suben a taparse los ojos */
+.hf-lalien-hands { top: -34px; height: 44px; z-index: 3; }
+.hf-lalien-hands__hand {
+  position: absolute;
+  top: 22px;
+  width: 44px;
+  height: 22px;
+  fill: #2a2d31;
+  stroke: var(--c-gold);
+  stroke-width: 1.6;
+  transition: left .35s ease, top .35s ease;
+}
+.hf-lalien-hands__hand--left { left: 7px; }
+.hf-lalien-hands__hand--right { left: 159px; }
+.hf-lalien-hands[data-mood="pass"] .hf-lalien-hands__hand { top: 0; }
+.hf-lalien-hands[data-mood="pass"] .hf-lalien-hands__hand--left { left: 55px; }
+.hf-lalien-hands[data-mood="pass"] .hf-lalien-hands__hand--right { left: 111px; }
+
+@keyframes hf-lalien-bob { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+@keyframes hf-lalien-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+@keyframes hf-lalien-jump { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-14px); } }
+@keyframes hf-lalien-pad { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+@keyframes hf-lalien-note {
+  0% { transform: translate(0, 0); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translate(var(--dx), -80px) rotate(16deg); opacity: 0; }
+}
+
+/* M1: el mismo alien al 81 %, anclado al borde superior de la tarjeta */
+@media (max-width: 767px) {
+  .hf-lalien { transform: scale(.81); transform-origin: 50% 108px; }
+  .hf-lalien-hands { transform: scale(.81); transform-origin: 50% 34px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hf-lalien .hf-lalien__head,
+  .hf-lalien .hf-lalien__pad,
+  .hf-lalien__note { animation: none; }
+  .hf-lalien-hands__hand { transition: none; }
+}

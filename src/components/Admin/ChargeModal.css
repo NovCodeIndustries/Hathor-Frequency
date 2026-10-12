@@ -97,3 +97,17 @@
   .hf-charge { align-items: flex-end; padding: 0; }
   .hf-charge__card { max-width: none; padding: 28px 20px 24px; border-radius: 16px 16px 0 0; }
 }
+
+/* Agendar sesión desde el panel (mismo marco) */
+.hf-newbook { max-width: 560px; gap: 16px; }
+.hf-newbook__row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.hf-newbook__two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.hf-newbook__slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+.hf-newbook .hf-admin__filter { height: 42px; padding: 0 8px; }
+.hf-newbook .hf-admin__filter:disabled { opacity: .3; cursor: default; text-decoration: line-through; }
+.hf-newbook__date { color-scheme: dark; }
+.hf-newbook select.hf-admin__input { background: var(--c-surface-2); }
+
+@media (max-width: 767px) {
+  .hf-newbook__row { grid-template-columns: 1fr; }
+}

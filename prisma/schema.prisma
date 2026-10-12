@@ -61,7 +61,7 @@ model Booking {
   id                 String             @id @default(uuid()) @db.Uuid
   /// Día de la sesión (sin hora)
   date               DateTime           @db.Date
-  /// Hora de inicio "HH:MM" (10:00, 12:00, 15:00, 17:00, 19:00, 21:00)
+  /// Hora de inicio "HH:MM" (las de panel · Contenido · Horarios)
   startTime          String             @map("start_time") @db.VarChar(5)
   service            Service
   status             BookingStatus      @default(PENDING)
@@ -70,6 +70,7 @@ model Booking {
   representativeType RepresentativeType @map("representative_type")
   representativeName String             @map("representative_name") @db.VarChar(120)
   phone              String             @db.VarChar(20)
+  /// Vacío si la sesión la agendó el estudio sin correo
   email              String             @db.VarChar(254)
   /// Monto acordado en centavos MXN (se captura al confirmar en el panel)
   amountCents        Int?               @map("amount_cents")

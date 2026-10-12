@@ -1,9 +1,10 @@
 import { useCallback, useState } from 'react'
-import { bookingServices, defaultSlotIndex, timeSlots } from '../../data/booking'
+import { bookingServices, defaultSlot } from '../../data/booking'
 import { addMonths, compareMonths, dayLabel, startOfDay, toISODate, type YearMonth } from '../../lib/calendar'
 import { SubmitError, submitBooking, submitErrorText, type BookingContact } from '../../lib/submit'
 import { useAvailability } from '../../lib/useAvailability'
 import { trackEvent } from '../../lib/analytics'
+import { useContent } from '../../lib/content'
 import { formatTime } from '../../lib/time'
 import { Eyebrow } from '../shared/Eyebrow'
 import { GoldText } from '../shared/GoldText'
@@ -37,7 +38,9 @@ export function Booking() {
 
   const [month, setMonth] = useState<YearMonth>(currentMonth)
   const [selected, setSelected] = useState<Date>(today)
-  const [slot, setSlot] = useState(defaultSlotIndex)
+  const timeSlots = useContent('horarios').slots
+  // Se guarda la hora (no el índice) para que siga elegida si el estudio cambia las horas
+  const [slotTime, setSlotTime] = useState(defaultSlot)
   const [service, setService] = useState<string>(bookingServices[0])
   const [status, setStatus] = useState<SubmitStatus>('idle')
   const [contact, setContact] = useState<BookingContact>(EMPTY_CONTACT)
@@ -49,10 +52,11 @@ export function Booking() {
   const selectedISO = toISODate(selected)
   const blockedDays = new Set(availability.blockedDays)
   const takenSlots = blockedDays.has(selectedISO) ? [...timeSlots] : (availability.taken[selectedISO] ?? [])
-  // Si el horario elegido se ocupó (o el día se cerró), se usa el primero libre
-  const activeSlot = takenSlots.includes(timeSlots[slot])
-    ? Math.max(0, timeSlots.findIndex((t) => !takenSlots.includes(t)))
-    : slot
+  // Si el horario elegido se ocupó, se quitó o el día se cerró, se usa el primero libre
+  const chosen = timeSlots.indexOf(slotTime)
+  const activeSlot = chosen >= 0 && !takenSlots.includes(slotTime)
+    ? chosen
+    : Math.max(0, timeSlots.findIndex((t) => !takenSlots.includes(t)))
 
   const touch = () => status !== 'sending' && setStatus('idle')
 
@@ -113,6 +117,7 @@ export function Booking() {
 
       <SessionPanel
         date={selected}
+        slots={timeSlots}
         slot={activeSlot}
         takenSlots={takenSlots}
         error={error}
@@ -120,7 +125,7 @@ export function Booking() {
         contact={contact}
         status={status}
         onSlot={(i) => {
-          setSlot(i)
+          setSlotTime(timeSlots[i])
           touch()
         }}
         onService={(s) => {

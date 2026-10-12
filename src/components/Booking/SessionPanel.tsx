@@ -1,5 +1,5 @@
 import { useId, useRef, type FormEvent } from 'react'
-import { bookingServices, representativeTypes, timeSlots } from '../../data/booking'
+import { bookingServices, representativeTypes } from '../../data/booking'
 import { dayLabel } from '../../lib/calendar'
 import { formatTime } from '../../lib/time'
 import type { BookingContact } from '../../lib/submit'
@@ -11,6 +11,8 @@ export type SubmitStatus = 'idle' | 'sending' | 'sent' | 'error'
 
 interface SessionPanelProps {
   date: Date
+  /** Horas de inicio vigentes (24 h) */
+  slots: string[]
   slot: number
   /** Horarios ocupados del día elegido */
   takenSlots: string[]
@@ -26,7 +28,7 @@ interface SessionPanelProps {
 }
 
 /** Diseño RA (canvas https://claude.ai/artifact/VuPzsH4vpZaQc3XDpAXBzL): sesión y datos de contacto en el mismo panel */
-export function SessionPanel({ date, slot, takenSlots, error, service, contact, status, onSlot, onService, onContact, onSubmit }: SessionPanelProps) {
+export function SessionPanel({ date, slots: timeSlots, slot, takenSlots, error, service, contact, status, onSlot, onService, onContact, onSubmit }: SessionPanelProps) {
   const id = useId()
   const trap = useRef<HTMLInputElement>(null)
   const dayFull = timeSlots.every((t) => takenSlots.includes(t))

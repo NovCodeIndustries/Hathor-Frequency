@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { timeSlots } from '../../src/data/booking'
+import { timePattern } from '../../src/data/booking'
 import { endSession, requireAdmin, startSession, verifyPassword, type AdminVariables } from '../auth'
 import { prisma } from '../db'
 import { BookingStatus, PaymentStatus, ReviewStatus } from '../generated/prisma/enums'
@@ -20,6 +20,10 @@ import { streamSSE } from 'hono/streaming'
 import { adminSite } from './site'
 import { users } from './users'
 import { publishedDisabled } from '../lib/site'
+import { bookingSlots } from '../lib/slots'
+import { isBlocked } from '../lib/availability'
+import { serviceFromLabel } from '../lib/services'
+import { adminBookingSchema } from '../schemas'
 
 export const admin = new Hono<{ Variables: AdminVariables }>()
 
@@ -115,6 +119,35 @@ admin.get('/bookings', async (c) => {
   return c.json(rows.map(toAdminBooking))
 })
 
+/** El estudio agenda una sesión sin pasar por la web (confirmada por defecto) */
+admin.post('/bookings', async (c) => {
+  const body = await parseBody(c, adminBookingSchema)
+  if (body instanceof Response) return body
+  const { date, time, service, representativeType, status, email, ...contact } = body
+  if (!(await bookingSlots()).includes(time)) return fail(c, 400, 'Datos inválidos', { time: 'No es una hora de inicio' })
+  const day = dateFromISO(date)
+  if (await isBlocked(day, time)) return fail(c, 409, 'Ese horario está bloqueado. Libéralo primero en la agenda.')
+  try {
+    const b = await prisma.booking.create({
+      data: {
+        ...contact,
+        email: email ?? '',
+        date: day,
+        startTime: time,
+        status,
+        service: serviceFromLabel[service],
+        representativeType: representativeType === 'integrante' ? 'INTEGRANTE' : 'EXTERNO',
+      },
+    })
+    emitAdmin('booking')
+    emitAvailability()
+    return c.json(toAdminBooking(b), 201)
+  } catch (err) {
+    if (isUniqueViolation(err)) return fail(c, 409, 'Ese horario ya tiene una reserva')
+    throw err
+  }
+})
+
 const pesos = z.number().min(0).max(10_000_000)
 const toCents = (n: number | null | undefined) => (n === undefined ? undefined : n === null ? null : Math.round(n * 100))
 
@@ -183,6 +216,16 @@ admin.patch('/reviews/:id', async (c) => {
   }
 })
 
+admin.delete('/reviews/:id', async (c) => {
+  const id = c.req.param('id')
+  if (!z.uuid().safeParse(id).success) return fail(c, 404, 'Opinión no encontrada')
+  const { count } = await prisma.review.deleteMany({ where: { id } })
+  if (!count) return fail(c, 404, 'Opinión no encontrada')
+  emitAdmin('review')
+  emitLive('reviews', {})
+  return c.json({ ok: true })
+})
+
 // ── Contactos ─────────────────────────────────────────────
 
 admin.get('/contacts', async (c) =>
@@ -210,7 +253,7 @@ admin.patch('/contacts/:id', async (c) => {
 const blockSchema = z.object({
   date: z.iso.date('Fecha inválida'),
   /** Sin hora = el día completo */
-  time: z.enum(timeSlots).optional(),
+  time: z.string().regex(timePattern, 'Hora inválida').optional(),
   reason: z.string().trim().max(120).optional(),
 })
 
@@ -230,6 +273,7 @@ admin.get('/blocks', async (c) => {
 admin.post('/blocks', async (c) => {
   const body = await parseBody(c, blockSchema)
   if (body instanceof Response) return body
+  if (body.time && !(await bookingSlots()).includes(body.time)) return fail(c, 400, 'Datos inválidos', { time: 'No es una hora de inicio' })
   try {
     const b = await prisma.blockedSlot.create({
       data: { date: dateFromISO(body.date), startTime: body.time ?? null, reason: body.reason || null },

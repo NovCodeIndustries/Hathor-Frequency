@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useState, type FormEvent } from 'react'
 import { adminApi, formatStamp, type AdminUserRow, type NewAdminUser } from '../../lib/adminApi'
 import { useAdmin } from '../../lib/useAdmin'
+import './AdminSite.css'
 import './AdminUsers.css'
 import { useAdminLive } from '../../lib/useAdminLive'
 
@@ -101,12 +102,12 @@ function UsersAdmin({ meId, onError }: { meId: string; onError: (e: unknown) => 
               {list?.map((u) => (
                 <tr key={u.id}>
                   <td>{u.name}{u.id === meId && <span className="hf-acontacts__muted"> (tú)</span>}</td>
-                  <td className="hf-acontacts__muted">
+                  <td data-label="Correo" className="hf-acontacts__muted">
                     {u.email}
                     {u.phone && <span className="hf-ausers__phone">{u.phone}</span>}
                   </td>
-                  <td>{u.isRoot ? <span className="hf-chip hf-chip--done">Principal</span> : <span className="hf-chip hf-chip--tag">Admin</span>}</td>
-                  <td className="hf-acontacts__muted">{formatStamp(u.createdAt)}</td>
+                  <td data-label="Rol">{u.isRoot ? <span className="hf-chip hf-chip--done">Principal</span> : <span className="hf-chip hf-chip--tag">Admin</span>}</td>
+                  <td data-label="Alta" className="hf-acontacts__muted">{formatStamp(u.createdAt)}</td>
                   <td className="hf-acontacts__right">
                     {resetId === u.id ? (
                       <form

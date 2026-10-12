@@ -177,6 +177,8 @@ export interface Dashboard {
   services: { label: string; count: number }[]
   /** [horario][día lunes..domingo] = reservas */
   heat: number[][]
+  /** Horas de cada fila de `heat` (24 h) */
+  heatSlots: string[]
   reviews: { count: number; average: number | null }
   contacts: { count: number; open: number; topTopic: { label: string; count: number } | null; avgHours: number | null }
   /** null si Umami no está configurado o no responde */
@@ -251,6 +253,19 @@ const query = (params: Record<string, string | undefined>) => {
   return q ? `?${q}` : ''
 }
 
+/** Sesión agendada desde el panel (`time` en 24 h; correo opcional) */
+export interface NewBooking {
+  date: string
+  time: string
+  service: string
+  project: string
+  representativeType: 'integrante' | 'externo'
+  representativeName: string
+  phone: string
+  email: string
+  status: 'PENDING' | 'CONFIRMED'
+}
+
 export const adminApi = {
   login: (email: string, password: string) => request<AdminUser>('POST', '/login', { email, password }),
   logout: () => request<{ ok: true }>('POST', '/logout', {}),
@@ -261,6 +276,7 @@ export const adminApi = {
     request<AdminBooking[]>('GET', `/bookings${query(params)}`),
   setBookingStatus: (id: string, status: BookingStatus) => request<AdminBooking>('PATCH', `/bookings/${id}`, { status }),
   updateBooking: (id: string, patch: BookingPatch) => request<AdminBooking>('PATCH', `/bookings/${id}`, patch),
+  createBooking: (b: NewBooking) => request<AdminBooking>('POST', '/bookings', b),
 
   dashboard: (range: DashboardRange) => request<Dashboard>('GET', `/dashboard?range=${range}`),
 
@@ -290,6 +306,7 @@ export const adminApi = {
 
   reviews: () => request<AdminReview[]>('GET', '/reviews'),
   setReviewStatus: (id: string, status: ReviewStatus) => request<AdminReview>('PATCH', `/reviews/${id}`, { status }),
+  deleteReview: (id: string) => request<{ ok: true }>('DELETE', `/reviews/${id}`),
 
   contacts: () => request<AdminContact[]>('GET', '/contacts'),
   setContactHandled: (id: string, handled: boolean) => request<AdminContact>('PATCH', `/contacts/${id}`, { handled }),

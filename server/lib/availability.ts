@@ -1,7 +1,7 @@
 import { prisma } from '../db'
-import { timeSlots } from '../../src/data/booking'
 import { BookingStatus } from '../generated/prisma/enums'
 import { isoFromDate } from './dates'
+import { bookingSlots } from './slots'
 
 /** Estados que ocupan un horario (CANCELLED lo libera) */
 export const ACTIVE_STATUSES = [BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.COMPLETED]
@@ -15,12 +15,13 @@ export interface Availability {
 
 /** Disponibilidad entre `from` (incluido) y `to` (excluido); sin datos personales */
 export async function availabilityBetween(from: Date, to: Date): Promise<Availability> {
-  const [bookings, blocks] = await Promise.all([
+  const [bookings, blocks, timeSlots] = await Promise.all([
     prisma.booking.findMany({
       where: { date: { gte: from, lt: to }, status: { in: ACTIVE_STATUSES } },
       select: { date: true, startTime: true },
     }),
     prisma.blockedSlot.findMany({ where: { date: { gte: from, lt: to } }, select: { date: true, startTime: true } }),
+    bookingSlots(),
   ])
 
   const taken: Record<string, Set<string>> = {}
@@ -30,7 +31,8 @@ export async function availabilityBetween(from: Date, to: Date): Promise<Availab
     if (b.startTime === null) closed.add(day)
     else (taken[day] ??= new Set()).add(b.startTime)
   }
-  for (const [day, set] of Object.entries(taken)) if (set.size >= timeSlots.length) closed.add(day)
+  // Lleno = ninguna hora de inicio vigente libre
+  for (const [day, set] of Object.entries(taken)) if (timeSlots.every((t) => set.has(t))) closed.add(day)
 
   return {
     taken: Object.fromEntries(Object.entries(taken).map(([d, s]) => [d, timeSlots.filter((t) => s.has(t))])),

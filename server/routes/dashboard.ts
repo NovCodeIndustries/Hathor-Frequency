@@ -1,12 +1,13 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { bookingServices, timeSlots } from '../../src/data/booking'
+import { bookingServices, sortSlots } from '../../src/data/booking'
 import type { AdminVariables } from '../auth'
 import { prisma } from '../db'
 import { BookingStatus, ReviewStatus } from '../generated/prisma/enums'
 import { dateFromISO, isoFromDate, todayISO } from '../lib/dates'
 import { invalid } from '../lib/errors'
 import { serviceLabel } from '../lib/services'
+import { bookingSlots } from '../lib/slots'
 import { visitsBetween } from '../lib/umami'
 
 export const dashboard = new Hono<{ Variables: AdminVariables }>()
@@ -53,6 +54,9 @@ dashboard.get('/', async (c) => {
   const p = periods(range.data, today)
   const inRange = (from: string, to: string) => ({ gte: dateFromISO(from), lte: dateFromISO(to) })
   const createdIn = (from: string, to: string) => ({ gte: new Date(cdmxMs(from)), lt: new Date(cdmxMs(addDays(to, 1))) })
+  const timeSlots = await bookingSlots()
+  /** Horas vigentes + las de reservas hechas en una hora que ya se quitó */
+  const withTimes = (times: string[]) => sortSlots([...timeSlots, ...times])
 
   const [bookings, prevBookings, blocks, soon, soonBlocks, pendingBookings, pendingReviews, openContacts, reviews, contacts, created, visits, prevVisits] =
     await Promise.all([
@@ -83,7 +87,7 @@ dashboard.get('/', async (c) => {
 
   // ── Hoy y mañana: cada horario libre, reservado o bloqueado
   const dayPlan = (iso: string) =>
-    timeSlots.map((time) => {
+    withTimes(soon.filter((x) => isoFromDate(x.date) === iso).map((x) => x.startTime)).map((time) => {
       const b = soon.find((x) => isoFromDate(x.date) === iso && x.startTime === time)
       if (b) return { time, kind: b.status === 'PENDING' ? 'pending' : 'confirmed', id: b.id, project: b.project, service: serviceLabel[b.service] }
       const block = soonBlocks.find((x) => isoFromDate(x.date) === iso && (x.startTime === null || x.startTime === time))
@@ -125,7 +129,8 @@ dashboard.get('/', async (c) => {
   const services = bookingServices
     .map((label) => ({ label, count: active.filter((b) => serviceLabel[b.service] === label).length }))
     .sort((a, b) => b.count - a.count)
-  const heat = timeSlots.map((time) =>
+  const heatSlots = withTimes(active.map((b) => b.startTime))
+  const heat = heatSlots.map((time) =>
     Array.from({ length: 7 }, (_, wd) => active.filter((b) => b.startTime === time && (b.date.getUTCDay() + 6) % 7 === wd).length),
   )
 
@@ -164,6 +169,7 @@ dashboard.get('/', async (c) => {
     revenue: { ...rev, change: change(rev.paid, prevRev.paid), byService: revByService },
     services,
     heat,
+    heatSlots,
     reviews: {
       count: reviews.length,
       average: reviews.length ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / reviews.length) * 10) / 10 : null,

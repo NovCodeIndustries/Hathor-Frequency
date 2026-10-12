@@ -171,6 +171,12 @@ select.hf-cinput { background: var(--c-surface-2); }
 
 /* F2 · Listas */
 .hf-clines { display: flex; flex-direction: column; gap: 8px; }
+.hf-ctimes { margin: 0 0 12px; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
+.hf-ctime { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 6px 0 16px; border: 1px solid var(--c-gold); border-radius: var(--radius-pill); background: rgba(242,201,76,0.08); color: var(--c-gold); font-size: 14px; }
+.hf-ctime.has-error { border-style: dashed; }
+.hf-ctimes__add { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.hf-ctimes__add .hf-cinput { width: 150px; height: 40px; color-scheme: dark; }
+.hf-cadd:disabled { opacity: .45; cursor: default; border-color: var(--c-line); color: var(--c-text-3); }
 .hf-cline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .hf-cline .hf-cinput { flex: 1 1 200px; height: 40px; }
 .hf-cline__n { width: 22px; font-family: var(--font-display); color: var(--c-text-3); text-align: right; }

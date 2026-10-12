@@ -1,11 +1,15 @@
 import { useId, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { adminApi } from '../../lib/adminApi'
+import { LoginAlien, type AlienMood } from './LoginAlien'
+import './AdminLayout.css'
 import './AdminLogin.css'
 
 const ARC = 'M 550 10 A 540 540 0 0 1 1010 270'
+/** Lo que dura el brinco del alien antes de entrar al panel */
+const OK_DELAY_MS = 650
 
-/** Login del panel (diseño L1): tarjeta centrada sobre los anillos de vinil */
+/** Login del panel (diseño L1 + alien A4/M1): tarjeta centrada sobre los anillos de vinil */
 export function AdminLogin() {
   const id = useId()
   const navigate = useNavigate()
@@ -14,6 +18,7 @@ export function AdminLogin() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [sending, setSending] = useState(false)
+  const [mood, setMood] = useState<AlienMood>('listen')
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -21,10 +26,12 @@ export function AdminLogin() {
     setError('')
     try {
       await adminApi.login(email.trim(), password)
+      setMood('ok')
       const next = params.get('next')
-      navigate(next?.startsWith('/admin') ? next : '/admin', { replace: true })
+      setTimeout(() => navigate(next?.startsWith('/admin') ? next : '/admin', { replace: true }), OK_DELAY_MS)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No pudimos iniciar sesión')
+      setMood('error')
       setSending(false)
     }
   }
@@ -40,47 +47,55 @@ export function AdminLogin() {
         <path d={ARC} stroke="currentColor" strokeOpacity=".6" strokeWidth="2" />
       </svg>
 
-      <form className="hf-login__card" onSubmit={handleSubmit}>
-        <div className="hf-login__brand">
-          <span className="hf-login__logo">HATHOR</span>
-          <span className="hf-login__sub">FREQUENCY</span>
-          <span className="hf-login__kicker">Panel del estudio</span>
-        </div>
+      <div className="hf-login__stage">
+        <LoginAlien mood={mood} />
 
-        <label className="hf-admin__field" htmlFor={`${id}-email`}>
-          Correo
-          <input
-            id={`${id}-email`}
-            className="hf-admin__input hf-login__input"
-            type="email"
-            autoComplete="username"
-            placeholder="tu@hathorfrequency.mx"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </label>
-        <label className="hf-admin__field" htmlFor={`${id}-password`}>
-          Contraseña
-          <input
-            id={`${id}-password`}
-            className="hf-admin__input hf-login__input"
-            type="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </label>
+        <form className="hf-login__card" onSubmit={handleSubmit}>
+          <div className="hf-login__brand">
+            <span className="hf-login__logo">HATHOR</span>
+            <span className="hf-login__sub">FREQUENCY</span>
+            <span className="hf-login__kicker">Panel del estudio</span>
+          </div>
 
-        <p className="hf-login__error" role="status">{error}</p>
+          <label className="hf-admin__field" htmlFor={`${id}-email`}>
+            Correo
+            <input
+              id={`${id}-email`}
+              className="hf-admin__input hf-login__input"
+              type="email"
+              autoComplete="username"
+              placeholder="tu@hathorfrequency.mx"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onFocus={() => setMood('email')}
+              onBlur={() => setMood('listen')}
+            />
+          </label>
+          <label className="hf-admin__field" htmlFor={`${id}-password`}>
+            Contraseña
+            <input
+              id={`${id}-password`}
+              className="hf-admin__input hf-login__input"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onFocus={() => setMood('pass')}
+              onBlur={() => setMood('listen')}
+            />
+          </label>
 
-        <button type="submit" className="hf-login__submit" disabled={sending}>
-          {sending ? 'Entrando…' : 'Entrar'}
-        </button>
+          <p className="hf-login__error" role="status">{error}</p>
 
-        <p className="hf-login__help">¿Sin acceso? Pídelo a quien administra el estudio.</p>
-      </form>
+          <button type="submit" className="hf-login__submit" disabled={sending}>
+            {sending ? 'Entrando…' : 'Entrar'}
+          </button>
+
+          <p className="hf-login__help">¿Sin acceso? Pídelo a quien administra el estudio.</p>
+        </form>
+      </div>
 
       <Link to="/" className="hf-login__back">← Volver al sitio</Link>
     </div>

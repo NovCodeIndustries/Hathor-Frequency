@@ -68,10 +68,10 @@ export function AdminContacts() {
             {shown.map((c) => (
               <tr key={c.id} className={c.handledAt ? 'is-done' : ''}>
                 <td>{c.name}</td>
-                <td><span className="hf-chip hf-chip--tag">{c.topic}</span></td>
-                <td><a href={`mailto:${c.email}`}>{c.email}</a></td>
-                <td className="hf-acontacts__muted">{formatStamp(c.createdAt)}</td>
-                <td>
+                <td data-label="Tema"><span className="hf-chip hf-chip--tag">{c.topic}</span></td>
+                <td data-label="Correo"><a href={`mailto:${c.email}`}>{c.email}</a></td>
+                <td data-label="Recibido" className="hf-acontacts__muted">{formatStamp(c.createdAt)}</td>
+                <td data-label="Atendido">
                   <label className="hf-acontacts__check">
                     <input type="checkbox" checked={!!c.handledAt} onChange={() => toggle(c)} />
                     {c.handledAt ? 'Sí' : 'No'}

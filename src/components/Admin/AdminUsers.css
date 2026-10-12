@@ -11,6 +11,14 @@
 .hf-ausers__actions { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .hf-ausers__reset { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .hf-ausers__reset-input { height: 40px; min-width: 200px; }
+.hf-acontacts__table td .hf-ausers__phone { margin-top: 2px; }
+@media (max-width: 767px) {
+  .hf-ausers__card { padding: 18px; }
+  .hf-ausers__reset { width: 100%; justify-content: stretch; }
+  .hf-ausers__reset-input { min-width: 0; flex: 1 1 100%; }
+  .hf-ausers__actions { width: 100%; justify-content: flex-start; }
+  .hf-ausers__submit { align-self: stretch; }
+}
 .hf-ausers__match { font-size: 12px; letter-spacing: 0; text-transform: none; color: var(--c-text-3); }
 .hf-ausers__match.is-ok { color: var(--c-gold); }
 .hf-ausers__match.is-bad { color: var(--c-text); text-decoration: underline wavy var(--c-gold); }

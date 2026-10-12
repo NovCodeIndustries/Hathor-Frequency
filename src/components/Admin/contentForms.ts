@@ -1,4 +1,4 @@
-import { bookingServices } from '../../data/booking'
+import { bookingServices, maxSlots } from '../../data/booking'
 import { slugify, type ContentKey } from '../../data/content'
 
 /**
@@ -14,6 +14,8 @@ export type Field =
   | { kind: 'select'; key: string; label: string; options: { value: string; label: string }[] }
   | { kind: 'media'; key: string; label: string; accept: 'image' | 'video'; hint?: string; wide?: boolean }
   | { kind: 'lines'; key: string; label: string; itemLabel: string; max?: number; placeholder?: string }
+  /** Lista de horas "HH:MM" (24 h), ordenada y sin repetir; se muestra en 12 h */
+  | { kind: 'times'; key: string; label: string; max: number; hint?: string }
   | { kind: 'list'; key: string; label: string; itemLabel: string; fields: Field[]; newItem: () => Record<string, unknown>; titleOf: (x: Record<string, unknown>) => string }
 
 /** Lista principal de una sección (lo que va en la columna izquierda) */
@@ -118,6 +120,25 @@ export const sectionForms: Record<ContentKey, SectionForm> = {
       { kind: 'text', key: 'short', label: 'Descripción corta', max: 120, wide: true },
       { kind: 'textarea', key: 'description', label: 'Descripción', max: 1200 },
       { kind: 'lines', key: 'includes', label: 'Qué incluye', itemLabel: 'línea', max: 160 },
+    ],
+  },
+
+  horarios: {
+    type: 'groups',
+    groups: [
+      {
+        id: 'horarios',
+        label: 'Horas de inicio',
+        fields: [
+          {
+            kind: 'times',
+            key: 'slots',
+            label: 'Horas de inicio de las sesiones',
+            max: maxSlots,
+            hint: 'Las que puede elegir quien reserva y las columnas de la agenda. Quitar una no cancela las reservas ya hechas a esa hora.',
+          },
+        ],
+      },
     ],
   },
 

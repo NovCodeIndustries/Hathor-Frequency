@@ -25,3 +25,4 @@
 
 .hf-areviews__actions { display: flex; gap: 8px; }
 .hf-areviews__actions .hf-admin__btn { flex: 1 1 0; }
+.hf-areviews__actions .hf-areviews__delete { flex: 0 0 auto; }

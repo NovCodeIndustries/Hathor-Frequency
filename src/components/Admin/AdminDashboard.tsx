@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router'
-import { timeSlots } from '../../data/booking'
 import { adminApi, dateFromISO, formatMoney, formatStamp, shortName, type Dashboard, type DashboardRange, type DaySlot } from '../../lib/adminApi'
 import { MONTHS, WEEKDAYS, WEEKDAYS_SHORT } from '../../lib/calendar'
 import { formatTime } from '../../lib/time'
@@ -85,7 +84,7 @@ export function AdminDashboard() {
   const peak = (() => {
     let best = { v: 0, r: 0, c: 0 }
     data.heat.forEach((row, r) => row.forEach((v, c) => v > best.v && (best = { v, r, c })))
-    return best.v ? `Pico: ${WEEKDAYS[best.c].toLowerCase()} ${formatTime(timeSlots[best.r])}` : 'Sin reservas en el periodo'
+    return best.v ? `Pico: ${WEEKDAYS[best.c].toLowerCase()} ${formatTime(data.heatSlots[best.r])}` : 'Sin reservas en el periodo'
   })()
   const revTotal = rev.paid + rev.due
   const litLeds = Math.round((bk.confirmedPct / 100) * LEDS)
@@ -318,7 +317,7 @@ export function AdminDashboard() {
             <h3 id="m-led" className="hf-dash__ptitle">Matriz · cuándo reservan</h3>
             <span className="hf-dash__muted" aria-live="polite">
               {heatHover
-                ? `${WEEKDAYS[heatHover[2]]} ${formatTime(timeSlots[heatHover[1]])} · ${data.heat[heatHover[1]][heatHover[2]]} reservas`
+                ? `${WEEKDAYS[heatHover[2]]} ${formatTime(data.heatSlots[heatHover[1]])} · ${data.heat[heatHover[1]][heatHover[2]]} reservas`
                 : peak}
             </span>
           </div>
@@ -327,7 +326,7 @@ export function AdminDashboard() {
             {WEEKDAYS_SHORT.map((w) => (
               <span key={w} className="hf-dash__wd">{w}</span>
             ))}
-            {timeSlots.map((t, r) => (
+            {data.heatSlots.map((t, r) => (
               <div key={t} className="hf-dash__matrix-row">
                 <span className="hf-dash__matrix-time">{formatTime(t)}</span>
                 {data.heat[r].map((v, c) => {
