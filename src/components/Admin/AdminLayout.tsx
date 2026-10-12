@@ -5,6 +5,11 @@ import type { AdminContext } from '../../lib/useAdmin'
 import './AdminLayout.css'
 import './MaintenanceModal.css'
 import { useSeason } from '../../lib/useSeason'
+import { celebratedToday, partyStage, setPartyStage, startParty, type PartyStage } from '../../lib/birthdayParty'
+import { BirthdayBalloons } from './BirthdayBalloons'
+import { BirthdayCake } from './BirthdayCake'
+import { DedicationsLayer } from './DedicationsLayer'
+import { PanelWelcome } from './PanelWelcome'
 import { SeasonGarland } from '../Season/SeasonGarland'
 import { Glyph } from '../Ufo/seasonArt'
 import { startAdminLive, stopAdminLive, useAdminLive } from '../../lib/useAdminLive'
@@ -21,6 +26,16 @@ export function AdminLayout() {
   const [menuOpen, setMenuOpen] = useState(false)
   // Temporada del mes o cumpleaños del equipo: adorno arriba y glifo junto al logo (como en la web)
   const season = useSeason()
+  const [welcome, setWelcome] = useState(false)
+  // Cumpleaños de quien entra (B3 en el login → B1 pastel → B4 globos), una vez al día; viene del login o empieza aquí
+  const [party, setPartyState] = useState<PartyStage | null>(() => partyStage())
+  const setParty = useCallback((stage: PartyStage | null) => {
+    setPartyStage(stage)
+    setPartyState(stage)
+  }, [])
+  const endParty = useCallback(() => setParty(null), [setParty])
+  // Tras el pastel, las dedicatorias del equipo (si no hay, DedicationsLayer pasa a los globos)
+  const toLetters = useCallback(() => setParty('letters'), [setParty])
   // Cerrar el menú móvil al cambiar de página
   const [lastPath, setLastPath] = useState(location.pathname)
   if (location.pathname !== lastPath) {
@@ -41,7 +56,19 @@ export function AdminLayout() {
 
   // Se revisa la sesión al entrar y al cambiar de pestaña
   useEffect(() => {
-    adminApi.me().then(setAdmin).catch(toLogin)
+    adminApi
+      .me()
+      .then((u) => {
+        // Con la sesión ya abierta (sin pasar por el login), el festejo empieza en el pastel
+        // Usuario nuevo: la bienvenida queda abierta hasta que la termine (aunque la sesión se refresque al guardar)
+        if (u.mustChangePassword) setWelcome(true)
+        if (u.birthday && !celebratedToday(u.id)) {
+          startParty(u.id)
+          setPartyState('cake')
+        }
+        setAdmin(u)
+      })
+      .catch(toLogin)
   }, [toLogin])
 
   const refreshMe = useCallback(() => {
@@ -161,7 +188,7 @@ export function AdminLayout() {
         </nav>
         <div className="hf-admin__user">
           <span className="hf-admin__name">{shortName(admin)}</span>
-          <span className="hf-admin__email">{admin.email}</span>
+          <span className="hf-admin__email">{admin.username}</span>
           <button type="button" className="hf-admin__btn hf-admin__btn--ghost hf-admin__btn--sm" onClick={logout}>
             Cerrar sesión
           </button>
@@ -188,6 +215,29 @@ export function AdminLayout() {
             )}
           </div>
         )}
+        {/* Usuario nuevo (contraseña temporal): primero la bienvenida; la fiesta y las dedicatorias esperan */}
+        {welcome && (
+          <PanelWelcome
+            admin={admin}
+            onDone={() => {
+              setWelcome(false)
+              refreshMe()
+            }}
+            onLogout={logout}
+            onError={onError}
+          />
+        )}
+        {!welcome && !admin.mustChangePassword && (
+        <DedicationsLayer
+          admin={admin}
+          party={party}
+          setParty={setParty}
+          landing={location.pathname === (staffOnly ? '/admin/reservas' : '/admin')}
+          onError={onError}
+        />
+        )}
+        {!welcome && !admin.mustChangePassword && party === 'balloons' && <BirthdayBalloons name={admin.firstName || shortName(admin)} onDone={endParty} />}
+        {!welcome && !admin.mustChangePassword && party === 'cake' && <BirthdayCake name={admin.firstName || shortName(admin)} onDone={toLetters} onSkip={endParty} />}
         <Outlet context={{ admin, summary, refreshSummary, refreshMe, onError } satisfies AdminContext} />
       </main>
     </div>

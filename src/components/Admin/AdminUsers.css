@@ -45,3 +45,13 @@
 .hf-ausers__role[aria-checked="true"] { background: var(--c-gold); color: #000; font-weight: 600; }
 .hf-ausers__role:hover:not([aria-checked="true"]) { color: var(--c-gold); }
 .hf-ausers__date { color-scheme: dark; }
+/* Contraseña temporal (se ve hasta que la persona pone la suya) */
+.hf-ausers__temp { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 6px; font-size: 12px; }
+.hf-ausers__temp-label { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--c-gold); }
+.hf-ausers__temp code { padding: 3px 8px; border: 1px dashed var(--c-gold-2); border-radius: 6px; color: var(--c-text); font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 13px; letter-spacing: .04em; user-select: all; }
+.hf-ausers__temp.is-big code { font-size: 18px; padding: 8px 14px; }
+.hf-ausers__copy { height: 28px; padding: 0 12px; border: 1px solid var(--c-line-2); border-radius: var(--radius-pill); background: none; color: var(--c-text-2); font-family: var(--font-body); font-size: 12px; cursor: pointer; }
+.hf-ausers__copy:hover { border-color: var(--c-gold); color: var(--c-gold); }
+.hf-ausers__creds { margin: 0; display: flex; flex-direction: column; gap: 12px; }
+.hf-ausers__creds dt { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--c-text-3); }
+.hf-ausers__creds dd { margin: 4px 0 0; font-size: 18px; color: var(--c-gold); }

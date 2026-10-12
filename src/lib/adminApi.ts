@@ -12,7 +12,8 @@ export type PaymentStatus = 'PENDING' | 'DEPOSIT' | 'PAID'
 
 export interface AdminUser {
   id: string
-  email: string
+  /** Con lo que entra al panel ("jnunez") */
+  username: string
   /** Nombre completo */
   name: string
   firstName: string
@@ -20,6 +21,10 @@ export interface AdminUser {
   /** Usuario principal: no se puede borrar y administra a los demás */
   isRoot: boolean
   role: AdminRole
+  /** Hoy es su cumpleaños (CDMX): el panel lo festeja una vez al día */
+  birthday: boolean
+  /** Entró con una contraseña temporal: la bienvenida (W5) le pide poner la suya */
+  mustChangePassword: boolean
 }
 
 /** ADMIN: todo el panel · STAFF: solo Agenda, Contactos y Mi cuenta */
@@ -39,11 +44,13 @@ export interface AdminUserRow extends AdminUser {
   birthDate: string | null
   /** Bloqueada por intentos fallidos hasta esa hora, solo si sigue vigente (se quita sola o con una contraseña nueva) */
   lockedUntil: string | null
+  /** Contraseña temporal en claro, solo para el principal y solo mientras la persona no ponga la suya */
+  tempPassword: string | null
   createdAt: string
 }
 
 /** Nombre y teléfono de un usuario, lo que se edita en Usuarios */
-export type AdminUserProfile = Omit<NewAdminUser, 'password'>
+export type AdminUserProfile = NewAdminUser
 
 export interface NewAdminUser {
   firstName: string
@@ -54,7 +61,6 @@ export interface NewAdminUser {
   role: AdminRole
   /** "YYYY-MM-DD"; vacío o null = sin fecha */
   birthDate?: string | null
-  password: string
 }
 
 /** "Xavier Ruiz": primer nombre + primer apellido (para saludos y la barra) */
@@ -257,6 +263,24 @@ export interface AdminBlock {
   reason: string | null
 }
 
+/** Quien cumple hoy, para firmar su funda (D2): si ya firmé y quién más firmó (solo nombres) */
+export interface BirthdayPerson {
+  id: string
+  name: string
+  firstName: string
+  mine: { text: string; anonymous: boolean } | null
+  signers: string[]
+}
+
+/** Una dedicatoria que recibí hoy (L1) */
+export interface Dedication {
+  id: string
+  text: string
+  from: string
+  createdAt: string
+  read: boolean
+}
+
 /** Una sesión abierta de mi cuenta (Mi cuenta · Sesiones) */
 export interface AdminSessionRow {
   id: string
@@ -270,7 +294,8 @@ export interface AdminSessionRow {
 /** Un intento de login (Usuarios · Registro de accesos) */
 export interface AccessLogRow {
   id: string
-  email: string
+  /** El usuario que se escribió en el login */
+  username: string
   success: boolean
   reason: 'password' | 'unknown' | 'locked' | null
   ip: string | null
@@ -332,7 +357,7 @@ export interface NewBooking {
 }
 
 export const adminApi = {
-  login: (email: string, password: string) => request<AdminUser>('POST', '/login', { email, password }),
+  login: (username: string, password: string) => request<AdminUser>('POST', '/login', { username, password }),
   logout: () => request<{ ok: true }>('POST', '/logout', {}),
   me: () => request<AdminUser>('GET', '/me'),
   summary: () => request<AdminSummary>('GET', '/summary'),
@@ -364,13 +389,18 @@ export const adminApi = {
   restoreContent: (key: string, id: string) => request<ContentState>('POST', `/content/${key}/restore/${id}`, {}),
   users: () => request<AdminUserRow[]>('GET', '/users'),
   createUser: (user: NewAdminUser) => request<AdminUserRow>('POST', '/users', user),
-  setUserPassword: (id: string, password: string) => request<{ ok: true }>('PATCH', `/users/${id}/password`, { password }),
+  newTempPassword: (id: string) => request<{ tempPassword: string }>('POST', `/users/${id}/temp-password`, {}),
+  setFirstPassword: (next: string) => request<{ ok: true }>('PATCH', '/users/me/first-password', { next }),
   deleteUser: (id: string) => request<{ ok: true }>('DELETE', `/users/${id}`),
-  updateUser: (id: string, profile: AdminUserProfile & { regenerateEmail?: boolean }) => request<AdminUserRow>('PATCH', `/users/${id}`, profile),
+  updateUser: (id: string, profile: AdminUserProfile & { regenerateUsername?: boolean }) => request<AdminUserRow>('PATCH', `/users/${id}`, profile),
   mySessions: () => request<AdminSessionRow[]>('GET', '/users/me/sessions'),
   closeSession: (id: string) => request<{ ok: true }>('DELETE', `/users/me/sessions/${id}`),
   closeOtherSessions: () => request<{ ok: true; closed: number }>('DELETE', '/users/me/sessions'),
   accessLog: () => request<AccessLogRow[]>('GET', '/users/access-log'),
+  dedicationsToday: () => request<BirthdayPerson[]>('GET', '/dedications/today'),
+  signDedication: (recipientId: string, text: string, anonymous: boolean) => request<{ ok: true }>('PUT', `/dedications/${recipientId}`, { text, anonymous }),
+  myDedications: () => request<Dedication[]>('GET', '/dedications/mine'),
+  markDedicationsRead: (ids: string[]) => request<{ ok: true }>('POST', '/dedications/mine/read', { ids }),
   changeMyPassword: (current: string, next: string) => request<{ ok: true }>('PATCH', '/users/me/password', { current, next }),
 
   mediaList: (params: { dir?: string; q?: string }) =>

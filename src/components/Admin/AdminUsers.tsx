@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { ROLE_HINT, ROLE_LABEL, adminApi, describeDevice, formatStamp, type AccessLogRow, type AdminRole, type AdminSessionRow, type AdminUserProfile, type AdminUserRow, type NewAdminUser } from '../../lib/adminApi'
-import { staffEmail, staffEmailLocal } from '../../data/staff'
+import { staffUsername } from '../../data/staff'
 import { useAdmin } from '../../lib/useAdmin'
 import './AdminSite.css'
 import './AdminUsers.css'
@@ -28,7 +28,7 @@ export function AdminUsers() {
       </div>
       <div className="hf-ausers">
         {admin.isRoot && <UsersAdmin meId={admin.id} onError={onError} onSelfEdited={refreshMe} />}
-        <MyPassword name={admin.name} email={admin.email} onError={onError} />
+        <MyPassword name={admin.name} username={admin.username} onError={onError} />
         <MySessions onError={onError} />
         {admin.isRoot && <AccessLog onError={onError} />}
       </div>
@@ -41,12 +41,12 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
   const [list, setList] = useState<AdminUserRow[] | null>(null)
   const [error, setError] = useState('')
   const [msg, setMsg] = useState('')
-  const EMPTY: NewAdminUser & { repeat: string } = { firstName: '', middleName: '', lastName: '', secondLastName: '', phone: '', role: 'ADMIN', birthDate: '', password: '', repeat: '' }
+  const EMPTY: NewAdminUser = { firstName: '', middleName: '', lastName: '', secondLastName: '', phone: '', role: 'ADMIN', birthDate: '' }
   const [form, setForm] = useState(EMPTY)
-  const [show, setShow] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [resetId, setResetId] = useState<string | null>(null)
-  const [resetPwd, setResetPwd] = useState('')
+  /** La temporal recién generada (alta o "Nueva temporal"), para mostrarla con su botón de copiar */
+  const [fresh, setFresh] = useState<{ username: string; temp: string } | null>(null)
+  const [renewId, setRenewId] = useState<string | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [editId, setEditId] = useState<string | null>(null)
 
@@ -75,19 +75,20 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
 
   const create = async (e: FormEvent) => {
     e.preventDefault()
-    if (form.password !== form.repeat) return setError('Las contraseñas no coinciden.')
-    const { repeat: _repeat, ...user } = form
-    const clean = Object.fromEntries(Object.entries(user).map(([k, v]) => [k, k === 'password' ? v : String(v ?? '').trim()])) as unknown as NewAdminUser
+    const clean = Object.fromEntries(Object.entries(form).map(([k, v]) => [k, String(v ?? '').trim()])) as unknown as NewAdminUser
     clean.birthDate = clean.birthDate || null
-    if (await run(() => adminApi.createUser(clean), (u) => `Usuario creado: ${u.email}`)) {
+    let created: AdminUserRow | null = null
+    if (await run(async () => (created = await adminApi.createUser(clean)), (u) => `Usuario creado: ${u.username}`)) {
       setForm(EMPTY)
-      setShow(false)
+      const u = created as AdminUserRow | null
+      if (u?.tempPassword) setFresh({ username: u.username, temp: u.tempPassword })
     }
   }
 
   const target = list?.find((u) => u.id === deleteId)
   const editing = list?.find((u) => u.id === editId)
-  const newEmail = staffEmail(form.firstName, form.lastName)
+  const renewing = list?.find((u) => u.id === renewId)
+  const newUsername = staffUsername(form.firstName, form.lastName)
 
   return (
     <>
@@ -100,7 +101,7 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
             <thead>
               <tr>
                 <th scope="col">Nombre</th>
-                <th scope="col">Correo y teléfono</th>
+                <th scope="col">Usuario y teléfono</th>
                 <th scope="col">Rol</th>
                 <th scope="col">Alta</th>
                 <th scope="col" className="hf-acontacts__right">Acciones</th>
@@ -111,9 +112,16 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
                 <tr key={u.id}>
                   <td>{u.name}{u.id === meId && <span className="hf-acontacts__muted"> (tú)</span>}</td>
                   <td data-label="Correo" className="hf-acontacts__muted">
-                    {u.email}
+                    {u.username}
                     {u.phone && <span className="hf-ausers__phone">{u.phone}</span>}
                     {u.birthDate && <span className="hf-ausers__phone">Cumpleaños: {birthdayLabel(u.birthDate)}</span>}
+                    {u.mustChangePassword && (
+                      u.tempPassword ? (
+                        <TempPassword value={u.tempPassword} />
+                      ) : (
+                        <span className="hf-ausers__phone">Con contraseña temporal (genera otra si la perdieron)</span>
+                      )
+                    )}
                   </td>
                   <td data-label="Rol">
                     {u.isRoot ? (
@@ -129,31 +137,15 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
                   </td>
                   <td data-label="Alta" className="hf-acontacts__muted">{formatStamp(u.createdAt)}</td>
                   <td className="hf-acontacts__right">
-                    {resetId === u.id ? (
-                      <form
-                        className="hf-ausers__reset"
-                        onSubmit={async (e) => {
-                          e.preventDefault()
-                          if (await run(() => adminApi.setUserPassword(u.id, resetPwd), `Contraseña de ${u.email} cambiada.`)) {
-                            setResetId(null)
-                            setResetPwd('')
-                          }
-                        }}
-                      >
-                        <label className="sr-only" htmlFor={`${id}-reset-${u.id}`}>Contraseña nueva de {u.name}</label>
-                        <input id={`${id}-reset-${u.id}`} className="hf-admin__input hf-ausers__reset-input" type="text" autoComplete="new-password" minLength={10} required placeholder="Contraseña nueva" value={resetPwd} onChange={(e) => setResetPwd(e.target.value)} />
-                        <button type="submit" className="hf-admin__btn hf-admin__btn--primary hf-admin__btn--sm" disabled={busy}>Guardar</button>
-                        <button type="button" className="hf-admin__btn hf-admin__btn--ghost hf-admin__btn--sm" onClick={() => setResetId(null)}>Cancelar</button>
-                      </form>
-                    ) : (
-                      <span className="hf-ausers__actions">
-                        <button type="button" className="hf-admin__btn hf-admin__btn--sm" onClick={() => setEditId(u.id)}>Editar</button>
-                        <button type="button" className="hf-admin__btn hf-admin__btn--sm" onClick={() => (setResetId(u.id), setResetPwd(''))}>Cambiar contraseña</button>
-                        {!u.isRoot && (
-                          <button type="button" className="hf-admin__btn hf-admin__btn--ghost hf-admin__btn--sm" onClick={() => setDeleteId(u.id)}>Quitar acceso</button>
-                        )}
-                      </span>
-                    )}
+                    <span className="hf-ausers__actions">
+                      <button type="button" className="hf-admin__btn hf-admin__btn--sm" onClick={() => setEditId(u.id)}>Editar</button>
+                      {u.id !== meId && (
+                        <button type="button" className="hf-admin__btn hf-admin__btn--sm" onClick={() => setRenewId(u.id)}>Nueva temporal</button>
+                      )}
+                      {!u.isRoot && (
+                        <button type="button" className="hf-admin__btn hf-admin__btn--ghost hf-admin__btn--sm" onClick={() => setDeleteId(u.id)}>Quitar acceso</button>
+                      )}
+                    </span>
                   </td>
                 </tr>
               ))}
@@ -183,41 +175,67 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
             <input id={`${id}-phone`} className="hf-admin__input" type="tel" inputMode="tel" required pattern="[0-9+()\s\-]{8,20}" title="Al menos 8 dígitos" placeholder="+52 55 0000 0000" autoComplete="off" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
           </label>
           <div className="hf-admin__field">
-            Correo
-            <output className={`hf-ausers__email ${newEmail ? '' : 'is-empty'}`} aria-live="polite">
-              {newEmail || 'Se arma con el nombre y el apellido'}
+            Usuario
+            <output className={`hf-ausers__email ${newUsername ? '' : 'is-empty'}`} aria-live="polite">
+              {newUsername || 'Se arma con el nombre y el apellido'}
             </output>
             <span className="hf-ausers__match">Inicial del primer nombre + primer apellido. Si ya existe, se le agrega un número.</span>
           </div>
           <BirthDateField value={form.birthDate ?? ''} onChange={(birthDate) => setForm({ ...form, birthDate })} />
           <RolePicker value={form.role} onChange={(role) => setForm({ ...form, role })} />
-          <label className="hf-admin__field" htmlFor={`${id}-pwd`}>
-            Contraseña (mín. 10)
-            <span className="hf-ausers__pwd">
-              <input id={`${id}-pwd`} className="hf-admin__input" type={show ? 'text' : 'password'} required minLength={10} autoComplete="new-password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-              <button type="button" className="hf-admin__btn hf-admin__btn--ghost hf-admin__btn--sm" aria-pressed={show} onClick={() => setShow((v) => !v)}>
-                {show ? 'Ocultar' : 'Mostrar'}
-              </button>
-            </span>
-          </label>
-          <label className="hf-admin__field" htmlFor={`${id}-rep`}>
-            Repite la contraseña
-            <input
-              id={`${id}-rep`}
-              className={`hf-admin__input ${form.repeat && form.repeat !== form.password ? 'is-bad' : ''}`}
-              type={show ? 'text' : 'password'}
-              required
-              autoComplete="new-password"
-              aria-describedby={`${id}-match`}
-              value={form.repeat}
-              onChange={(e) => setForm({ ...form, repeat: e.target.value })}
-            />
-            <PasswordMatch id={`${id}-match`} a={form.password} b={form.repeat} />
-          </label>
         </div>
-        <p className="hf-ausers__muted">Comparte la contraseña por un medio seguro; podrá cambiarla en "Mi cuenta".</p>
-        <button type="submit" className="hf-admin__btn hf-admin__btn--primary hf-ausers__submit" disabled={busy || form.password.length < 10 || form.password !== form.repeat}>Crear usuario</button>
+        <p className="hf-ausers__muted">La contraseña se genera sola y es temporal: la ves aquí hasta que la persona entre y ponga la suya en la bienvenida.</p>
+        <button type="submit" className="hf-admin__btn hf-admin__btn--primary hf-ausers__submit" disabled={busy}>Crear usuario</button>
       </form>
+
+      {fresh && (
+        <div className="hf-asite__modal">
+          <button type="button" className="hf-asite__backdrop" aria-label="Cerrar" tabIndex={-1} onClick={() => setFresh(null)} />
+          <div className="hf-asite__confirm" role="dialog" aria-modal="true" aria-labelledby={`${id}-fresh`}>
+            <h2 id={`${id}-fresh`} className="hf-asite__confirm-title">
+              Acceso para <span className="hf-asite__gold">{fresh.username}</span>
+            </h2>
+            <p className="hf-ausers__muted">Dale estos datos por un medio seguro. Al entrar, la bienvenida le pide poner su propia contraseña; mientras tanto la sigues viendo en la tabla.</p>
+            <dl className="hf-ausers__creds">
+              <div><dt>Usuario</dt><dd>{fresh.username}</dd></div>
+              <div><dt>Contraseña temporal</dt><dd><TempPassword value={fresh.temp} big /></dd></div>
+            </dl>
+            <div className="hf-asite__confirm-actions">
+              <button type="button" className="hf-admin__btn hf-admin__btn--primary" onClick={() => setFresh(null)}>Listo</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {renewing && (
+        <div className="hf-asite__modal">
+          <button type="button" className="hf-asite__backdrop" aria-label="Cerrar" tabIndex={-1} onClick={() => setRenewId(null)} />
+          <div className="hf-asite__confirm" role="dialog" aria-modal="true" aria-labelledby={`${id}-renew`}>
+            <h2 id={`${id}-renew`} className="hf-asite__confirm-title">
+              ¿Nueva contraseña temporal para <span className="hf-asite__gold">{renewing.username}?</span>
+            </h2>
+            <p className="hf-ausers__muted">La que tiene deja de servir, se cierran sus sesiones y se le quita el bloqueo si lo tenía. Al entrar con la nueva, le pedimos poner la suya.</p>
+            <div className="hf-asite__confirm-actions">
+              <button type="button" className="hf-admin__btn" onClick={() => setRenewId(null)}>Cancelar</button>
+              <button
+                type="button"
+                className="hf-admin__btn hf-admin__btn--primary"
+                disabled={busy}
+                onClick={async () => {
+                  const who = renewing
+                  let temp = ''
+                  if (await run(async () => (temp = (await adminApi.newTempPassword(who.id)).tempPassword), `Nueva temporal para ${who.username}.`)) {
+                    setRenewId(null)
+                    setFresh({ username: who.username, temp })
+                  }
+                }}
+              >
+                Generar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {editing && (
         <EditUser
@@ -226,7 +244,7 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
           onCancel={() => setEditId(null)}
           onSave={async (profile) => {
             const ok = await run(() => adminApi.updateUser(editing.id, profile), (u) =>
-              u.email !== editing.email ? `Datos de ${u.name} guardados. Su correo ahora es ${u.email}.` : `Datos de ${u.name} guardados.`,
+              u.username !== editing.username ? `Datos de ${u.name} guardados. Su usuario ahora es ${u.username}.` : `Datos de ${u.name} guardados.`,
             )
             if (ok) {
               setEditId(null)
@@ -243,7 +261,7 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
             <h2 id={`${id}-del`} className="hf-asite__confirm-title">
               ¿Quitar el acceso a <span className="hf-asite__gold">{target.name}?</span>
             </h2>
-            <p className="hf-ausers__muted">{target.email} ya no podrá entrar al panel y se cierran sus sesiones.</p>
+            <p className="hf-ausers__muted">{target.username} ya no podrá entrar al panel y se cierran sus sesiones.</p>
             <div className="hf-asite__confirm-actions">
               <button type="button" className="hf-admin__btn" onClick={() => setDeleteId(null)}>Cancelar</button>
               <button
@@ -251,7 +269,7 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
                 className="hf-admin__btn hf-admin__btn--primary"
                 disabled={busy}
                 onClick={async () => {
-                  await run(() => adminApi.deleteUser(target.id), `Acceso de ${target.email} quitado.`)
+                  await run(() => adminApi.deleteUser(target.id), `Acceso de ${target.username} quitado.`)
                   setDeleteId(null)
                 }}
               >
@@ -265,7 +283,7 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
   )
 }
 
-function MyPassword({ name, email, onError }: { name: string; email: string; onError: (e: unknown) => string }) {
+function MyPassword({ name, username, onError }: { name: string; username: string; onError: (e: unknown) => string }) {
   const id = useId()
   const [f, setF] = useState({ current: '', next: '', repeat: '' })
   const [msg, setMsg] = useState('')
@@ -292,7 +310,7 @@ function MyPassword({ name, email, onError }: { name: string; email: string; onE
   return (
     <form className="hf-ausers__card" aria-labelledby={`${id}-me`} onSubmit={submit}>
       <h2 id={`${id}-me`} className="hf-ausers__title">Mi cuenta</h2>
-      <p className="hf-ausers__muted">{name} · {email}</p>
+      <p className="hf-ausers__muted">{name} · usuario {username}</p>
       <div className="hf-ausers__grid">
         <label className="hf-admin__field" htmlFor={`${id}-cur`}>
           Contraseña actual
@@ -332,6 +350,29 @@ function BirthDateField({ value, onChange }: { value: string; onChange: (v: stri
   )
 }
 
+/** Contraseña temporal con botón de copiar */
+function TempPassword({ value, big = false }: { value: string; big?: boolean }) {
+  const [copied, setCopied] = useState(false)
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(value)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1800)
+    } catch {
+      // sin portapapeles (http o permiso): se selecciona a mano
+    }
+  }
+  return (
+    <span className={`hf-ausers__temp ${big ? 'is-big' : ''}`}>
+      {!big && <span className="hf-ausers__temp-label">Temporal</span>}
+      <code>{value}</code>
+      <button type="button" className="hf-ausers__copy" onClick={copy} aria-label={`Copiar la contraseña temporal ${value}`}>
+        {copied ? 'Copiada' : 'Copiar'}
+      </button>
+    </span>
+  )
+}
+
 /** Rol de un usuario: dos pills con su descripción debajo */
 function RolePicker({ value, onChange }: { value: AdminRole; onChange: (r: AdminRole) => void }) {
   const id = useId()
@@ -350,11 +391,11 @@ function RolePicker({ value, onChange }: { value: AdminRole; onChange: (r: Admin
   )
 }
 
-/** Parte local del correo sin el número que se agrega cuando ya existía ("jnunez2" → "jnunez") */
-const emailBase = (email: string) => email.split('@')[0].replace(/\d+$/, '')
+/** El usuario sin el número que se agrega cuando ya existía ("jnunez2" → "jnunez") */
+const usernameBase = (username: string) => username.replace(/\d+$/, '')
 
-/** Ventana para editar el nombre y el teléfono de un usuario; el correo se puede volver a armar con el nombre nuevo */
-function EditUser({ user, busy, onCancel, onSave }: { user: AdminUserRow; busy: boolean; onCancel: () => void; onSave: (p: AdminUserProfile & { regenerateEmail: boolean }) => void }) {
+/** Ventana para editar el nombre y el teléfono de un usuario; el usuario se puede volver a armar con el nombre nuevo */
+function EditUser({ user, busy, onCancel, onSave }: { user: AdminUserRow; busy: boolean; onCancel: () => void; onSave: (p: AdminUserProfile & { regenerateUsername: boolean }) => void }) {
   const id = useId()
   const [f, setF] = useState<AdminUserProfile>({
     firstName: user.firstName,
@@ -374,14 +415,14 @@ function EditUser({ user, busy, onCancel, onSave }: { user: AdminUserRow; busy: 
     return () => document.removeEventListener('keydown', onKey)
   }, [onCancel])
 
-  // El correo del principal no cambia (es ROOT_ADMIN_EMAIL); a los demás se les ofrece si el nombre ya no cuadra
-  const proposed = staffEmail(f.firstName, f.lastName)
-  const canRegenerate = !user.isRoot && !!proposed && staffEmailLocal(f.firstName, f.lastName) !== emailBase(user.email)
+  // El usuario del principal no cambia (es ROOT_ADMIN_USERNAME); a los demás se les ofrece si el nombre ya no cuadra
+  const proposed = staffUsername(f.firstName, f.lastName)
+  const canRegenerate = !user.isRoot && !!proposed && proposed !== usernameBase(user.username)
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
     const clean = Object.fromEntries(Object.entries(f).map(([k, v]) => [k, String(v ?? '').trim()])) as unknown as AdminUserProfile
-    onSave({ ...clean, birthDate: clean.birthDate || null, regenerateEmail: canRegenerate && regenerate })
+    onSave({ ...clean, birthDate: clean.birthDate || null, regenerateUsername: canRegenerate && regenerate })
   }
 
   return (
@@ -419,13 +460,13 @@ function EditUser({ user, busy, onCancel, onSave }: { user: AdminUserRow; busy: 
             <input id={`${id}-phone`} className="hf-admin__input" type="tel" inputMode="tel" required pattern="[0-9+()\s\-]{8,20}" title="Al menos 8 dígitos" autoComplete="off" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
           </label>
           <div className="hf-admin__field">
-            Correo
-            <output className="hf-ausers__email is-empty">{user.email}</output>
+            Usuario
+            <output className="hf-ausers__email is-empty">{user.username}</output>
           </div>
           <BirthDateField value={f.birthDate ?? ''} onChange={(birthDate) => setF({ ...f, birthDate })} />
         </div>
         {user.isRoot ? (
-          <p className="hf-ausers__muted">El usuario principal siempre es Admin, y su correo no cambia: es el de ROOT_ADMIN_EMAIL en .env.</p>
+          <p className="hf-ausers__muted">El usuario principal siempre es Admin, y su usuario no cambia: es el de ROOT_ADMIN_USERNAME en .env.</p>
         ) : (
           <RolePicker value={f.role} onChange={(role) => setF({ ...f, role })} />
         )}
@@ -433,8 +474,8 @@ function EditUser({ user, busy, onCancel, onSave }: { user: AdminUserRow; busy: 
           <label className="hf-ausers__check">
             <input type="checkbox" checked={regenerate} onChange={(e) => setRegenerate(e.target.checked)} />
             <span>
-              Cambiar su correo a <span className="hf-asite__gold">{proposed}</span>
-              <span className="hf-ausers__phone">Entrará con el correo nuevo y se cerrarán sus sesiones. Si ya existe, se le agrega un número.</span>
+              Cambiar su usuario a <span className="hf-asite__gold">{proposed}</span>
+              <span className="hf-ausers__phone">Entrará con el usuario nuevo y se cerrarán sus sesiones. Si ya existe, se le agrega un número.</span>
             </span>
           </label>
         )}
@@ -512,7 +553,7 @@ function MySessions({ onError }: { onError: (e: unknown) => string }) {
 
 const REASON: Record<NonNullable<AccessLogRow['reason']>, string> = {
   password: 'Contraseña incorrecta',
-  unknown: 'Correo sin cuenta',
+  unknown: 'Usuario que no existe',
   locked: 'Cuenta bloqueada',
 }
 
@@ -549,8 +590,8 @@ function AccessLog({ onError }: { onError: (e: unknown) => string }) {
                 <tr key={e.id}>
                   <td className="hf-acontacts__muted">{formatStamp(e.createdAt)}</td>
                   <td data-label="Cuenta">
-                    {e.user?.name ?? e.email}
-                    {e.user && <span className="hf-ausers__phone">{e.email}</span>}
+                    {e.user?.name ?? e.username}
+                    {e.user && <span className="hf-ausers__phone">{e.username}</span>}
                   </td>
                   <td data-label="Resultado">
                     {e.success ? <span className="hf-chip hf-chip--done">Entró</span> : <span className="hf-chip hf-chip--off">{e.reason ? REASON[e.reason] : 'Falló'}</span>}

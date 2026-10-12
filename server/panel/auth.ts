@@ -4,6 +4,7 @@ import type { Context, MiddlewareHandler } from 'hono'
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie'
 import { prisma } from '../shared/db'
 import { AdminRole } from '../generated/prisma/enums'
+import { isBirthdayToday } from '../shared/lib/birthdays'
 import { fail } from '../shared/lib/errors'
 
 const scryptAsync = promisify(scrypt) as (pw: string, salt: Buffer, len: number) => Promise<Buffer>
@@ -34,7 +35,7 @@ export async function verifyPassword(password: string, stored: string): Promise<
 
 const sha256 = (token: string) => createHash('sha256').update(token).digest('hex')
 
-/** Hash con el que se compara cuando el correo no existe, para que tarde lo mismo (no delata qué correos hay) */
+/** Hash con el que se compara cuando el usuario no existe, para que tarde lo mismo (no delata qué usuarios hay) */
 export const DUMMY_HASH = `${'0'.repeat(32)}:${'0'.repeat(128)}`
 
 /** Navegador del cliente, recortado para guardarlo */
@@ -61,7 +62,7 @@ export async function endSession(c: Context) {
 }
 
 export interface AdminVariables {
-  admin: { id: string; email: string; name: string; firstName: string; lastName: string; isRoot: boolean; role: AdminRole }
+  admin: { id: string; username: string; name: string; firstName: string; lastName: string; isRoot: boolean; role: AdminRole; birthday: boolean; mustChangePassword: boolean }
   /** Sesión de esta petición (para no cerrarla al cerrar "las demás") */
   sessionId: string
 }
@@ -70,7 +71,7 @@ export interface AdminVariables {
  * Lo que puede usar el rol STAFF, además de su sesión y su cuenta: Agenda (reservas y bloqueos) y Contactos.
  * Rutas bajo /api/admin; vale la ruta exacta o lo que cuelga de ella.
  */
-const STAFF_ALLOWED = ['/me', '/summary', '/events', '/bookings', '/blocks', '/contacts', '/users/me']
+const STAFF_ALLOWED = ['/me', '/summary', '/events', '/bookings', '/blocks', '/contacts', '/users/me', '/dedications']
 
 /** Va después de requireAdmin: el rol STAFF recibe 403 fuera de lo suyo (no basta con ocultar pestañas) */
 export const requireRole: MiddlewareHandler<{ Variables: AdminVariables }> = async (c, next) => {
@@ -87,7 +88,7 @@ export const requireAdmin: MiddlewareHandler<{ Variables: AdminVariables }> = as
   if (!token) return fail(c, 401, 'Inicia sesión')
   const session = await prisma.adminSession.findUnique({
     where: { tokenHash: sha256(token) },
-    include: { user: { select: { id: true, email: true, name: true, firstName: true, lastName: true, isRoot: true, role: true } } },
+    include: { user: { select: { id: true, username: true, name: true, firstName: true, lastName: true, isRoot: true, role: true, birthDate: true, mustChangePassword: true } } },
   })
   const now = Date.now()
   if (!session || session.expiresAt.getTime() <= now || session.lastSeenAt.getTime() + IDLE_MS <= now) {
@@ -98,7 +99,9 @@ export const requireAdmin: MiddlewareHandler<{ Variables: AdminVariables }> = as
   if (session.lastSeenAt.getTime() + TOUCH_MS <= now) {
     await prisma.adminSession.updateMany({ where: { id: session.id }, data: { lastSeenAt: new Date(now) } })
   }
-  c.set('admin', session.user)
+  // Solo si hoy es su cumpleaños (para la animación del panel); la fecha no sale de aquí
+  const { birthDate, ...user } = session.user
+  c.set('admin', { ...user, birthday: isBirthdayToday(birthDate) })
   c.set('sessionId', session.id)
   await next()
 }

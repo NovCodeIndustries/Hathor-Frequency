@@ -92,8 +92,8 @@ export const emitSitePublished = (disabled: string[]) => emitLive('site', { disa
 // ── Avisos del panel (solo admins con sesión: GET /api/admin/events) ──
 
 /** Qué cambió: el panel recarga los contadores de la barra y la vista que lo muestre */
-export type AdminEventKind = 'booking' | 'contact' | 'review' | 'block' | 'site' | 'content' | 'users'
-const ADMIN_KINDS: AdminEventKind[] = ['booking', 'contact', 'review', 'block', 'site', 'content', 'users']
+export type AdminEventKind = 'booking' | 'contact' | 'review' | 'block' | 'site' | 'content' | 'users' | 'dedications'
+const ADMIN_KINDS: AdminEventKind[] = ['booking', 'contact', 'review', 'block', 'site', 'content', 'users', 'dedications']
 
 type AdminListener = (kind: AdminEventKind) => void
 const adminListeners = new Set<AdminListener>()

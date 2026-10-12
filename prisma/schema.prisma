@@ -140,29 +140,36 @@ model BlockedSlot {
 
 /// Personas del estudio con acceso al panel (alta con `npm run admin:create`)
 model AdminUser {
-  id             String            @id @default(uuid()) @db.Uuid
-  email          String            @unique @db.VarChar(254)
+  id                  String               @id @default(uuid()) @db.Uuid
+  /// Con lo que entra al panel: inicial del primer nombre + primer apellido ("jnunez", "jnunez2"); sin correo
+  username            String               @unique @db.VarChar(60)
   /// Nombre completo (se arma con los cuatro campos)
-  name           String            @db.VarChar(120)
-  firstName      String            @default("") @map("first_name") @db.VarChar(60)
-  middleName     String?           @map("middle_name") @db.VarChar(60)
-  lastName       String            @default("") @map("last_name") @db.VarChar(60)
-  secondLastName String?           @map("second_last_name") @db.VarChar(60)
-  phone          String?           @db.VarChar(20)
+  name                String               @db.VarChar(120)
+  firstName           String               @default("") @map("first_name") @db.VarChar(60)
+  middleName          String?              @map("middle_name") @db.VarChar(60)
+  lastName            String               @default("") @map("last_name") @db.VarChar(60)
+  secondLastName      String?              @map("second_last_name") @db.VarChar(60)
+  phone               String?              @db.VarChar(20)
   /// Fecha de nacimiento: ese día la web festeja su cumpleaños (temporada `cumple`); la web solo recibe el nombre
-  birthDate      DateTime?         @map("birth_date") @db.Date
+  birthDate           DateTime?            @map("birth_date") @db.Date
   /// scrypt: "salt:hash" en hex
-  passwordHash   String            @map("password_hash") @db.VarChar(200)
+  passwordHash        String               @map("password_hash") @db.VarChar(200)
+  /// Contraseña temporal, cifrada con APP_SECRET (AES-GCM): el principal la ve hasta que la persona pone la suya; null después
+  tempPassword        String?              @map("temp_password") @db.VarChar(300)
+  /// Debe cambiar su contraseña (usuario nuevo o con temporal): la pantalla de bienvenida se lo pide
+  mustChangePassword  Boolean              @default(false) @map("must_change_password")
   /// Usuario principal (ROOT_ADMIN_EMAIL): siempre existe, no se puede borrar y es el único que administra usuarios
-  isRoot         Boolean           @default(false) @map("is_root")
+  isRoot              Boolean              @default(false) @map("is_root")
   /// Qué ve en el panel: ADMIN todo; STAFF solo Agenda, Contactos y Mi cuenta (el principal siempre es ADMIN)
-  role           AdminRole         @default(ADMIN)
+  role                AdminRole            @default(ADMIN)
   /// Intentos fallidos seguidos; al llegar a 5 la cuenta se bloquea 15 min (vengan de la IP que vengan)
-  failedLogins   Int               @default(0) @map("failed_logins")
-  lockedUntil    DateTime?         @map("locked_until") @db.Timestamptz(6)
-  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
-  sessions       AdminSession[]
-  loginEvents    AdminLoginEvent[]
+  failedLogins        Int                  @default(0) @map("failed_logins")
+  lockedUntil         DateTime?            @map("locked_until") @db.Timestamptz(6)
+  createdAt           DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  sessions            AdminSession[]
+  loginEvents         AdminLoginEvent[]
+  dedicationsReceived BirthdayDedication[] @relation("recipient")
+  dedicationsWritten  BirthdayDedication[] @relation("author")
 
   @@map("admin_users")
 }
@@ -192,11 +199,34 @@ model AdminSession {
   @@map("admin_sessions")
 }
 
+/// Dedicatoria de cumpleaños (panel): alguien del equipo firma la "funda" de quien cumple ese día (D2) y quien cumple
+/// las lee una a una (L1). Solo la lee quien la recibe; el resto del equipo solo ve quién firmó.
+model BirthdayDedication {
+  id          String    @id @default(uuid()) @db.Uuid
+  recipientId String    @map("recipient_id") @db.Uuid
+  recipient   AdminUser @relation("recipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  authorId    String    @map("author_id") @db.Uuid
+  author      AdminUser @relation("author", fields: [authorId], references: [id], onDelete: Cascade)
+  /// Día del cumpleaños (CDMX) al que pertenece
+  forDate     DateTime  @map("for_date") @db.Date
+  text        String    @db.VarChar(500)
+  /// Se firma como "Anónimo"
+  anonymous   Boolean   @default(false)
+  /// Cuándo la leyó quien cumple (null = nueva)
+  readAt      DateTime? @map("read_at") @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([recipientId, authorId, forDate])
+  @@index([recipientId, forDate])
+  @@map("birthday_dedications")
+}
+
 /// Registro de accesos al panel: cada intento de login, bueno o fallido (se guardan 90 días)
 model AdminLoginEvent {
   id        String     @id @default(uuid()) @db.Uuid
-  /// Lo que se escribió en el login (puede no ser un usuario)
-  email     String     @db.VarChar(254)
+  /// El usuario que se escribió en el login (puede no existir)
+  username  String     @db.VarChar(254)
   userId    String?    @map("user_id") @db.Uuid
   user      AdminUser? @relation(fields: [userId], references: [id], onDelete: SetNull)
   success   Boolean

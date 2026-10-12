@@ -7,6 +7,7 @@ import 'dotenv/config'
 import { Writable } from 'node:stream'
 import { stdin, stdout } from 'node:process'
 import { createInterface } from 'node:readline'
+import { normalizeUsername } from '../../../src/data/staff'
 import { hashPassword } from '../auth'
 import { prisma } from '../../shared/db'
 
@@ -29,24 +30,24 @@ async function ask(prompt: string, hidden = false): Promise<string> {
   return value
 }
 
-const email = (await ask('Correo: ')).trim().toLowerCase()
+const username = normalizeUsername(await ask('Usuario (p. ej. jnunez): '))
 const name = (await ask('Nombre: ')).trim()
 const password = await ask('Contraseña (mín. 10 caracteres): ', true)
 stdin.pause()
 
-if (!email.includes('@') || !name || password.length < 10) {
-  console.error('Datos inválidos: correo, nombre y contraseña de al menos 10 caracteres.')
+if (!/^[a-z0-9]{2,60}$/.test(username) || !name || password.length < 10) {
+  console.error('Datos inválidos: usuario (letras y números), nombre y contraseña de al menos 10 caracteres.')
   process.exit(1)
 }
 
 const passwordHash = await hashPassword(password)
 const user = await prisma.adminUser.upsert({
-  where: { email },
-  create: { email, name, firstName: name.split(' ')[0], lastName: name.split(' ').slice(1).join(' '), passwordHash },
+  where: { username },
+  create: { username, name, firstName: name.split(' ')[0], lastName: name.split(' ').slice(1).join(' '), passwordHash },
   update: { name, passwordHash },
 })
 // Al cambiar la contraseña se cierran las sesiones abiertas
 await prisma.adminSession.deleteMany({ where: { userId: user.id } })
-console.info(`✔ Admin listo: ${user.name} <${user.email}>`)
+console.info(`✔ Admin listo: ${user.name} (${user.username})`)
 await prisma.$disconnect()
 process.exit(0)

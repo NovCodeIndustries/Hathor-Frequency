@@ -1,0 +1,119 @@
+/* Cumpleaños en el panel (B3 en el login, B1 pastel, B4 globos) */
+
+/* ---------- B1 · Pastel a pantalla completa ---------- */
+.hf-bcake {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 46%, rgba(38,30,8,0.96), rgba(0,0,0,0.97) 60%);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: var(--c-text);
+  font-family: var(--font-body);
+}
+.hf-bcake__skip {
+  position: absolute;
+  top: 28px;
+  right: 32px;
+  z-index: 2;
+  height: 44px;
+  padding: 0 20px;
+  border: 1px solid var(--c-line-2);
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--c-text-2);
+  font-family: var(--font-body);
+  font-size: 13px;
+  letter-spacing: .14em;
+  cursor: pointer;
+}
+.hf-bcake__skip:hover { border-color: var(--c-gold); color: var(--c-gold); }
+.hf-bcake__body { position: relative; height: 100%; box-sizing: border-box; padding: 80px 16px 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; text-align: center; }
+.hf-bcake__kick { font-size: 12px; letter-spacing: .32em; text-transform: uppercase; color: var(--c-gold); }
+.hf-bcake__title { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 54px; line-height: 1.05; }
+.hf-bcake__title span { background: linear-gradient(90deg, var(--c-gold), var(--c-gold-2)); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 0 30px rgba(242,201,76,0.25); }
+.hf-bcake__cake { width: 300px; height: 250px; margin: 6px 0; }
+.hf-bcake__text { margin: 0; font-size: 18px; line-height: 1.5; color: var(--c-text-2); }
+.hf-bcake__text em { color: var(--c-gold); }
+.hf-bcake__flame { transform-box: fill-box; transform-origin: 50% 100%; animation: hf-bp-flame .5s ease-in-out infinite; }
+.hf-bcake__glow { animation: hf-bp-glow 1s ease-in-out infinite; }
+.hf-bcake__smoke { transform-box: fill-box; transform-origin: 50% 100%; animation: hf-bp-smoke 1.6s ease-out infinite; }
+
+.hf-bparty__btn {
+  height: 56px;
+  padding: 0 36px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--c-gold);
+  color: #000;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: var(--glow-btn);
+}
+.hf-bparty__btn:hover { box-shadow: var(--glow-btn-hover); }
+.hf-bparty__in { animation: hf-bp-rise .6s ease-out both; }
+
+.hf-bparty__confetti { position: absolute; inset: 0; pointer-events: none; }
+.hf-bparty__bit { position: absolute; top: 0; width: 8px; height: 14px; border-radius: 2px; animation: hf-bp-fall 3.2s linear infinite; }
+
+/* ---------- B4 · Globos en el panel ---------- */
+.hf-bballoons__banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  border: 1px solid var(--c-gold);
+  border-radius: var(--radius-card);
+  background: rgba(242,201,76,0.08);
+  box-shadow: 0 0 22px rgba(242,201,76,0.12);
+}
+.hf-bballoons__msg { font-family: var(--font-display); font-size: 20px; }
+.hf-bballoons__msg span { color: var(--c-gold); }
+.hf-bballoons__actions { display: flex; align-items: center; gap: 14px; flex: none; }
+.hf-bballoons__count { font-size: 13px; letter-spacing: .14em; color: var(--c-text-2); }
+
+.hf-bballoons { position: fixed; left: 260px; right: 0; bottom: 40px; height: 360px; z-index: 60; pointer-events: none; }
+.hf-bballoons__slot { position: absolute; animation: hf-bp-up 1.4s cubic-bezier(.2,.7,.2,1) both; }
+.hf-bballoons__float { animation: hf-bp-float 3s ease-in-out infinite; }
+.hf-bballoons__balloon { display: block; padding: 0; border: 0; background: none; cursor: pointer; pointer-events: auto; }
+.hf-bballoons__balloon:focus-visible { outline: 2px solid var(--c-gold); outline-offset: 4px; border-radius: 50%; }
+.hf-bballoons__popped { position: relative; width: 70px; height: 130px; }
+.hf-bballoons__burst { position: absolute; left: -10px; top: -6px; animation: hf-bp-burst .5s ease-out both; }
+.hf-bballoons__note { position: absolute; left: 50%; top: 0; width: 180px; margin-left: -90px; text-align: center; font-family: var(--font-display); font-size: 14px; color: var(--c-gold); animation: hf-bp-note 2.2s ease-out both; }
+
+@keyframes hf-bp-flame { 0%, 100% { transform: scaleY(1) translateX(0); } 30% { transform: scaleY(1.15) translateX(-1px); } 60% { transform: scaleY(.9) translateX(1px); } }
+@keyframes hf-bp-glow { 0%, 100% { opacity: .55; } 50% { opacity: .9; } }
+@keyframes hf-bp-smoke { 0% { transform: translateY(0) scale(.6); opacity: .7; } 100% { transform: translateY(-70px) scale(1.6); opacity: 0; } }
+@keyframes hf-bp-fall { 0% { transform: translateY(-40px) rotate(0); opacity: 0; } 10% { opacity: 1; } 100% { transform: translateY(110vh) rotate(540deg); opacity: .9; } }
+@keyframes hf-bp-rise { 0% { transform: translateY(30px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+@keyframes hf-bp-up { 0% { transform: translateY(420px); } 100% { transform: translateY(0); } }
+@keyframes hf-bp-float { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-16px) rotate(3deg); } }
+@keyframes hf-bp-burst { 0% { transform: scale(.4); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
+@keyframes hf-bp-note { 0% { transform: translateY(8px); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-30px); opacity: 0; } }
+
+@media (max-width: 1023px) {
+  .hf-bballoons { left: 0; }
+}
+@media (max-width: 767px) {
+  .hf-bcake__title { font-size: 34px; }
+  .hf-bcake__cake { width: 240px; height: 200px; }
+  .hf-bcake__text { font-size: 16px; }
+  .hf-bcake__skip { top: 20px; right: 16px; }
+  .hf-bcake .hf-bparty__btn { width: 100%; }
+  .hf-bballoons__banner { flex-direction: column; align-items: stretch; }
+  .hf-bballoons__msg { font-size: 18px; }
+  .hf-bballoons { height: 300px; bottom: 24px; }
+  .hf-bballoons__balloon svg { width: 52px; height: 98px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hf-bcake__flame, .hf-bcake__glow, .hf-bcake__smoke, .hf-bparty__in, .hf-bparty__bit,
+  .hf-bballoons__slot, .hf-bballoons__float, .hf-bballoons__burst, .hf-bballoons__note { animation: none; }
+  .hf-bparty__bit { display: none; }
+}

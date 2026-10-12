@@ -120,7 +120,7 @@ Hay dos APIs (Hono + Prisma), una por servicio, y cada navegador llama a la suya
 - **Una sesión por horario**: un índice único parcial en `bookings (date, start_time)` para PENDING/CONFIRMED evita reservas dobles, aunque lleguen a la vez. Cancelar libera el horario.
 - **Anti-spam**: campo honeypot (`website`) y límite de envíos por IP en memoria.
 - **Panel del estudio**: en http://localhost:5180/admin, un servicio aparte de la web (Inicio/dashboard, Agenda con reservas y bloqueos, Opiniones, Contactos, Sitio, Contenido, Usuarios).
-- **Usuario principal**: `ROOT_ADMIN_EMAIL` / `ROOT_ADMIN_PASSWORD` en `.env`. La API lo crea al arrancar si no existe. Es el único que crea o quita admins en **/admin/usuarios**, y no se puede borrar.
+- **Usuario principal**: `ROOT_ADMIN_USERNAME` / `ROOT_ADMIN_PASSWORD` en `.env`. Al panel se entra con **usuario** ("jnunez"), no con correo. Al dar de alta a alguien se genera una contraseña temporal (cifrada con `APP_SECRET` de `.env` para que el principal la vea hasta que la persona ponga la suya en la bienvenida). La API lo crea al arrancar si no existe. Es el único que crea o quita admins en **/admin/usuarios**, y no se puede borrar.
 - **Admin**: usuarios en `admin_users` (contraseña con scrypt), sesión por cookie httpOnly `hf_admin` (se cierra tras 12 h sin uso o a los 7 días). No hay registro público: `npm run admin:create`.
 - **Login**: 10 intentos por IP cada 15 min y 5 fallidos seguidos bloquean la cuenta 15 min. Cada intento queda en el registro de accesos (Usuarios).
 - **Producción**: `VITE_WEB_URL` y `VITE_PANEL_URL` en `.env` (p. ej. `https://hathorfrequency.mx` y `https://panel.hathorfrequency.mx`) antes de `npm run build`.

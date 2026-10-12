@@ -1,7 +1,7 @@
-import { useId, useState, type FormEvent } from 'react'
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
-import { WEB_URL } from '../../lib/origins'
 import { adminApi } from '../../lib/adminApi'
+import { celebratedToday, setPartyStage, startParty } from '../../lib/birthdayParty'
 import { LoginAlien, type AlienMood } from './LoginAlien'
 import './AdminLayout.css'
 import './AdminLogin.css'
@@ -10,26 +10,47 @@ const ARC = 'M 550 10 A 540 540 0 0 1 1010 270'
 /** Lo que dura el brinco del alien antes de entrar al panel */
 const OK_DELAY_MS = 650
 
-/** Login del panel (diseño L1 + alien A4/M1): tarjeta centrada sobre los anillos de vinil */
+/**
+ * Login del panel (diseño L1 + alien A4/M1): tarjeta centrada sobre los anillos de vinil.
+ * En el cumpleaños de quien entra (una vez al día), el alien se pone el gorro y le canta (B3) antes del panel.
+ */
 export function AdminLogin() {
   const id = useId()
   const navigate = useNavigate()
   const [params] = useSearchParams()
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [sending, setSending] = useState(false)
   const [mood, setMood] = useState<AlienMood>('listen')
+  /** Cumpleaños: el nombre de quien entró (null = login normal) */
+  const [party, setParty] = useState<string | null>(null)
+  const [thanked, setThanked] = useState(false)
+  const thanksRef = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    if (party) thanksRef.current?.focus()
+  }, [party])
+  // Al salir de un campo vuelve a escuchar música, salvo que ya esté de fiesta
+  const listen = () => setMood((m) => (m === 'party' || m === 'ok' ? m : 'listen'))
+  const next = params.get('next')
+  const goIn = () => navigate(next?.startsWith('/admin') ? next : '/admin', { replace: true })
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setSending(true)
     setError('')
     try {
-      await adminApi.login(email.trim(), password)
+      const user = await adminApi.login(username.trim(), password)
+      if (user.birthday && !celebratedToday(user.id)) {
+        // Hoy cumple: el alien le canta; después el panel sigue con el pastel y los globos
+        startParty(user.id)
+        setParty(user.firstName || user.name)
+        setMood('party')
+        setSending(false)
+        return
+      }
       setMood('ok')
-      const next = params.get('next')
-      setTimeout(() => navigate(next?.startsWith('/admin') ? next : '/admin', { replace: true }), OK_DELAY_MS)
+      setTimeout(goIn, OK_DELAY_MS)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No pudimos iniciar sesión')
       setMood('error')
@@ -48,9 +69,58 @@ export function AdminLogin() {
         <path d={ARC} stroke="currentColor" strokeOpacity=".6" strokeWidth="2" />
       </svg>
 
-      <div className="hf-login__stage">
+      <div className={`hf-login__stage ${party ? 'is-party' : ''}`}>
         <LoginAlien mood={mood} />
 
+        {party && (
+          <p className="hf-login__bubble" aria-live="polite">
+            {thanked ? (
+              <>
+                ¡De nada! <span>Hoy mando yo los beats.</span>
+              </>
+            ) : (
+              <>
+                ♪ Feliz cumpleaños, <span>{party}</span> ♪<small>Te la canto desde Andrómeda.</small>
+              </>
+            )}
+          </p>
+        )}
+
+        {party ? (
+          <div className="hf-login__card hf-login__party">
+            <div className="hf-login__brand">
+              <span className="hf-login__logo">HATHOR</span>
+              <span className="hf-login__kicker">Hoy es tu cumpleaños</span>
+            </div>
+            <h1 className="hf-login__party-title">
+              ¡Felicidades, <span>{party}!</span>
+            </h1>
+            <p className="hf-login__help">El estudio entero te desea un año lleno de buenas tomas.</p>
+            <button
+              ref={thanksRef}
+              type="button"
+              className="hf-login__submit"
+              disabled={thanked}
+              onClick={() => {
+                setThanked(true)
+                setMood('ok')
+                setTimeout(goIn, OK_DELAY_MS * 2)
+              }}
+            >
+              Gracias, alien
+            </button>
+            <button
+              type="button"
+              className="hf-login__skip"
+              onClick={() => {
+                setPartyStage(null)
+                goIn()
+              }}
+            >
+              Saltar el festejo
+            </button>
+          </div>
+        ) : (
         <form className="hf-login__card" onSubmit={handleSubmit}>
           <div className="hf-login__brand">
             <span className="hf-login__logo">HATHOR</span>
@@ -58,19 +128,23 @@ export function AdminLogin() {
             <span className="hf-login__kicker">Panel del estudio</span>
           </div>
 
-          <label className="hf-admin__field" htmlFor={`${id}-email`}>
-            Correo
+          <label className="hf-admin__field" htmlFor={`${id}-user`}>
+            Usuario
             <input
-              id={`${id}-email`}
+              id={`${id}-user`}
               className="hf-admin__input hf-login__input"
-              type="email"
+              type="text"
               autoComplete="username"
-              placeholder="tu@hathorfrequency.mx"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              placeholder="jnunez"
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              maxLength={60}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               onFocus={() => setMood('email')}
-              onBlur={() => setMood('listen')}
+              onBlur={listen}
             />
           </label>
           <label className="hf-admin__field" htmlFor={`${id}-password`}>
@@ -84,7 +158,7 @@ export function AdminLogin() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onFocus={() => setMood('pass')}
-              onBlur={() => setMood('listen')}
+              onBlur={listen}
             />
           </label>
 
@@ -96,9 +170,9 @@ export function AdminLogin() {
 
           <p className="hf-login__help">¿Sin acceso? Pídelo a quien administra el estudio.</p>
         </form>
+        )}
       </div>
 
-      <a href={WEB_URL} className="hf-login__back">← Volver al sitio</a>
     </div>
   )
 }

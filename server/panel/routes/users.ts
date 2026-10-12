@@ -5,7 +5,8 @@ import { prisma } from '../../shared/db'
 import { parseBody } from '../../shared/lib/body'
 import { fail } from '../../shared/lib/errors'
 import { emitAdmin } from '../../shared/lib/siteEvents'
-import { staffDomain, staffEmailLocal } from '../../../src/data/staff'
+import { staffUsername } from '../../../src/data/staff'
+import { generateTempPassword, openTempPassword, sealTempPassword } from '../lib/tempPassword'
 import { AdminRole } from '../../generated/prisma/enums'
 import { dateFromISO, isoFromDate, todayISO } from '../../shared/lib/dates'
 
@@ -18,7 +19,7 @@ const onlyRoot: MiddlewareHandler<{ Variables: AdminVariables }> = async (c, nex
 }
 
 const password = z.string().min(10, 'Mínimo 10 caracteres').max(200)
-const select = { id: true, email: true, name: true, firstName: true, middleName: true, lastName: true, secondLastName: true, phone: true, isRoot: true, role: true, birthDate: true, lockedUntil: true, createdAt: true } as const
+const select = { id: true, username: true, name: true, firstName: true, middleName: true, lastName: true, secondLastName: true, phone: true, isRoot: true, role: true, birthDate: true, lockedUntil: true, tempPassword: true, mustChangePassword: true, createdAt: true } as const
 const part = (max: number) => z.string().trim().max(max)
 /** Nombre completo: primer nombre, segundo nombre, primer apellido, segundo apellido */
 const fullName = (u: { firstName: string; middleName?: string; lastName: string; secondLastName?: string }) =>
@@ -30,8 +31,25 @@ users.patch('/me/password', async (c) => {
   if (body instanceof Response) return body
   const me = await prisma.adminUser.findUnique({ where: { id: c.get('admin').id } })
   if (!me || !(await verifyPassword(body.current, me.passwordHash))) return fail(c, 400, 'La contraseña actual no es correcta', { current: 'No coincide' })
-  await prisma.adminUser.update({ where: { id: me.id }, data: { passwordHash: await hashPassword(body.next) } })
+  // Ya es suya: la temporal se borra y deja de pedirle cambiarla
+  await prisma.adminUser.update({ where: { id: me.id }, data: { passwordHash: await hashPassword(body.next), tempPassword: null, mustChangePassword: false } })
   await prisma.adminSession.deleteMany({ where: { userId: me.id, id: { not: c.get('sessionId') } } })
+  return c.json({ ok: true })
+})
+
+/**
+ * Bienvenida (W5): quien entró con su contraseña temporal pone la suya sin volver a escribir la temporal.
+ * Solo mientras tenga temporal; después, en Mi cuenta pide la actual.
+ */
+users.patch('/me/first-password', async (c) => {
+  const body = await parseBody(c, z.object({ next: password }))
+  if (body instanceof Response) return body
+  const me = await prisma.adminUser.findUnique({ where: { id: c.get('admin').id } })
+  if (!me?.mustChangePassword) return fail(c, 400, 'Tu contraseña ya es tuya: cámbiala en Mi cuenta')
+  if (openTempPassword(me.tempPassword) === body.next) return fail(c, 400, 'Elige una distinta a la temporal', { next: 'Es la temporal' })
+  await prisma.adminUser.update({ where: { id: me.id }, data: { passwordHash: await hashPassword(body.next), tempPassword: null, mustChangePassword: false } })
+  await prisma.adminSession.deleteMany({ where: { userId: me.id, id: { not: c.get('sessionId') } } })
+  emitAdmin('users')
   return c.json({ ok: true })
 })
 
@@ -68,7 +86,7 @@ users.get('/access-log', onlyRoot, async (c) =>
     await prisma.adminLoginEvent.findMany({
       orderBy: { createdAt: 'desc' },
       take: 100,
-      select: { id: true, email: true, success: true, reason: true, ip: true, userAgent: true, createdAt: true, user: { select: { name: true } } },
+      select: { id: true, username: true, success: true, reason: true, ip: true, userAgent: true, createdAt: true, user: { select: { name: true } } },
     }),
   ),
 )
@@ -91,18 +109,23 @@ const profileSchema = z.object({
 })
 
 /** Fila de un usuario para el panel: la fecha de nacimiento como "YYYY-MM-DD" */
-const toRow = <T extends { birthDate: Date | null }>(u: T) => ({ ...u, birthDate: u.birthDate ? isoFromDate(u.birthDate) : null })
+const toRow = <T extends { birthDate: Date | null; tempPassword: string | null; mustChangePassword: boolean }>(u: T) => ({
+  ...u,
+  birthDate: u.birthDate ? isoFromDate(u.birthDate) : null,
+  // Solo mientras no la cambie: el principal la ve en claro para dársela
+  tempPassword: u.mustChangePassword ? openTempPassword(u.tempPassword) : null,
+})
 
-/** Correo libre para "jnunez": jnunez@…, o jnunez2@…, jnunez3@… (sin contar el del propio usuario) */
-async function freeStaffEmail(local: string, exceptId?: string): Promise<string> {
+/** Usuario libre para "jnunez": jnunez, o jnunez2, jnunez3… (sin contar el del propio usuario) */
+async function freeUsername(base: string, exceptId?: string): Promise<string> {
   const taken = new Set(
-    (await prisma.adminUser.findMany({ where: { email: { startsWith: local }, id: exceptId ? { not: exceptId } : undefined }, select: { email: true } })).map(
-      (u) => u.email,
+    (await prisma.adminUser.findMany({ where: { username: { startsWith: base }, id: exceptId ? { not: exceptId } : undefined }, select: { username: true } })).map(
+      (u) => u.username,
     ),
   )
-  let email = `${local}@${staffDomain}`
-  for (let n = 2; taken.has(email); n++) email = `${local}${n}@${staffDomain}`
-  return email
+  let username = base
+  for (let n = 2; taken.has(username); n++) username = `${base}${n}`
+  return username
 }
 
 users.get('/', onlyRoot, async (c) => {
@@ -113,12 +136,13 @@ users.get('/', onlyRoot, async (c) => {
 })
 
 users.post('/', onlyRoot, async (c) => {
-  const body = await parseBody(c, profileSchema.extend({ password }))
+  const body = await parseBody(c, profileSchema)
   if (body instanceof Response) return body
-  // El correo se genera: primera letra del primer nombre + primer apellido; si ya existe, jnunez2, jnunez3…
-  const local = staffEmailLocal(body.firstName, body.lastName)
-  if (!local) return fail(c, 400, 'Datos inválidos', { firstName: 'Usa letras en el nombre y el apellido' })
-  const email = await freeStaffEmail(local)
+  // El usuario se genera: primera letra del primer nombre + primer apellido; si ya existe, jnunez2, jnunez3…
+  const base = staffUsername(body.firstName, body.lastName)
+  if (!base) return fail(c, 400, 'Datos inválidos', { firstName: 'Usa letras en el nombre y el apellido' })
+  const username = await freeUsername(base)
+  const temp = generateTempPassword()
   const user = await prisma.adminUser.create({
     data: {
       firstName: body.firstName,
@@ -127,33 +151,37 @@ users.post('/', onlyRoot, async (c) => {
       secondLastName: body.secondLastName || null,
       phone: body.phone,
       name: fullName({ ...body, middleName: body.middleName || undefined, secondLastName: body.secondLastName || undefined }),
-      email,
+      username,
       role: body.role ?? AdminRole.ADMIN,
       birthDate: body.birthDate ? dateFromISO(body.birthDate) : null,
-      passwordHash: await hashPassword(body.password),
+      // La contraseña es temporal: se genera aquí y la persona la cambia en la bienvenida
+      passwordHash: await hashPassword(temp),
+      tempPassword: sealTempPassword(temp),
+      mustChangePassword: true,
     },
     select,
   })
   emitAdmin('users')
-  return c.json(toRow(user), 201)
+  // La temporal va en claro esta vez aunque falte APP_SECRET (entonces no se vuelve a ver)
+  return c.json({ ...toRow(user), tempPassword: temp }, 201)
 })
 
 /**
- * El principal edita el nombre y el teléfono de un usuario. Con `regenerateEmail`, el correo se vuelve a armar
- * con el nombre nuevo (el del principal no cambia: es ROOT_ADMIN_EMAIL). Cambiar el correo cierra sus sesiones.
+ * El principal edita el nombre y el teléfono de un usuario. Con `regenerateUsername`, el usuario se vuelve a armar
+ * con el nombre nuevo (el del principal no cambia: es ROOT_ADMIN_USERNAME). Cambiar el usuario cierra sus sesiones.
  */
 users.patch('/:id', onlyRoot, async (c) => {
-  const body = await parseBody(c, profileSchema.extend({ regenerateEmail: z.boolean().optional() }))
+  const body = await parseBody(c, profileSchema.extend({ regenerateUsername: z.boolean().optional() }))
   if (body instanceof Response) return body
   const id = c.req.param('id')
   if (!z.uuid().safeParse(id).success) return fail(c, 404, 'Usuario no encontrado')
   const user = await prisma.adminUser.findUnique({ where: { id } })
   if (!user) return fail(c, 404, 'Usuario no encontrado')
-  let email = user.email
-  if (body.regenerateEmail && !user.isRoot) {
-    const local = staffEmailLocal(body.firstName, body.lastName)
-    if (!local) return fail(c, 400, 'Datos inválidos', { firstName: 'Usa letras en el nombre y el apellido' })
-    email = await freeStaffEmail(local, id)
+  let username = user.username
+  if (body.regenerateUsername && !user.isRoot) {
+    const base = staffUsername(body.firstName, body.lastName)
+    if (!base) return fail(c, 400, 'Datos inválidos', { firstName: 'Usa letras en el nombre y el apellido' })
+    username = await freeUsername(base, id)
   }
   const middleName = body.middleName || null
   const secondLastName = body.secondLastName || null
@@ -166,7 +194,7 @@ users.patch('/:id', onlyRoot, async (c) => {
       secondLastName,
       phone: body.phone,
       name: fullName({ ...body, middleName: middleName ?? undefined, secondLastName: secondLastName ?? undefined }),
-      email,
+      username,
       // El principal siempre es ADMIN; el rol nuevo vale desde su siguiente petición
       role: user.isRoot ? AdminRole.ADMIN : (body.role ?? user.role),
       // Sin el campo, se queda la que tenía; null la borra
@@ -174,24 +202,27 @@ users.patch('/:id', onlyRoot, async (c) => {
     },
     select,
   })
-  // Con otro correo entra con el nuevo: sus sesiones se cierran (de la tuya, todas menos esta)
-  if (email !== user.email) await prisma.adminSession.deleteMany({ where: { userId: id, id: { not: c.get('sessionId') } } })
+  // Con otro usuario entra con el nuevo: sus sesiones se cierran (de la tuya, todas menos esta)
+  if (username !== user.username) await prisma.adminSession.deleteMany({ where: { userId: id, id: { not: c.get('sessionId') } } })
   emitAdmin('users')
   return c.json(toRow(updated))
 })
 
-/** El principal pone una contraseña nueva a otro usuario (y le cierra las sesiones) */
-users.patch('/:id/password', onlyRoot, async (c) => {
-  const body = await parseBody(c, z.object({ password }))
-  if (body instanceof Response) return body
+/** El principal le genera una contraseña temporal nueva (si la perdió): quita el bloqueo y cierra sus sesiones */
+users.post('/:id/temp-password', onlyRoot, async (c) => {
   const id = c.req.param('id')
+  if (!z.uuid().safeParse(id).success) return fail(c, 404, 'Usuario no encontrado')
   const user = await prisma.adminUser.findUnique({ where: { id } })
   if (!user) return fail(c, 404, 'Usuario no encontrado')
-  // Una contraseña nueva también quita el bloqueo por intentos fallidos
-  await prisma.adminUser.update({ where: { id }, data: { passwordHash: await hashPassword(body.password), failedLogins: 0, lockedUntil: null } })
-  // Sus sesiones abiertas se cierran (de la tuya, todas menos esta)
-  await prisma.adminSession.deleteMany({ where: { userId: id, id: { not: c.get('sessionId') } } })
-  return c.json({ ok: true })
+  if (id === c.get('admin').id) return fail(c, 400, 'Tu propia contraseña cámbiala en Mi cuenta')
+  const temp = generateTempPassword()
+  await prisma.adminUser.update({
+    where: { id },
+    data: { passwordHash: await hashPassword(temp), tempPassword: sealTempPassword(temp), mustChangePassword: true, failedLogins: 0, lockedUntil: null },
+  })
+  await prisma.adminSession.deleteMany({ where: { userId: id } })
+  emitAdmin('users')
+  return c.json({ tempPassword: temp })
 })
 
 users.delete('/:id', onlyRoot, async (c) => {

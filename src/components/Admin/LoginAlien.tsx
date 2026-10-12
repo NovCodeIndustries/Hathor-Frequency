@@ -1,13 +1,14 @@
 import './LoginAlien.css'
 
-export type AlienMood = 'listen' | 'email' | 'pass' | 'error' | 'ok'
+export type AlienMood = 'listen' | 'email' | 'pass' | 'error' | 'ok' | 'party'
 
 const LABEL: Record<AlienMood, string> = {
   listen: 'Alien con audífonos escuchando música',
-  email: 'El alien mira el campo de correo',
+  email: 'El alien mira el campo de usuario',
   pass: 'El alien se tapa los ojos mientras escribes la contraseña',
   error: 'El alien se asusta: se le cae un audífono',
   ok: 'El alien brinca de gusto',
+  party: 'El alien, con gorro de fiesta, te canta las mañanitas',
 }
 
 const NOTE_EIGHTH = 'M8 0v14a4 4 0 1 1-2-3.4V0z'
@@ -28,12 +29,20 @@ function Hand({ className }: { className: string }) {
  * con audífonos y reacciona al formulario. La cabeza va detrás de la tarjeta y las manos delante.
  */
 export function LoginAlien({ mood }: { mood: AlienMood }) {
-  const notes = mood === 'listen' || mood === 'ok'
+  const notes = mood === 'listen' || mood === 'ok' || mood === 'party'
   return (
     <>
       <div className="hf-lalien" data-mood={mood}>
         <svg className="hf-lalien__svg" viewBox="-15 -12 150 114" role="img" aria-label={LABEL[mood]}>
           <g className="hf-lalien__head">
+            {/* Cumpleaños (B3): gorro de fiesta */}
+            {mood === 'party' && (
+              <g className="hf-lalien__hat">
+                <path d="M44 -2 L60 -54 L76 -2Z" fill="#E8577D" stroke="#F2C94C" strokeWidth="1.6" />
+                <path d="M49 -16 L71 -20 M46 -6 L74 -10" stroke="#F2C94C" strokeWidth="2" />
+                <circle cx="60" cy="-56" r="5" fill="#F2C94C" />
+              </g>
+            )}
             <path className="hf-lalien__skin" d="M60 6 C88 6 101 28 99 50 C97 72 77 94 60 96 C43 94 23 72 21 50 C19 28 32 6 60 6Z" />
 
             {mood === 'listen' && (
@@ -61,7 +70,7 @@ export function LoginAlien({ mood }: { mood: AlienMood }) {
                 <circle className="hf-lalien__glint hf-lalien__glint--wide" cx="78" cy="50" r="2.6" />
               </>
             )}
-            {mood === 'ok' && (
+            {(mood === 'ok' || mood === 'party') && (
               <path className="hf-lalien__line" d="M31 52 C37 44 49 44 54 52 M89 52 C83 44 71 44 66 52" />
             )}
 
@@ -73,6 +82,13 @@ export function LoginAlien({ mood }: { mood: AlienMood }) {
             <rect className="hf-lalien__shell" x="94" y="36" width="20" height="34" rx="9" />
             <rect className="hf-lalien__pad" x="99" y="43" width="10" height="20" rx="4" />
             {mood === 'error' && <text className="hf-lalien__huh" x="112" y="10">?</text>}
+            {/* Cumpleaños (B3): espantasuegras que se estira */}
+            {mood === 'party' && (
+              <g className="hf-lalien__horn">
+                <path d="M66 74 L118 66 L120 82 L66 80Z" fill="#3FA9F5" stroke="#F2C94C" strokeWidth="1.4" />
+                <path d="M84 72 L84 79 M100 70 L100 80" stroke="#F2C94C" strokeWidth="1.4" />
+              </g>
+            )}
           </g>
         </svg>
 

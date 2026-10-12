@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { timePattern } from '../../../src/data/booking'
+import { normalizeUsername } from '../../../src/data/staff'
 import { DUMMY_HASH, endSession, requireAdmin, requireRole, startSession, userAgentOf, verifyPassword, type AdminVariables } from '../auth'
 import { prisma } from '../../shared/db'
 import { BookingStatus, PaymentStatus, ReviewStatus } from '../../generated/prisma/enums'
@@ -19,9 +20,10 @@ import { POLL_WAIT_MS, adminFeed, emitAdmin, emitAvailability, emitLive, onAdmin
 import { streamSSE } from 'hono/streaming'
 import { adminSite } from './site'
 import { users } from './users'
+import { dedications } from './dedications'
 import { publishedDisabled } from '../../shared/lib/site'
 import { getMaintenance } from '../../shared/lib/maintenance'
-import { birthdaysToday } from '../../shared/lib/birthdays'
+import { birthdaysToday, isBirthdayToday } from '../../shared/lib/birthdays'
 import { bookingSlots } from '../../shared/lib/slots'
 import { isBlocked } from '../../shared/lib/availability'
 import { serviceFromLabel } from '../../shared/lib/services'
@@ -31,7 +33,8 @@ export const admin = new Hono<{ Variables: AdminVariables }>()
 
 // ── Sesión ────────────────────────────────────────────────
 
-const loginSchema = z.object({ email: z.string().trim().toLowerCase().max(254), password: z.string().min(1).max(200) })
+// Se entra con el usuario ("fruiz"); si escriben el correo de antes, se toma lo de antes de la @
+const loginSchema = z.object({ username: z.string().max(254).transform(normalizeUsername), password: z.string().min(1).max(200) })
 /** Intentos fallidos seguidos antes de bloquear la cuenta, y por cuánto */
 const LOCK_AFTER = 5
 const LOCK_MS = 15 * 60_000
@@ -41,15 +44,15 @@ admin.post('/login', rateLimit({ max: 10, windowMs: 15 * 60_000 }), async (c) =>
   if (body instanceof Response) return body
   const ip = clientIp(c)
   const log = (success: boolean, userId: string | null, reason: 'password' | 'unknown' | 'locked' | null) =>
-    prisma.adminLoginEvent.create({ data: { email: body.email.slice(0, 254), userId, success, reason, ip, userAgent: userAgentOf(c) } })
+    prisma.adminLoginEvent.create({ data: { username: body.username.slice(0, 254), userId, success, reason, ip, userAgent: userAgentOf(c) } })
 
-  const user = await prisma.adminUser.findUnique({ where: { email: body.email } })
+  const user = await prisma.adminUser.findUnique({ where: { username: body.username } })
   if (user?.lockedUntil && user.lockedUntil > new Date()) {
     await log(false, user.id, 'locked')
     const min = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60_000)
     return fail(c, 429, `Demasiados intentos fallidos. Intenta de nuevo en ${min} min.`)
   }
-  // Con un correo sin cuenta también se compara una contraseña, para que tarde lo mismo
+  // Con un usuario que no existe también se compara una contraseña, para que tarde lo mismo
   const ok = await verifyPassword(body.password, user?.passwordHash ?? DUMMY_HASH)
   if (!user || !ok) {
     if (user) {
@@ -61,7 +64,7 @@ admin.post('/login', rateLimit({ max: 10, windowMs: 15 * 60_000 }), async (c) =>
       })
     }
     await log(false, user?.id ?? null, user ? 'password' : 'unknown')
-    return fail(c, 401, 'Correo o contraseña incorrectos')
+    return fail(c, 401, 'Usuario o contraseña incorrectos')
   }
   if (user.failedLogins || user.lockedUntil) await prisma.adminUser.update({ where: { id: user.id }, data: { failedLogins: 0, lockedUntil: null } })
   await startSession(c, user.id, ip)
@@ -69,7 +72,7 @@ admin.post('/login', rateLimit({ max: 10, windowMs: 15 * 60_000 }), async (c) =>
   // El registro guarda 90 días
   void prisma.adminLoginEvent.deleteMany({ where: { createdAt: { lt: new Date(Date.now() - 90 * 86_400_000) } } }).catch(() => {})
   emitAdmin('users')
-  return c.json({ id: user.id, email: user.email, name: user.name, firstName: user.firstName, lastName: user.lastName, isRoot: user.isRoot, role: user.role })
+  return c.json({ id: user.id, username: user.username, name: user.name, firstName: user.firstName, lastName: user.lastName, isRoot: user.isRoot, role: user.role, birthday: isBirthdayToday(user.birthDate), mustChangePassword: user.mustChangePassword })
 })
 
 admin.post('/logout', async (c) => {
@@ -372,6 +375,10 @@ admin.route('/site', adminSite)
 // ── Usuarios del panel ────────────────────────────────────
 
 admin.route('/users', users)
+
+// ── Dedicatorias de cumpleaños ────────────────────────────
+
+admin.route('/dedications', dedications)
 
 // ── Medios (F1: ¿existe la ruta en el HDD?) ───────────────
 
