@@ -24,7 +24,7 @@ function PageGate({ id, title, children }: { id: string; title: string; children
       <div className="hf-edit-page">
         <span className="hf-edit-page__kick">Página oculta</span>
         <span className="hf-edit-page__title">Quien entre aquí verá “Próximamente”.</span>
-        <span className="hf-edit-page__text">Sale del menú y se ocultan los botones que llevan a esta página.</span>
+        <span className="hf-edit-page__text">Sigue en el menú; dentro de la web se ocultan los botones y links que llevan a esta página.</span>
       </div>
     )
   }

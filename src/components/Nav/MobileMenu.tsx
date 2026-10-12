@@ -1,14 +1,14 @@
 import { NavLink } from 'react-router'
 import { navAll } from '../../data/site'
 import { useContent } from '../../lib/content'
-import { useVisibleLinks } from '../../lib/siteModules'
 
 interface MobileMenuProps {
   onNavigate: () => void
 }
 
 export function MobileMenu({ onNavigate }: MobileMenuProps) {
-  const links = useVisibleLinks(navAll)
+  // Las páginas apagadas siguen en el menú (al entrar se ve "Próximamente")
+  const links = navAll
   const { slogan } = useContent('sitio')
   return (
     <nav id="m-menu" className="hf-mmenu" aria-label="Principal">

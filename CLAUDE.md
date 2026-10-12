@@ -65,7 +65,7 @@ La landing está construida (React + TypeScript + Vite) siguiendo `docs/DESIGN.m
 - Módulos del sitio (panel · Sitio), para apagar cosas sin borrarlas:
   - registro en `src/data/modules.ts`, con páginas, secciones, elementos de listas y globales; **los ids publicados no se cambian**;
   - la web los lee con `src/lib/siteModules.ts` (`useModule`, `useModuleFilter`, `useVisibleLinks`) y `<Module id>` / `PageLink`; se cargan antes de pintar, en `main.tsx`;
-  - `Button` con `to` se oculta solo si su página está apagada; una página apagada muestra "Próximamente" (`PageGate` en `pages.tsx`);
+  - una página apagada **sigue en el menú** (Nav y menú móvil, desde el 2026-10-12) y al entrar muestra "Próximamente" (`PageGate` en `pages.tsx`); dentro de la web, `Button` con `to` y `PageLink` sí se ocultan (salvo `Button always`, el Reservar del menú);
   - en la BD están `SiteDraft` (borrador) y `SiteVersion` (publicaciones);
   - la API es `GET /api/site` y `/api/admin/site/*`, y los formularios de páginas apagadas responden 403;
   - **en vivo**: al publicar, `GET /api/site/events` (SSE del servicio web, `server/shared/lib/siteEvents.ts`; el aviso llega del panel por `NOTIFY`) avisa a las páginas abiertas y cambian sin recargar. Si SSE no responde en 6 s (el túnel rápido de Cloudflare retiene el cuerpo del SSE), los mismos avisos llegan por long-polling (`GET /api/site/events/poll` y `/api/admin/events/poll`, feeds `siteFeed`/`adminFeed` de `siteEvents.ts`, cliente `src/lib/longPoll.ts`). Además se recarga todo al volver a la pestaña (`onRefresh`);

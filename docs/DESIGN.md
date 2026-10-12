@@ -764,7 +764,7 @@ Cambio del 2026-10-11. Es privado y, desde el 2026-10-12, **es otra app y otro s
   - **Vista previa**: la web real en un iframe (`?modo=edicion`). Arriba, la URL y el switch de la página actual; abajo, el contenido:
     - cada sección (`<Module>`) lleva un marco punteado dorado, su nombre en una pill arriba a la izquierda y el switch a la derecha;
     - **H2 · oculto**: conserva su tamaño, al 35% con trama, etiqueta "Oculto" (o "Oculto por {padre}") y contenido inerte;
-    - una página oculta muestra el aviso "Quien entre aquí verá 'Próximamente'";
+    - una página oculta muestra el aviso "Quien entre aquí verá 'Próximamente'" y "Sigue en el menú; dentro de la web se ocultan los botones y links que llevan a esta página." Desde el 2026-10-12 **una página apagada sigue en el menú** (escritorio y móvil, también el botón Reservar): al entrar se ve "Próximamente";
     - en modo edición no se muestran la bienvenida, el platillo ni los easter eggs, y Umami no cuenta.
   - **L · Elementos**: artistas, paquetes, canales de la consola y preguntas llevan un switch pequeño en la esquina; ocultos, se atenúan con trama.
   - **G · Globales**: tarjetas con nombre, descripción y switch (ticker, platillo, bienvenida, temporadas, easter eggs, redes y WhatsApp).

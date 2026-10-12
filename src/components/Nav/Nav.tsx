@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router'
 import { bookingCta, navAfterCta, navLeft, navRight } from '../../data/site'
 import { Button } from '../shared/Button'
-import { useVisibleLinks } from '../../lib/siteModules'
 import { useSeason } from '../../lib/useSeason'
 import { SeasonGarland } from '../Season/SeasonGarland'
 import { Logo } from '../shared/Logo'
@@ -16,9 +15,10 @@ export function Nav() {
   const headerRef = useRef<HTMLElement>(null)
   const burgerRef = useRef<HTMLButtonElement>(null)
   const { pathname } = useLocation()
-  const left = useVisibleLinks(navLeft)
-  const right = useVisibleLinks(navRight)
-  const after = useVisibleLinks(navAfterCta)
+  // Las páginas apagadas en el panel · Sitio siguen en el menú: al entrar se ve "Próximamente"
+  const left = navLeft
+  const right = navRight
+  const after = navAfterCta
 
   // Cerrar el menú al cambiar de página
   const [lastPath, setLastPath] = useState(pathname)
@@ -65,7 +65,7 @@ export function Nav() {
               <NavLink key={l.href} to={l.href}>{l.label}</NavLink>
             ))}
           </nav>
-          <Button variant="outline-gold" to={bookingCta.href}>{bookingCta.label}</Button>
+          <Button variant="outline-gold" to={bookingCta.href} always>{bookingCta.label}</Button>
           {after.map((l) => (
             <NavLink key={l.href} to={l.href}>{l.label}</NavLink>
           ))}
@@ -74,7 +74,7 @@ export function Nav() {
         {/* Móvil */}
         <Logo size="navMobile" className="hf-nav__logo--mobile" badge={badge} />
         <div className="hf-nav__mobile-actions">
-          <Button variant="outline-gold" to={bookingCta.href}>{bookingCta.label}</Button>
+          <Button variant="outline-gold" to={bookingCta.href} always>{bookingCta.label}</Button>
           <button
             ref={burgerRef}
             type="button"

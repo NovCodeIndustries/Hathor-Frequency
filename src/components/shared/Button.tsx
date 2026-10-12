@@ -9,6 +9,8 @@ interface BaseProps {
   variant?: Variant
   /** Ancho completo */
   block?: boolean
+  /** Se muestra aunque su página esté apagada en el panel · Sitio (el botón Reservar del menú) */
+  always?: boolean
   children: ReactNode
   className?: string
 }
@@ -22,11 +24,11 @@ type NativeButtonProps = BaseProps & ButtonHTMLAttributes<HTMLButtonElement> & {
 export type ButtonProps = RouteProps | AnchorProps | NativeButtonProps
 
 export function Button(props: ButtonProps) {
-  const { variant = 'primary', block = false, className = '', children, ...rest } = props
+  const { variant = 'primary', block = false, always = false, className = '', children, ...rest } = props
   const cls = `hf-btn hf-btn--${variant} ${block ? 'hf-btn--block' : ''} ${className}`
-  // Un botón a una página apagada en el panel · Sitio no se muestra
+  // Un botón a una página apagada en el panel · Sitio no se muestra (salvo los del menú, `always`)
   const visible = useLinkVisible(rest.to)
-  if (!visible) return null
+  if (!visible && !always) return null
 
   if (rest.to !== undefined) {
     const { to, ...anchor } = rest as RouteProps
