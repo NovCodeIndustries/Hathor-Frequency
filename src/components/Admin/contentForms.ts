@@ -37,6 +37,10 @@ export interface ItemsForm {
   searchOf?: (x: Record<string, unknown>) => string
   /** Texto de ejemplo del buscador ("Buscar artista por nombre o género") */
   searchHint?: string
+  /** "+ Agregar" arriba de la lista y "Publicar" dentro del formulario (no en la barra de la sección): Artistas */
+  actionsInForm?: boolean
+  /** Clave estable de un elemento para saber qué cambió respecto a lo publicado */
+  keyOf?: (x: Record<string, unknown>) => string
 }
 
 /** Sección por grupos (la columna izquierda son grupos de campos) */
@@ -175,6 +179,8 @@ export const sectionForms: Record<ContentKey, SectionForm> = {
     moduleOf: (x) => `artistas.${String(x.code).toLowerCase()}`,
     searchOf: (x) => `${x.name} ${x.genre} ${x.code}`,
     searchHint: 'Buscar artista por nombre o género',
+    actionsInForm: true,
+    keyOf: (x) => String(x.code),
     newItem: (list) => {
       // "Tu banda" (B14) es la fila fija: su código no se usa
       const taken = new Set([...list.map((a) => String(a.code)), 'B14'])

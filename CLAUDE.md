@@ -54,7 +54,7 @@ La landing está construida (React + TypeScript + Vite) siguiendo `docs/DESIGN.m
   - la validación por sección está en `server/shared/content/schemas.ts`;
   - la API es `GET /api/content` y `/api/admin/content/:key/*` (draft, publish, discard, history, restore);
   - en la BD están `ContentDraft` y `ContentVersion`; al publicar se manda el SSE `content` (`src/lib/live.ts` es el canal en vivo compartido);
-  - los formularios se definen en `src/components/Admin/contentForms.ts`; al agregar un campo editable, agrégalo al tipo, al schema y al formulario. Una lista con `searchOf` (y `searchHint`) lleva buscador: Artistas, Paquetes y FAQs.
+  - los formularios se definen en `src/components/Admin/contentForms.ts`; al agregar un campo editable, agrégalo al tipo, al schema y al formulario. Una lista con `searchOf` (y `searchHint`) lleva buscador: Artistas, Paquetes y FAQs. Con `actionsInForm` (Artistas), "+ Agregar" va arriba de la lista y "Publicar" dentro del formulario (dice qué se publica junto, con `keyOf`).
 - Tiempo real:
   - la web escucha `GET /api/site/events` (`site`, `content`, `stats`, `availability`, `reviews`; `src/lib/live.ts`);
   - el panel escucha `GET /api/admin/events` (`booking`, `contact`, `review`, `block`, `site`, `content`, `users`; `src/lib/useAdminLive.ts`, que se conecta en `AdminLayout`). Al agregar algo que cambie datos, emite el evento (`server/shared/lib/siteEvents.ts`).

@@ -193,6 +193,47 @@ function SectionEditor({ sectionKey: key, onSection }: { sectionKey: ContentKey;
 
   const issues: FieldIssue[] = state?.issues ?? []
   const dirty = !!state?.dirty || phase === 'saving'
+  const inForm = form.type === 'items' && !!form.actionsInForm
+  // Qué cambió respecto a lo publicado (para el botón Publicar dentro del formulario)
+  const changes = inForm && draft && state ? pendingChanges(form, draft, state.published as Obj) : { names: [], general: false, keys: [] }
+  const changedCount = changes.names.length + (changes.general ? 1 : 0)
+  const onlyThis =
+    changedCount === 1 &&
+    (selected === 'general' ? changes.general : typeof selected === 'number' && form.type === 'items' && !!items[selected] && changes.keys.includes(form.keyOf!(items[selected])))
+  const canPublish = dirty && issues.length === 0 && phase !== 'publishing'
+  const addButton = form.type === 'items' && form.canAdd && form.newItem && (
+    <button
+      type="button"
+      className={`hf-cadd hf-acontent__add ${inForm ? 'hf-acontent__add--top' : ''}`}
+      onClick={() => {
+        // Arriba de la lista también se agrega al final; se abre el nuevo para llenarlo
+        setItems([...items, form.newItem!(items)])
+        setSelected(items.length)
+        setQuery('')
+      }}
+    >
+      + Agregar {form.itemLabel}
+    </button>
+  )
+  const publishButton = inForm && (
+    <div className="hf-acontent__publish">
+      <button type="button" className="hf-admin__btn hf-admin__btn--primary hf-admin__btn--sm" disabled={!canPublish} onClick={publish}>
+        {phase === 'publishing'
+          ? 'Publicando…'
+          : !dirty
+            ? 'Publicado'
+            : onlyThis
+              ? `Publicar ${selected === 'general' ? 'textos' : form.type === 'items' ? form.itemLabel : ''}`
+              : `Publicar cambios (${changedCount || 1})`}
+      </button>
+      {dirty && !onlyThis && changedCount > 0 && (
+        <span className="hf-acontent__muted">
+          Se publican juntos: {[...changes.names, ...(changes.general ? ['textos de la sección'] : [])].join(', ')}.
+        </span>
+      )}
+      {issues.length > 0 && <span className="hf-cfield__error">Corrige {issues.length === 1 ? 'el error' : `los ${issues.length} errores`} antes de publicar.</span>}
+    </div>
+  )
   const changesInOther = dirtyKeys.filter((k) => k !== key)
 
   return (
@@ -240,9 +281,11 @@ function SectionEditor({ sectionKey: key, onSection }: { sectionKey: ContentKey;
         <div className="hf-acontent__actions">
           <button type="button" className="hf-admin__btn hf-admin__btn--ghost hf-admin__btn--sm" aria-expanded={panel === 'history'} onClick={openHistory}>Historial</button>
           <button type="button" className="hf-admin__btn hf-admin__btn--sm" disabled={!state?.dirty || phase === 'publishing'} onClick={() => replace(() => adminApi.discardContent(key))}>Descartar</button>
-          <button type="button" className="hf-admin__btn hf-admin__btn--primary hf-admin__btn--sm" disabled={!dirty || issues.length > 0 || phase === 'publishing'} onClick={publish}>
-            Publicar {section.label}
-          </button>
+          {!inForm && (
+            <button type="button" className="hf-admin__btn hf-admin__btn--primary hf-admin__btn--sm" disabled={!dirty || issues.length > 0 || phase === 'publishing'} onClick={publish}>
+              Publicar {section.label}
+            </button>
+          )}
         </div>
       </div>
       {changesInOther.length > 0 && (
@@ -290,6 +333,7 @@ function SectionEditor({ sectionKey: key, onSection }: { sectionKey: ContentKey;
           <nav className="hf-acontent__list" aria-label={form.type === 'items' ? `${section.label}: elementos` : `${section.label}: grupos`}>
             {form.type === 'items' ? (
               <>
+                {inForm && addButton}
                 {form.general.length > 0 && (
                   <ListRow active={selected === 'general'} title="General" sub="Textos de la sección" onPick={() => setSelected('general')} />
                 )}
@@ -332,19 +376,7 @@ function SectionEditor({ sectionKey: key, onSection }: { sectionKey: ContentKey;
                     onDown={!searching && i < items.length - 1 ? () => (setItems(swap(items, i, i + 1)), setSelected(i + 1)) : undefined}
                   />
                 )))}
-                {form.canAdd && form.newItem && (
-                  <button
-                    type="button"
-                    className="hf-cadd hf-acontent__add"
-                    onClick={() => {
-                      setItems([...items, form.newItem!(items)])
-                      setSelected(items.length)
-                      setQuery('')
-                    }}
-                  >
-                    + Agregar {form.itemLabel}
-                  </button>
-                )}
+                {!inForm && addButton}
               </>
             ) : (
               form.groups.map((g) => (
@@ -370,6 +402,8 @@ function SectionEditor({ sectionKey: key, onSection }: { sectionKey: ContentKey;
                 <Link to="/admin/sitio" className="hf-acontent__link">Ver en Sitio →</Link>
               </div>
             </div>
+            {/* Artistas: Publicar va aquí, a la vista, en vez de en la barra de la sección */}
+            {publishButton}
 
             {form.type === 'items' && selected === 'general' && (
               <ContentForm fields={form.general} data={draft} base={[]} issues={issues} onChange={onChange} />
@@ -445,6 +479,33 @@ function swap<T>(list: T[], a: number, b: number): T[] {
 }
 
 /** Copia de un elemento con id (o código de artista) nuevo y "(copia)" en el nombre */
+/** JSON con las claves ordenadas, para comparar sin importar el orden (la base reordena las claves) */
+function stable(v: unknown): string {
+  if (Array.isArray(v)) return `[${v.map(stable).join(',')}]`
+  if (v && typeof v === 'object') {
+    const o = v as Obj
+    return `{${Object.keys(o)
+      .filter((k) => o[k] !== undefined)
+      .sort()
+      .map((k) => `${JSON.stringify(k)}:${stable(o[k])}`)
+      .join(',')}}`
+  }
+  return JSON.stringify(v ?? null)
+}
+
+/** Qué elementos (por nombre) y si los textos generales cambiaron respecto a lo publicado */
+function pendingChanges(form: ItemsForm, draft: Obj, published: Obj): { names: string[]; general: boolean; keys: string[] } {
+  const keyOf = form.keyOf ?? ((x: Obj) => String(x.id ?? x.code ?? ''))
+  const now = ((draft.items as Obj[]) ?? []).map((x) => [keyOf(x), x] as const)
+  const before = new Map(((published?.items as Obj[]) ?? []).map((x) => [keyOf(x), x] as const))
+  const keys = now.filter(([k, x]) => !before.has(k) || stable(before.get(k)) !== stable(x)).map(([k]) => k)
+  const removed = [...before.keys()].filter((k) => !now.some(([n]) => n === k))
+  const names = [...keys.map((k) => form.titleOf(now.find(([n]) => n === k)![1])), ...removed.map((k) => `${form.titleOf(before.get(k)!)} (eliminado)`)]
+  const general = form.general.some((f) => stable(draft[f.key]) !== stable(published?.[f.key]))
+  const reordered = !keys.length && !removed.length && now.map(([k]) => k).join() !== [...before.keys()].join()
+  return { names: reordered ? ['el orden'] : names, general, keys: [...keys, ...removed] }
+}
+
 /** Minúsculas y sin acentos, para buscar "Sofia" y encontrar "Sofía" */
 const fold = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 

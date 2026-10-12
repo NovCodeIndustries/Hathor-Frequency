@@ -210,3 +210,9 @@ select.hf-cinput { background: var(--c-surface-2); }
   .hf-acontent__bar { border-radius: var(--radius-card); }
   .hf-acontent__form { padding: 18px; }
 }
+
+/* Artistas: "+ Agregar" arriba de la lista y "Publicar" dentro del formulario */
+.hf-acontent__add--top { flex: none; }
+.hf-acontent__publish { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 14px 16px; border: 1px solid var(--c-line); border-radius: var(--radius-card); background: rgba(242,201,76,0.04); }
+.hf-acontent__publish .hf-admin__btn { flex: none; }
+.hf-acontent__publish .hf-acontent__muted, .hf-acontent__publish .hf-cfield__error { font-size: 12px; line-height: 1.4; }
