@@ -28,7 +28,8 @@ La landing está construida (React + TypeScript + Vite) siguiendo `docs/DESIGN.m
 - Opiniones: vienen de `GET /api/reviews` (`useReviews`), solo las PUBLISHED; sin consentimiento, el nombre sale como "Anónimo".
 - Panel del estudio en `/admin` (DESIGN §7.4):
   - fuera del Layout público, con rutas `lazy` en `src/App.tsx`, componentes en `src/components/Admin/`, cliente `src/lib/adminApi.ts` y contexto `src/lib/useAdmin.ts`;
-  - la API está en `/api/admin/*` y los usuarios se crean con `npm run admin:create`;
+  - la API está en `/api/admin/*`;
+  - **usuario principal** (`ROOT_ADMIN_EMAIL` / `ROOT_ADMIN_PASSWORD` en `.env`, fuera de git): la API lo crea al arrancar si falta (`server/lib/rootAdmin.ts`, `isRoot`). No se puede borrar y es el único que crea, cambia y quita admins en `/admin/usuarios` (`server/routes/users.ts`); cualquier admin cambia su propia contraseña. `npm run admin:create` sigue sirviendo desde la terminal;
   - Inicio (`/admin`) es el dashboard D4 (`AdminDashboard.tsx`, `server/routes/dashboard.ts`); el cobro de una reserva (`amountCents`, `paymentStatus`, `depositCents`) se captura en la ventana `ChargeModal.tsx`.
 - Visitas: Umami en docker-compose (`umami` + `umami-db`, host :3100):
   - el sitio público lo carga desde `src/lib/analytics.ts`, solo si existe `VITE_UMAMI_WEBSITE_ID`, por el proxy `/umami` de Vite;
@@ -42,6 +43,10 @@ La landing está construida (React + TypeScript + Vite) siguiendo `docs/DESIGN.m
   - la API es `GET /api/content` y `/api/admin/content/:key/*` (draft, publish, discard, history, restore);
   - en la BD están `ContentDraft` y `ContentVersion`; al publicar se manda el SSE `content` (`src/lib/live.ts` es el canal en vivo compartido);
   - los formularios se definen en `src/components/Admin/contentForms.ts`; al agregar un campo editable, agrégalo al tipo, al schema y al formulario.
+- Tiempo real:
+  - la web escucha `GET /api/site/events` (`site`, `content`, `stats`, `availability`, `reviews`; `src/lib/live.ts`);
+  - el panel escucha `GET /api/admin/events` (`booking`, `contact`, `review`, `block`, `site`, `content`, `users`; `src/lib/useAdminLive.ts`, que se conecta en `AdminLayout`). Al agregar algo que cambie datos, emite el evento (`server/lib/siteEvents.ts`).
+- Calendarios del panel: `MonthPair.tsx` (dos meses) en Reservas y Bloqueos.
 - Cifras: "Proyectos" = reservas `COMPLETED` (el admin las marca como terminadas en la agenda) y "Artistas" = artistas publicados sin los ocultos. Salen de `GET /api/site/stats` (`server/lib/stats.ts`) y la web las lee con `useStats()`. El estado `COMPLETED` sigue ocupando su horario (índice `bookings_active_slot_key`).
 - Medios: fotos y videos en un HDD aparte; en el panel se eligen con el buscador (`MediaPicker.tsx`, `GET /api/admin/media/list?dir=|q=`). Docker lo monta (`MEDIA_DIR` en `.env`) en `/app/media`, la API lo sirve en `/media/...` y la BD solo guarda rutas o URLs (`server/lib/media.ts`).
 - Módulos del sitio (panel · Sitio), para apagar cosas sin borrarlas:
@@ -78,7 +83,7 @@ npm run db:seed             # opiniones de ejemplo (dev)
 npm run admin:create        # alta/cambio de contraseña de un admin (interactivo)
 ```
 
-Dentro de Docker, los comandos de Prisma se corren con `docker compose exec app npm run db:migrate`. Desde el host, `.env` (copia de `.env.example`) apunta a `localhost:5440`.
+Dentro de Docker, los comandos de Prisma se corren con `docker compose exec app npm run db:migrate`. El único archivo de entorno es `.env` (fuera de git, sin `.env.example`); desde el host apunta a `localhost:5440`.
 
 Para compartir un link temporal se usa un túnel rápido de Cloudflare: el contenedor `hathor-tunnel`; los comandos están en el README. **Es temporal:** `vite.config.ts` permite `allowedHosts: ['.trycloudflare.com']` solo para esto, y hay que quitarlo antes de la publicación definitiva.
 

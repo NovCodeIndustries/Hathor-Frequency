@@ -657,6 +657,7 @@ Cambio del 2026-10-09. Componente `Studio.tsx`, datos en `src/data/studio.ts`.
 Cambio del 2026-10-09. En el nav va después de Artistas (Servicios · Artistas · Opiniones). Textos y límites en `src/data/reviews.ts`; las opiniones vienen de `GET /api/reviews` (hook `useReviews`).
 - **Página** (`Reviews.tsx`): cabecera 7fr / 5fr con eyebrow "Opiniones", h1 "Lo que dicen *quienes ya grabaron.*" y un párrafo; a la derecha, tarjeta de resumen con el promedio (Cinzel 64px dorado), estrellas, total, barras por calificación (5 a 1) y el botón primario "Deja tu opinión ★". Debajo, filtros por servicio (pills `aria-pressed`, "Todas" + los servicios que tengan opiniones) y una grilla de 3 columnas (2 en tablet, 1 en móvil) con tarjetas: estrellas, etiqueta del servicio, cita en Cinzel 18px, nombre y proyecto.
 - **Ventana "Deja tu opinión"** (`ReviewModal.tsx`, portal): "Opiniones" + glifo de temporada, "¿Cómo sonó *tu experiencia?*" y "La revisamos antes de publicarla." Estrellas de 1 a 5 (`radiogroup`, 52px, se iluminan al pasar el mouse, flechas del teclado) con su texto: *Desafinado · Le falta mezcla · Suena bien · Suena muy bien · ¡Disco de oro!*; nombre, banda o proyecto (opcional), servicio (`contactTopics`), opinión (máx. 500 con contador) y "Pueden publicar mi opinión con mi nombre". Sin estrellas no se envía ("Elige cuántas estrellas le das"). Al enviar: estrellas iluminadas, "¡Gracias por *tu frecuencia!*" y botón Cerrar. Se cierra con la ✕, clic fuera o Escape. En móvil sube como hoja desde abajo. En temporada toma el borde, glow y anillos del color del mes, el glifo y el mensaje del mes. `/opiniones?opinar=1` la abre al llegar.
+- **Contacto · confirmación** (cambio del 2026-10-12): al enviar, sale un modal informativo con el mismo estilo que el de Reservar (`ContactModal.tsx`): "Petición enviada", "Recibimos tu *mensaje.*", nombre, tema y correo, y "Entendido".
 - **Contacto**: el testimonio fijo se cambió por la rotación de opiniones (`ReviewsRotator.tsx`): cada 6s (`reviewRotateMs`) cambia con fundido; estrellas, cita en Cinzel 20px y "— Nombre · Servicio"; puntos para elegir una (se queda en esa), barra de tiempo, y el link "¿Ya grabaste con nosotros? *Deja tu opinión →*" a `/opiniones?opinar=1`. Se pausa con el mouse encima, con el foco dentro y con reduced-motion.
 - **Datos**: `submitReview` guarda en la tabla `reviews` (calificación, nombre, proyecto, servicio, texto, permiso y estado `pending/published/rejected`). La página y la rotación muestran solo las PUBLISHED (`GET /api/reviews`, hook `useReviews`); sin permiso de nombre salen como "Anónimo". Se aprueban en el panel (§7.4).
 
@@ -668,12 +669,13 @@ Cambio del 2026-10-11. Es privado: va fuera del Layout público (sin Nav, Ufo, t
   - lockup "HATHOR / FREQUENCY" + "Panel del estudio" en dorado;
   - correo y contraseña en pills de 52px y botón dorado "Entrar" de 56px con glow;
   - el error de la API va en dorado ("Correo o contraseña incorrectos"), con "¿Sin acceso? Pídelo a quien administra el estudio." y "← Volver al sitio" al pie.
+- **Tiempo real en el panel**: cada reserva, contacto u opinión nueva, y cada cambio desde otra pestaña, llega por `GET /api/admin/events` (SSE). Los contadores de la barra lateral y la vista abierta se actualizan solos. Contenido solo actualiza los puntos de las pestañas, para no pisar el borrador que estás editando.
 - **Estructura** (`AdminLayout.tsx`): barra lateral izquierda de 260px, como en **A1** (cambio del 2026-10-11, reemplaza la barra superior de A2):
   - va fija al hacer scroll y lleva borde derecho `#333`;
   - arriba, el lockup "HATHOR / FREQUENCY" + "Panel del estudio" en dorado;
   - las secciones en pills de 44px (Reservas, Opiniones, Contactos, Bloqueos; la activa en dorado sobre `rgba(242,201,76,.12)`), con contadores: reservas pendientes desde hoy (pastilla dorada rellena), opiniones pendientes (contorno dorado) y contactos sin atender (gris);
   - abajo, el nombre, el correo y "Cerrar sesión";
-  - **excepción al breakpoint único**: por debajo de 1024px la barra pasa arriba (logo y "Cerrar sesión" en una fila, secciones en fila con scroll horizontal), porque la agenda necesita el ancho.
+  - **excepción al breakpoint único**: por debajo de 1024px, la barra pasa arriba con el logo y un **menú hamburguesa** (como la web). El botón muestra cuántos pendientes hay en total; al abrirlo, las secciones y la sesión salen en lista, y se cierra al elegir, con la X o con Escape.
 - **D4 · Inicio** (`/admin`, `AdminDashboard.tsx`; datos de `GET /api/admin/dashboard?range=week|month|quarter|year`). Es la combinación de D2 y D3, la primera sección de la barra y adonde lleva el login. Cambio del 2026-10-11.
   - **Hoy primero** (D2):
     - fecha y saludo según la hora ("Buenas tardes, {nombre}."), con el resumen de sesiones de hoy y reservas por confirmar;
@@ -697,12 +699,11 @@ Cambio del 2026-10-11. Es privado: va fuera del Layout público (sin Nav, Ufo, t
   - pago Pendiente / Anticipo / Pagado; con Anticipo aparece "Anticipo recibido";
   - el botón dice "Confirmar · $X" o "Confirmar sin monto";
   - el detalle de la agenda muestra "Cobro: $X · Anticipo ($Y recibido)".
-- **A2 · Reservas** (`/admin/reservas`, `AdminAgenda.tsx`):
-  - semana de lunes a domingo con flechas y botón "Hoy"; leyenda Pendiente (contorno dorado), Confirmada (dorado relleno) y Bloqueado (trama);
-  - cuadrícula de 96px + 7 columnas por `timeSlots` (horas en 12 h), con celdas de 64px: reserva activa (proyecto y servicio), bloqueo (trama + motivo, "Cerrado" o "Bloqueado") o libre (borde punteado);
-  - las canceladas no ocupan celda; se cuentan debajo;
-  - a la derecha va el detalle con anillos: proyecto en Cinzel, día, hora y servicio, chip de estado, representante, teléfono (`tel:`), correo (`mailto:`), fecha de recepción y las acciones Confirmar sesión / Cancelar (Reactivar si está cancelada);
-  - un 409 al reactivar se muestra como error.
+- **Reservas** (`/admin/reservas`, `AdminAgenda.tsx`; cambio del 2026-10-12, reemplaza la semana de A2):
+  - **dos meses en pantalla, uno debajo del otro** (el actual y el siguiente; `MonthPair.tsx`, igual que Bloqueos), con flechas;
+  - cada día lleva una marca por reserva: contorno = pendiente, dorado = confirmada, dorado oscuro = terminada; trama si está cerrado y punto gris si tiene horarios bloqueados;
+  - a la derecha, **el día elegido** con sus 6 horarios en 12 h (reserva, bloqueado o libre) y las canceladas de ese día; debajo, el detalle de la reserva (datos, cobro y acciones: Confirmar, Marcar como terminada, Editar cobro, Cancelar, Reactivar o Reabrir);
+  - en móvil, todo en una columna.
 - **O2 · Opiniones** (`/admin/opiniones`, `AdminReviews.tsx`):
   - filtros Todas / Pendientes / Publicadas / Rechazadas con su conteo; abre en Pendientes;
   - cuadrícula `auto-fill` de tarjetas de 300px: las pendientes con borde dorado y glow, las rechazadas al 60%;
@@ -713,7 +714,7 @@ Cambio del 2026-10-11. Es privado: va fuera del Layout público (sin Nav, Ufo, t
   - tabla con Nombre, Tema (chip), Correo, Recibido, Atendido y "Responder" (`mailto:` con asunto "Hathor Frequency · {tema}");
   - la casilla **Atendido** guarda `handled_at` y apaga la fila al 55%.
 - **B1 · Bloqueos** (`/admin/bloqueos`, `AdminBlocks.tsx`):
-  - calendario del mes (sin meses pasados): día cerrado con trama, punto dorado si tiene horarios bloqueados;
+  - **dos meses en pantalla, uno debajo del otro** (el actual y el siguiente, `MonthPair.tsx`; sin días pasados): día cerrado con trama, punto si tiene horarios bloqueados;
   - panel del día con "Cerrar el día completo", "O solo algunos horarios" (pills de `timeSlots`, desactivadas si el día está cerrado), motivo (solo lo ve el estudio) y "Guardar bloqueo" (activo solo si hay cambios);
   - abajo, "Próximos bloqueos" por día: clic para ir al día y ✕ para quitarlo;
   - bloquear no cancela reservas ya hechas.
@@ -758,6 +759,12 @@ Cambio del 2026-10-11. Es privado: va fuera del Layout público (sin Nav, Ufo, t
   - Solo cuenta lo de la base, sin número base. Por defecto, Proyectos y Artistas salen de la base y Años es manual.
   - En la agenda, la terminada se ve en dorado secundario con ✓ y sigue ocupando su horario.
   - La web recibe la cifra nueva al instante (SSE `stats`).
+- **Usuarios** (`/admin/usuarios`, `AdminUsers.tsx`; sin ronda de diseño, mismo estilo de tabla que Contactos):
+  - el **usuario principal** ve la tabla de accesos (nombre, correo y teléfono, rol Principal/Admin, alta; "Cambiar contraseña" en línea y "Borrar usuario" con confirmación; el principal no tiene ese botón y la API rechaza borrarlo);
+  - "Nuevo usuario admin" pide primer nombre, segundo nombre (opcional), primer apellido, segundo apellido (opcional), teléfono, correo, contraseña con Mostrar y **repetir contraseña**. Mientras escribes dice si coinciden, y no deja crear si no coinciden;
+  - cualquier admin ve **"Mi cuenta"**: contraseña actual, nueva y repetir (con el mismo aviso);
+  - el saludo de Inicio y la barra usan **primer nombre + primer apellido** ("Buenas tardes, Xavier Ruiz.").
+  - la pestaña dice "Usuarios" para el principal y "Mi cuenta" para los demás.
 - **D1 · Ocupado en Reservar (público)**: se queda el tachado: el horario o día lleno se apaga en `#444` con `line-through`, igual que los días pasados (§6).
 
 ---
