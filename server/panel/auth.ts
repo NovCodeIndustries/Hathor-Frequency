@@ -62,7 +62,7 @@ export async function endSession(c: Context) {
 }
 
 export interface AdminVariables {
-  admin: { id: string; username: string; name: string; firstName: string; lastName: string; isRoot: boolean; role: AdminRole; birthday: boolean; mustChangePassword: boolean }
+  admin: { id: string; username: string; name: string; firstName: string; lastName: string; isRoot: boolean; role: AdminRole; birthday: boolean; mustChangePassword: boolean; guidesSeen: string[] }
   /** Sesión de esta petición (para no cerrarla al cerrar "las demás") */
   sessionId: string
 }
@@ -88,7 +88,7 @@ export const requireAdmin: MiddlewareHandler<{ Variables: AdminVariables }> = as
   if (!token) return fail(c, 401, 'Inicia sesión')
   const session = await prisma.adminSession.findUnique({
     where: { tokenHash: sha256(token) },
-    include: { user: { select: { id: true, username: true, name: true, firstName: true, lastName: true, isRoot: true, role: true, birthDate: true, mustChangePassword: true } } },
+    include: { user: { select: { id: true, username: true, name: true, firstName: true, lastName: true, isRoot: true, role: true, birthDate: true, mustChangePassword: true, guidesSeen: true } } },
   })
   const now = Date.now()
   if (!session || session.expiresAt.getTime() <= now || session.lastSeenAt.getTime() + IDLE_MS <= now) {

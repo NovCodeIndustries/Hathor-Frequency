@@ -53,6 +53,17 @@ users.patch('/me/first-password', async (c) => {
   return c.json({ ok: true })
 })
 
+/** Guías del panel: marca la de un módulo como vista para que no vuelva a salir sola */
+users.post('/me/guides', async (c) => {
+  const body = await parseBody(c, z.object({ key: z.string().regex(/^[a-z]{2,20}$/) }))
+  if (body instanceof Response) return body
+  const me = c.get('admin')
+  if (!me.guidesSeen.includes(body.key)) {
+    await prisma.adminUser.update({ where: { id: me.id }, data: { guidesSeen: { push: body.key } } })
+  }
+  return c.json({ ok: true })
+})
+
 /** Mis sesiones abiertas (esta primero) */
 users.get('/me/sessions', async (c) => {
   const rows = await prisma.adminSession.findMany({

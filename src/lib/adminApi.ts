@@ -25,6 +25,8 @@ export interface AdminUser {
   birthday: boolean
   /** Entró con una contraseña temporal: la bienvenida (W5) le pide poner la suya */
   mustChangePassword: boolean
+  /** Guías del panel que ya vio (la de cada módulo sale sola solo la primera vez) */
+  guidesSeen: string[]
 }
 
 /** ADMIN: todo el panel · STAFF: solo Agenda, Contactos y Mi cuenta */
@@ -391,6 +393,7 @@ export const adminApi = {
   createUser: (user: NewAdminUser) => request<AdminUserRow>('POST', '/users', user),
   newTempPassword: (id: string) => request<{ tempPassword: string }>('POST', `/users/${id}/temp-password`, {}),
   setFirstPassword: (next: string) => request<{ ok: true }>('PATCH', '/users/me/first-password', { next }),
+  markGuideSeen: (key: string) => request<{ ok: true }>('POST', '/users/me/guides', { key }),
   deleteUser: (id: string) => request<{ ok: true }>('DELETE', `/users/${id}`),
   updateUser: (id: string, profile: AdminUserProfile & { regenerateUsername?: boolean }) => request<AdminUserRow>('PATCH', `/users/${id}`, profile),
   mySessions: () => request<AdminSessionRow[]>('GET', '/users/me/sessions'),

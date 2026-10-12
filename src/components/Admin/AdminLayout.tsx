@@ -10,6 +10,8 @@ import { BirthdayBalloons } from './BirthdayBalloons'
 import { BirthdayCake } from './BirthdayCake'
 import { DedicationsLayer } from './DedicationsLayer'
 import { PanelWelcome } from './PanelWelcome'
+import { GuideHelpButton, PanelGuide } from './PanelGuide'
+import { guideFor, guideTargetVisible } from './guides'
 import { SeasonGarland } from '../Season/SeasonGarland'
 import { Glyph } from '../Ufo/seasonArt'
 import { startAdminLive, stopAdminLive, useAdminLive } from '../../lib/useAdminLive'
@@ -27,6 +29,9 @@ export function AdminLayout() {
   // Temporada del mes o cumpleaños del equipo: adorno arriba y glifo junto al logo (como en la web)
   const season = useSeason()
   const [welcome, setWelcome] = useState(false)
+  // Guía del módulo (G5 · M2): sale sola la primera vez que se entra y el botón de ayuda la reabre
+  const guide = guideFor(location.pathname)
+  const [guideOpen, setGuideOpen] = useState(false)
   // Cumpleaños de quien entra (B3 en el login → B1 pastel → B4 globos), una vez al día; viene del login o empieza aquí
   const [party, setPartyState] = useState<PartyStage | null>(() => partyStage())
   const setParty = useCallback((stage: PartyStage | null) => {
@@ -41,6 +46,7 @@ export function AdminLayout() {
   if (location.pathname !== lastPath) {
     setLastPath(location.pathname)
     setMenuOpen(false)
+    setGuideOpen(false)
   }
   useEffect(() => {
     if (!menuOpen) return
@@ -101,6 +107,29 @@ export function AdminLayout() {
   useAdminLive('all', refreshSummary)
   // Si el principal te cambia el nombre o el rol, se nota sin recargar
   useAdminLive(['users'], refreshMe)
+
+  // Arranque automático: cuando no haya otra ventana encima (bienvenida, festejo, dedicatorias…) y ya se vea lo que explica
+  const guideKey = guide && admin && !admin.guidesSeen.includes(guide.key) ? guide.key : null
+  const blocked = welcome || !!admin?.mustChangePassword || (party !== null && party !== 'balloons')
+  useEffect(() => {
+    if (!guideKey || guideOpen || blocked) return
+    const g = guideFor(location.pathname)
+    const t = window.setInterval(() => {
+      if (document.querySelector('.hf-welcome, .hf-bcake, .hf-dreader, .hf-dsleeve, [aria-modal="true"]')) return
+      if (!g?.steps.some((s) => s.target && !s.target.includes('"help"') && guideTargetVisible(s.target))) return
+      window.clearInterval(t)
+      setGuideOpen(true)
+    }, 700)
+    return () => window.clearInterval(t)
+  }, [guideKey, guideOpen, blocked, location.pathname])
+
+  const closeGuide = useCallback(() => {
+    setGuideOpen(false)
+    if (!guide) return
+    const key = guide.key
+    setAdmin((a) => (a && !a.guidesSeen.includes(key) ? { ...a, guidesSeen: [...a.guidesSeen, key] } : a))
+    adminApi.markGuideSeen(key).then(refreshMe).catch(() => {})
+  }, [guide, refreshMe, setGuideOpen])
 
   const onError = useCallback(
     (err: unknown) => {
@@ -239,6 +268,8 @@ export function AdminLayout() {
         {!welcome && !admin.mustChangePassword && party === 'balloons' && <BirthdayBalloons name={admin.firstName || shortName(admin)} onDone={endParty} />}
         {!welcome && !admin.mustChangePassword && party === 'cake' && <BirthdayCake name={admin.firstName || shortName(admin)} onDone={toLetters} onSkip={endParty} />}
         <Outlet context={{ admin, summary, refreshSummary, refreshMe, onError } satisfies AdminContext} />
+        {guide && !welcome && <GuideHelpButton guide={guide} onOpen={() => setGuideOpen(true)} />}
+        {guide && guideOpen && <PanelGuide key={guide.key} guide={guide} onClose={closeGuide} />}
       </main>
     </div>
   )

@@ -92,7 +92,7 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
 
   return (
     <>
-      <section className="hf-ausers__card" aria-labelledby={`${id}-list`}>
+      <section className="hf-ausers__card" data-guide="users-list" aria-labelledby={`${id}-list`}>
         <h2 id={`${id}-list`} className="hf-ausers__title">Accesos al panel</h2>
         {error && <p className="hf-admin__error" role="alert">{error}</p>}
         {msg && <p className="hf-ausers__ok" role="status">{msg}</p>}
@@ -154,7 +154,7 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
         </div>
       </section>
 
-      <form className="hf-ausers__card" aria-labelledby={`${id}-new`} onSubmit={create}>
+      <form className="hf-ausers__card" data-guide="users-new" aria-labelledby={`${id}-new`} onSubmit={create}>
         <h2 id={`${id}-new`} className="hf-ausers__title">Nuevo usuario</h2>
         <div className="hf-ausers__grid">
           {(
@@ -308,7 +308,7 @@ function MyPassword({ name, username, onError }: { name: string; username: strin
   }
 
   return (
-    <form className="hf-ausers__card" aria-labelledby={`${id}-me`} onSubmit={submit}>
+    <form className="hf-ausers__card" data-guide="users-me" aria-labelledby={`${id}-me`} onSubmit={submit}>
       <h2 id={`${id}-me`} className="hf-ausers__title">Mi cuenta</h2>
       <p className="hf-ausers__muted">{name} · usuario {username}</p>
       <div className="hf-ausers__grid">
@@ -519,7 +519,7 @@ function MySessions({ onError }: { onError: (e: unknown) => string }) {
   const others = list?.filter((s) => !s.current).length ?? 0
 
   return (
-    <section className="hf-ausers__card" aria-labelledby={`${id}-sessions`}>
+    <section className="hf-ausers__card" data-guide="users-sessions" aria-labelledby={`${id}-sessions`}>
       <h2 id={`${id}-sessions`} className="hf-ausers__title">Sesiones abiertas</h2>
       <p className="hf-ausers__muted">Se cierran solas tras 12 h sin uso, o a los 7 días. Si ves una que no reconoces, ciérrala y cambia tu contraseña.</p>
       {error && <p className="hf-admin__error" role="alert">{error}</p>}
@@ -569,7 +569,7 @@ function AccessLog({ onError }: { onError: (e: unknown) => string }) {
   useAdminLive(['users'], load)
 
   return (
-    <section className="hf-ausers__card" aria-labelledby={`${id}-log`}>
+    <section className="hf-ausers__card" data-guide="users-log" aria-labelledby={`${id}-log`}>
       <h2 id={`${id}-log`} className="hf-ausers__title">Registro de accesos</h2>
       <p className="hf-ausers__muted">Últimos 100 intentos de entrar al panel; se guardan 90 días. Tras 5 fallidos seguidos, la cuenta se bloquea 15 min.</p>
       {error && <p className="hf-admin__error" role="alert">{error}</p>}

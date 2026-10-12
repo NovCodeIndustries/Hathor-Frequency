@@ -232,7 +232,7 @@ export function AdminAgenda() {
         </div>
         <div className="hf-pistas__tools">
           {search}
-          <button type="button" className="hf-admin__btn hf-admin__btn--primary hf-admin__btn--sm" onClick={() => setNewOn(todayISO)}>+ Agendar sesión</button>
+          <button type="button" data-guide="agenda-new" className="hf-admin__btn hf-admin__btn--primary hf-admin__btn--sm" onClick={() => setNewOn(todayISO)}>+ Agendar sesión</button>
           <div className="hf-pistas__nav">
             <button type="button" className="hf-admin__arrow" aria-label="Días anteriores" onClick={() => setStart((s) => addDays(s, -range))}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M10 3 5 8l5 5" /></svg>

@@ -72,7 +72,7 @@ admin.post('/login', rateLimit({ max: 10, windowMs: 15 * 60_000 }), async (c) =>
   // El registro guarda 90 días
   void prisma.adminLoginEvent.deleteMany({ where: { createdAt: { lt: new Date(Date.now() - 90 * 86_400_000) } } }).catch(() => {})
   emitAdmin('users')
-  return c.json({ id: user.id, username: user.username, name: user.name, firstName: user.firstName, lastName: user.lastName, isRoot: user.isRoot, role: user.role, birthday: isBirthdayToday(user.birthDate), mustChangePassword: user.mustChangePassword })
+  return c.json({ id: user.id, username: user.username, name: user.name, firstName: user.firstName, lastName: user.lastName, isRoot: user.isRoot, role: user.role, birthday: isBirthdayToday(user.birthDate), mustChangePassword: user.mustChangePassword, guidesSeen: user.guidesSeen })
 })
 
 admin.post('/logout', async (c) => {

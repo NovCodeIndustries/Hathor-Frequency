@@ -158,6 +158,8 @@ model AdminUser {
   tempPassword        String?              @map("temp_password") @db.VarChar(300)
   /// Debe cambiar su contraseña (usuario nuevo o con temporal): la pantalla de bienvenida se lo pide
   mustChangePassword  Boolean              @default(false) @map("must_change_password")
+  /// Guías del panel que ya vio ("agenda", "inicio"…): la de cada módulo sale sola solo la primera vez
+  guidesSeen          String[]             @default([]) @map("guides_seen")
   /// Usuario principal (ROOT_ADMIN_EMAIL): siempre existe, no se puede borrar y es el único que administra usuarios
   isRoot              Boolean              @default(false) @map("is_root")
   /// Qué ve en el panel: ADMIN todo; STAFF solo Agenda, Contactos y Mi cuenta (el principal siempre es ADMIN)
