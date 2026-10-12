@@ -6,6 +6,7 @@ import { logger } from 'hono/logger'
 import { jsonOnly } from './auth'
 import { fail } from './lib/errors'
 import { MEDIA_DIR } from './lib/media'
+import { ensureRootAdmin } from './lib/rootAdmin'
 import { rateLimit } from './lib/rateLimit'
 import { admin } from './routes/admin'
 import { availability, bookings } from './routes/bookings'
@@ -54,6 +55,9 @@ if (MEDIA_DIR) {
   root.use('/media/*', serveStatic({ root: MEDIA_DIR, rewriteRequestPath: (p) => p.replace(/^\/media/, '') }))
 }
 root.route('/', app)
+
+// El usuario principal del panel siempre existe
+void ensureRootAdmin()
 
 const port = Number(process.env.API_PORT ?? 3000)
 serve({ fetch: root.fetch, port }, () => console.info(`API en http://localhost:${port}/api`))

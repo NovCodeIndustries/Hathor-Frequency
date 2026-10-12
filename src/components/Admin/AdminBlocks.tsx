@@ -4,19 +4,17 @@ import { adminApi, dateFromISO, type AdminBlock } from '../../lib/adminApi'
 import {
   MONTHS,
   WEEKDAYS,
-  WEEKDAYS_SHORT,
   addMonths,
   compareMonths,
-  dayLabel,
-  monthCells,
-  monthTitle,
   startOfDay,
   toISODate,
   type YearMonth,
 } from '../../lib/calendar'
 import { useAdmin } from '../../lib/useAdmin'
+import { MonthPair } from './MonthPair'
 import { formatTime } from '../../lib/time'
 import './AdminBlocks.css'
+import { useAdminLive } from '../../lib/useAdminLive'
 
 interface Draft {
   iso: string
@@ -46,7 +44,7 @@ export function AdminBlocks() {
   const [tick, setTick] = useState(0)
 
   const from = toISODate(new Date(month.year, month.month, 1))
-  const to = toISODate(lastOfMonth(month))
+  const to = toISODate(lastOfMonth(addMonths(month, 1)))
 
   useEffect(() => {
     let alive = true
@@ -63,6 +61,7 @@ export function AdminBlocks() {
   }, [from, to, today, tick, onError])
 
   const reload = useCallback(() => setTick((t) => t + 1), [])
+  useAdminLive(['block'], reload)
 
   const iso = toISODate(selected)
   const dayBlocks = monthBlocks.filter((b) => b.date === iso)
@@ -140,55 +139,25 @@ export function AdminBlocks() {
       </div>
 
       <div className="hf-blocks">
-        <section className="hf-blocks__cal" aria-label={monthTitle(month)}>
-          <div className="hf-blocks__nav">
-            <button
-              type="button"
-              className="hf-admin__arrow"
-              aria-label="Mes anterior"
-              disabled={compareMonths(month, currentMonth) <= 0}
-              onClick={() => setMonth((m) => addMonths(m, -1))}
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M10 3 5 8l5 5" /></svg>
-            </button>
-            <span className="hf-blocks__month" aria-live="polite">{monthTitle(month)}</span>
-            <button type="button" className="hf-admin__arrow" aria-label="Mes siguiente" onClick={() => setMonth((m) => addMonths(m, 1))}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="m6 3 5 5-5 5" /></svg>
-            </button>
-          </div>
-          <div className="hf-blocks__week" aria-hidden="true">
-            {WEEKDAYS_SHORT.map((w) => (
-              <span key={w}>{w}</span>
-            ))}
-          </div>
-          <div className="hf-blocks__days">
-            {monthCells(month).map((d, i) => {
-              if (!d) return <span key={`blank-${i}`} />
-              const dIso = toISODate(d)
+        <div className="hf-blocks__cal">
+          <MonthPair
+            start={month}
+            today={today}
+            selected={iso}
+            disablePast
+            canPrev={compareMonths(month, currentMonth) > 0}
+            onShift={(d) => setMonth((m) => addMonths(m, d))}
+            onSelect={(d) => setSelected(d)}
+            dayInfo={(dIso) => {
               const list = monthBlocks.filter((b) => b.date === dIso)
-              const closed = list.some((b) => b.startTime === null)
-              const partial = !closed && list.length > 0
-              return (
-                <button
-                  key={dIso}
-                  type="button"
-                  className={`hf-blocks__day ${closed ? 'is-closed' : ''}`}
-                  aria-pressed={dIso === iso}
-                  aria-label={`${dayLabel(d)}${closed ? ', cerrado' : partial ? ', horarios bloqueados' : ''}`}
-                  disabled={d < today}
-                  onClick={() => setSelected(d)}
-                >
-                  {d.getDate()}
-                  {partial && <span className="hf-blocks__dot" aria-hidden="true" />}
-                </button>
-              )
-            })}
-          </div>
+              return { closed: list.some((b) => b.startTime === null), partial: list.length > 0 }
+            }}
+          />
           <div className="hf-blocks__legend">
             <span><i className="hf-blocks__key" />Día cerrado</span>
             <span><i className="hf-blocks__dot hf-blocks__dot--key" />Horarios bloqueados</span>
           </div>
-        </section>
+        </div>
 
         <section className="hf-blocks__editor" aria-label="Bloquear">
           <span className="hf-blocks__kicker">Día elegido</span>

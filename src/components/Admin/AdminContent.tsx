@@ -7,6 +7,7 @@ import { useAdmin } from '../../lib/useAdmin'
 import { ContentForm } from './ContentForm'
 import { sectionForms, setAt, type ItemsForm } from './contentForms'
 import './AdminContent.css'
+import { useAdminLive } from '../../lib/useAdminLive'
 
 type Obj = Record<string, unknown>
 type Phase = 'idle' | 'saving' | 'publishing' | 'published'
@@ -67,6 +68,8 @@ function SectionEditor({ sectionKey: key, onSection }: { sectionKey: ContentKey;
   const loadDirty = useCallback(() => {
     adminApi.contentDirty().then((r) => setDirtyKeys(r.dirty)).catch(() => {})
   }, [])
+  // Otra pestaña guardó o publicó: se actualizan los puntos de las pestañas (el borrador que editas no se toca)
+  useAdminLive(['content'], loadDirty)
 
   // Al cambiar de sección: cargar su estado
   useEffect(() => {

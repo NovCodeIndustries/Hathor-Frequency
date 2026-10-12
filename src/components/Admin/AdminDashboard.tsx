@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { timeSlots } from '../../data/booking'
-import { adminApi, dateFromISO, formatMoney, formatStamp, type Dashboard, type DashboardRange, type DaySlot } from '../../lib/adminApi'
+import { adminApi, dateFromISO, formatMoney, formatStamp, shortName, type Dashboard, type DashboardRange, type DaySlot } from '../../lib/adminApi'
 import { MONTHS, WEEKDAYS, WEEKDAYS_SHORT } from '../../lib/calendar'
 import { formatTime } from '../../lib/time'
 import { useAdmin } from '../../lib/useAdmin'
 import { ChargeModal, type ChargeTarget } from './ChargeModal'
 import './AdminDashboard.css'
+import { useAdminLive } from '../../lib/useAdminLive'
 
 const RANGES: { value: DashboardRange; label: string }[] = [
   { value: 'week', label: 'Semana' },
@@ -60,6 +61,7 @@ export function AdminDashboard() {
   }, [range, tick, onError])
 
   const reload = useCallback(() => setTick((t) => t + 1), [])
+  useAdminLive(['booking', 'contact', 'review', 'block', 'content', 'site'], reload)
   const clear = () => setHover(null)
 
   if (!data) {
@@ -96,7 +98,7 @@ export function AdminDashboard() {
       <header className="hf-dash__hello">
         <span className="hf-dash__kick">{longDate(data.today.date)}</span>
         <h1 className="hf-dash__title">
-          {greeting()}, <span>{admin.name}.</span>
+          {greeting()}, <span>{shortName(admin)}.</span>
         </h1>
         <p className="hf-admin__lead">
           Hoy {sessionsToday === 1 ? 'hay 1 sesión' : `hay ${sessionsToday} sesiones`}

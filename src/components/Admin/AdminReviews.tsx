@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { adminApi, formatStamp, type AdminReview, type ReviewStatus } from '../../lib/adminApi'
 import { Stars } from '../Reviews/Stars'
 import '../Reviews/Reviews.css'
 import { useAdmin } from '../../lib/useAdmin'
 import './AdminReviews.css'
+import { useAdminLive } from '../../lib/useAdminLive'
 
 const FILTERS: { label: string; status: ReviewStatus | null }[] = [
   { label: 'Todas', status: null },
@@ -26,9 +27,11 @@ export function AdminReviews() {
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState('')
 
-  useEffect(() => {
+  const load = useCallback(() => {
     adminApi.reviews().then(setReviews).catch((err) => setError(onError(err)))
   }, [onError])
+  useEffect(load, [load])
+  useAdminLive(['review'], load)
 
   const setStatus = async (id: string, status: ReviewStatus) => {
     setBusyId(id)

@@ -49,7 +49,7 @@ export async function endSession(c: Context) {
 }
 
 export interface AdminVariables {
-  admin: { id: string; email: string; name: string }
+  admin: { id: string; email: string; name: string; firstName: string; lastName: string; isRoot: boolean }
 }
 
 /** Exige sesión válida; deja al usuario en `c.get('admin')` */
@@ -58,7 +58,7 @@ export const requireAdmin: MiddlewareHandler<{ Variables: AdminVariables }> = as
   if (!token) return fail(c, 401, 'Inicia sesión')
   const session = await prisma.adminSession.findUnique({
     where: { tokenHash: sha256(token) },
-    include: { user: { select: { id: true, email: true, name: true } } },
+    include: { user: { select: { id: true, email: true, name: true, firstName: true, lastName: true, isRoot: true } } },
   })
   if (!session || session.expiresAt <= new Date()) {
     if (session) await prisma.adminSession.delete({ where: { id: session.id } })

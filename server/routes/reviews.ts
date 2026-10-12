@@ -3,6 +3,7 @@ import { prisma } from '../db'
 import { ReviewStatus } from '../generated/prisma/enums'
 import { parseBody } from '../lib/body'
 import { reviewSchema } from '../schemas'
+import { emitAdmin } from '../lib/siteEvents'
 
 export const reviews = new Hono()
 
@@ -35,5 +36,6 @@ reviews.post('/', async (c) => {
   if (website) return c.json({ ok: true }, 201)
 
   await prisma.review.create({ data: { ...data, project: project || null } })
+  emitAdmin('review')
   return c.json({ ok: true }, 201)
 })

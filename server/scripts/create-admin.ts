@@ -42,7 +42,7 @@ if (!email.includes('@') || !name || password.length < 10) {
 const passwordHash = await hashPassword(password)
 const user = await prisma.adminUser.upsert({
   where: { email },
-  create: { email, name, passwordHash },
+  create: { email, name, firstName: name.split(' ')[0], lastName: name.split(' ').slice(1).join(' '), passwordHash },
   update: { name, passwordHash },
 })
 // Al cambiar la contraseña se cierran las sesiones abiertas

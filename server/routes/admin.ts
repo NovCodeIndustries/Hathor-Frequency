@@ -15,7 +15,10 @@ import { dashboard } from './dashboard'
 import { adminContent, contentChanges } from './content'
 import { MEDIA_DIR, listMedia, mediaExists, searchMedia } from '../lib/media'
 import { broadcastStats } from '../lib/stats'
+import { emitAdmin, emitAvailability, emitLive, onAdminEvent } from '../lib/siteEvents'
+import { streamSSE } from 'hono/streaming'
 import { adminSite } from './site'
+import { users } from './users'
 import { publishedDisabled } from '../lib/site'
 
 export const admin = new Hono<{ Variables: AdminVariables }>()
@@ -32,7 +35,7 @@ admin.post('/login', rateLimit({ max: 10, windowMs: 15 * 60_000 }), async (c) =>
     return fail(c, 401, 'Correo o contraseña incorrectos')
   }
   await startSession(c, user.id)
-  return c.json({ id: user.id, email: user.email, name: user.name })
+  return c.json({ id: user.id, email: user.email, name: user.name, firstName: user.firstName, lastName: user.lastName, isRoot: user.isRoot })
 })
 
 admin.post('/logout', async (c) => {
@@ -44,6 +47,25 @@ admin.post('/logout', async (c) => {
 admin.use('*', requireAdmin)
 
 admin.get('/me', (c) => c.json(c.get('admin')))
+
+/** GET /api/admin/events: SSE con un evento `admin` (data = qué cambió) para que el panel se actualice solo */
+admin.get('/events', (c) => {
+  c.header('X-Accel-Buffering', 'no')
+  return streamSSE(c, async (stream) => {
+    let closed = false
+    const off = onAdminEvent((kind) => void stream.writeSSE({ event: 'admin', data: kind }))
+    stream.onAbort(() => {
+      closed = true
+      off()
+    })
+    await stream.write(`:${' '.repeat(2048)}\n\n`)
+    await stream.writeSSE({ event: 'hello', data: '', retry: 5000 })
+    while (!closed) {
+      await stream.sleep(25_000)
+      if (!closed) await stream.writeSSE({ event: 'ping', data: '' })
+    }
+  })
+})
 
 /** Contadores de las pestañas del panel */
 admin.get('/summary', async (c) => {
@@ -127,6 +149,8 @@ admin.patch('/bookings/:id', async (c) => {
     })
     // Terminar o reabrir una sesión cambia la cifra de proyectos
     if (status) void broadcastStats()
+    emitAdmin('booking')
+    emitAvailability()
     return c.json(toAdminBooking(b))
   } catch (err) {
     // Reactivar una cancelada cuando su horario ya lo tomó otra reserva
@@ -148,7 +172,11 @@ admin.patch('/reviews/:id', async (c) => {
   const body = await parseBody(c, z.object({ status: z.enum(ReviewStatus) }))
   if (body instanceof Response) return body
   try {
-    return c.json(await prisma.review.update({ where: { id: c.req.param('id') }, data: { status: body.status } }))
+    const r = await prisma.review.update({ where: { id: c.req.param('id') }, data: { status: body.status } })
+    emitAdmin('review')
+    // Publicar u ocultar cambia la página Opiniones abierta
+    emitLive('reviews', {})
+    return c.json(r)
   } catch (err) {
     if ((err as { code?: string }).code === 'P2025') return fail(c, 404, 'Opinión no encontrada')
     throw err
@@ -165,12 +193,12 @@ admin.patch('/contacts/:id', async (c) => {
   const body = await parseBody(c, z.object({ handled: z.boolean() }))
   if (body instanceof Response) return body
   try {
-    return c.json(
-      await prisma.contactRequest.update({
-        where: { id: c.req.param('id') },
-        data: { handledAt: body.handled ? new Date() : null },
-      }),
-    )
+    const row = await prisma.contactRequest.update({
+      where: { id: c.req.param('id') },
+      data: { handledAt: body.handled ? new Date() : null },
+    })
+    emitAdmin('contact')
+    return c.json(row)
   } catch (err) {
     if ((err as { code?: string }).code === 'P2025') return fail(c, 404, 'Contacto no encontrado')
     throw err
@@ -206,6 +234,8 @@ admin.post('/blocks', async (c) => {
     const b = await prisma.blockedSlot.create({
       data: { date: dateFromISO(body.date), startTime: body.time ?? null, reason: body.reason || null },
     })
+    emitAdmin('block')
+    emitAvailability()
     return c.json({ ...b, date: isoFromDate(b.date) }, 201)
   } catch (err) {
     if (isUniqueViolation(err)) return fail(c, 409, 'Ese bloqueo ya existe')
@@ -215,7 +245,10 @@ admin.post('/blocks', async (c) => {
 
 admin.delete('/blocks/:id', async (c) => {
   const { count } = await prisma.blockedSlot.deleteMany({ where: { id: c.req.param('id') } })
-  return count ? c.json({ ok: true }) : fail(c, 404, 'Bloqueo no encontrado')
+  if (!count) return fail(c, 404, 'Bloqueo no encontrado')
+  emitAdmin('block')
+  emitAvailability()
+  return c.json({ ok: true })
 })
 
 // ── Dashboard (Inicio) ────────────────────────────────────
@@ -225,6 +258,10 @@ admin.route('/dashboard', dashboard)
 // ── Sitio (módulos) ───────────────────────────────────────
 
 admin.route('/site', adminSite)
+
+// ── Usuarios del panel ────────────────────────────────────
+
+admin.route('/users', users)
 
 // ── Medios (F1: ¿existe la ruta en el HDD?) ───────────────
 

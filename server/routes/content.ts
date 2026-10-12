@@ -7,7 +7,7 @@ import { prisma } from '../db'
 import type { Prisma } from '../generated/prisma/client'
 import { parseBody } from '../lib/body'
 import { fail } from '../lib/errors'
-import { emitLive } from '../lib/siteEvents'
+import { emitAdmin, emitLive } from '../lib/siteEvents'
 import { broadcastStats } from '../lib/stats'
 
 const isKey = (k: string): k is ContentKey => (contentKeys as string[]).includes(k)
@@ -115,6 +115,7 @@ adminContent.put('/:key/draft', async (c) => {
   const data = body.data as Prisma.InputJsonValue
   const updatedByName = c.get('admin').name
   await prisma.contentDraft.upsert({ where: { key }, create: { key, data, updatedByName }, update: { data, updatedByName } })
+  emitAdmin('content')
   return c.json(await sectionState(key))
 })
 
@@ -131,6 +132,7 @@ adminContent.post('/:key/publish', async (c) => {
   // La web abierta cambia al instante
   emitLive('content', { key, data: state.draft })
   if (key === 'artistas') void broadcastStats()
+  emitAdmin('content')
   return c.json(await sectionState(key))
 })
 

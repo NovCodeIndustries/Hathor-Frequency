@@ -13,8 +13,34 @@ export type PaymentStatus = 'PENDING' | 'DEPOSIT' | 'PAID'
 export interface AdminUser {
   id: string
   email: string
+  /** Nombre completo */
   name: string
+  firstName: string
+  lastName: string
+  /** Usuario principal: no se puede borrar y administra a los demás */
+  isRoot: boolean
 }
+
+export interface AdminUserRow extends AdminUser {
+  middleName: string | null
+  secondLastName: string | null
+  phone: string | null
+  createdAt: string
+}
+
+export interface NewAdminUser {
+  firstName: string
+  middleName?: string
+  lastName: string
+  secondLastName?: string
+  phone: string
+  email: string
+  password: string
+}
+
+/** "Xavier Ruiz": primer nombre + primer apellido (para saludos y la barra) */
+export const shortName = (u: { firstName?: string; lastName?: string; name: string }) =>
+  [u.firstName, u.lastName].filter(Boolean).join(' ') || u.name
 
 export interface AdminSummary {
   pendingBookings: number
@@ -208,8 +234,9 @@ async function request<T>(method: string, path: string, body?: object): Promise<
   try {
     res = await fetch(`/api/admin${path}`, {
       method,
-      headers: body ? { 'Content-Type': 'application/json' } : undefined,
-      body: body ? JSON.stringify(body) : undefined,
+      // Toda escritura va como JSON (la API rechaza otras: anti-CSRF), también un DELETE sin cuerpo
+      headers: method === 'GET' ? undefined : { 'Content-Type': 'application/json' },
+      body: method === 'GET' ? undefined : JSON.stringify(body ?? {}),
     })
   } catch {
     throw new AdminApiError(0, 'Sin conexión con el servidor')
@@ -251,6 +278,12 @@ export const adminApi = {
   discardContent: (key: string) => request<ContentState>('POST', `/content/${key}/discard`, {}),
   contentHistory: (key: string) => request<ContentVersionInfo[]>('GET', `/content/${key}/history`),
   restoreContent: (key: string, id: string) => request<ContentState>('POST', `/content/${key}/restore/${id}`, {}),
+  users: () => request<AdminUserRow[]>('GET', '/users'),
+  createUser: (user: NewAdminUser) => request<AdminUserRow>('POST', '/users', user),
+  setUserPassword: (id: string, password: string) => request<{ ok: true }>('PATCH', `/users/${id}/password`, { password }),
+  deleteUser: (id: string) => request<{ ok: true }>('DELETE', `/users/${id}`),
+  changeMyPassword: (current: string, next: string) => request<{ ok: true }>('PATCH', '/users/me/password', { current, next }),
+
   mediaList: (params: { dir?: string; q?: string }) =>
     request<MediaListing>('GET', `/media/list${query({ dir: params.dir, q: params.q })}`),
   mediaCheck: (path: string) => request<{ path: string; exists: boolean | null }>('GET', `/media/check?path=${encodeURIComponent(path)}`),

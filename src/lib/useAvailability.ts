@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { YearMonth } from './calendar'
+import { onLive } from './live'
 
 /** Respuesta de `GET /api/availability?month=YYYY-MM` (server/lib/availability.ts) */
 export interface Availability {
@@ -32,5 +33,7 @@ export function useAvailability(month: YearMonth): { availability: Availability;
   }, [key, tick])
 
   const refresh = useCallback(() => setTick((t) => t + 1), [])
+  // En tiempo real: otra persona reservó o el estudio bloqueó un horario
+  useEffect(() => onLive('availability', refresh), [refresh])
   return { availability: state.key === key ? state.data : EMPTY, refresh }
 }

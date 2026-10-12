@@ -6,7 +6,7 @@ import { prisma } from '../db'
 import { parseBody } from '../lib/body'
 import { fail } from '../lib/errors'
 import { cleanIds, publishedDisabled } from '../lib/site'
-import { emitSitePublished, onLiveEvent } from '../lib/siteEvents'
+import { emitAdmin, emitSitePublished, onLiveEvent } from '../lib/siteEvents'
 import { broadcastStats, computeStats } from '../lib/stats'
 
 /** GET /api/site: módulos apagados que ve el público */
@@ -62,6 +62,7 @@ adminSite.put('/draft', async (c) => {
   const disabled = cleanIds(body.disabled)
   const updatedByName = c.get('admin').name
   await prisma.siteDraft.upsert({ where: { id: 1 }, create: { id: 1, disabled, updatedByName }, update: { disabled, updatedByName } })
+  emitAdmin('site')
   return c.json(await draftOrPublished())
 })
 
@@ -72,6 +73,7 @@ adminSite.post('/publish', async (c) => {
   await prisma.siteVersion.create({ data: { disabled: draft, publishedByName: c.get('admin').name } })
   // La web abierta cambia al instante
   emitSitePublished(draft)
+  emitAdmin('site')
   void broadcastStats()
   return c.json(await draftOrPublished())
 })

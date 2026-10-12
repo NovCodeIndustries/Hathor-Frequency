@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { prisma } from '../db'
 import { parseBody } from '../lib/body'
 import { contactSchema } from '../schemas'
+import { emitAdmin } from '../lib/siteEvents'
 
 export const contact = new Hono()
 
@@ -12,5 +13,6 @@ contact.post('/', async (c) => {
   if (website) return c.json({ ok: true }, 201)
 
   await prisma.contactRequest.create({ data })
+  emitAdmin('contact')
   return c.json({ ok: true }, 201)
 })

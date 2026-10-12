@@ -1,35 +1,32 @@
 import { useCallback, useEffect, useState } from 'react'
 import { timeSlots } from '../../data/booking'
 import { adminApi, dateFromISO, formatMoney, formatStamp, type AdminBlock, type AdminBooking, type BookingStatus, type PaymentStatus } from '../../lib/adminApi'
-import { MONTHS, WEEKDAYS_SHORT, startOfDay, toISODate } from '../../lib/calendar'
+import { MONTHS, WEEKDAYS, WEEKDAYS_SHORT, addMonths, compareMonths, startOfDay, toISODate, type YearMonth } from '../../lib/calendar'
 import { formatTime } from '../../lib/time'
 import { useAdmin } from '../../lib/useAdmin'
+import { useAdminLive } from '../../lib/useAdminLive'
 import { ChargeModal } from './ChargeModal'
+import { MonthPair, type DayMark } from './MonthPair'
 import './AdminAgenda.css'
 
 const STATUS_LABEL: Record<BookingStatus, string> = { PENDING: 'Pendiente', CONFIRMED: 'Confirmada', CANCELLED: 'Cancelada', COMPLETED: 'Terminada' }
 const STATUS_CHIP: Record<BookingStatus, string> = { PENDING: 'pending', CONFIRMED: 'done', CANCELLED: 'off', COMPLETED: 'finished' }
+const STATUS_MARK: Record<BookingStatus, DayMark | null> = { PENDING: 'pending', CONFIRMED: 'done', COMPLETED: 'finished', CANCELLED: null }
 const PAY_LABEL: Record<PaymentStatus, string> = { PENDING: 'Pago pendiente', DEPOSIT: 'Anticipo', PAID: 'Pagado' }
 
-const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n)
-const mondayOf = (d: Date) => addDays(startOfDay(d), -((d.getDay() + 6) % 7))
-
-/** "13 – 19 de octubre" / "27 de octubre – 2 de noviembre" */
-function weekTitle(monday: Date): string {
-  const sunday = addDays(monday, 6)
-  return monday.getMonth() === sunday.getMonth()
-    ? `${monday.getDate()} – ${sunday.getDate()} de ${MONTHS[sunday.getMonth()]}`
-    : `${monday.getDate()} de ${MONTHS[monday.getMonth()]} – ${sunday.getDate()} de ${MONTHS[sunday.getMonth()]}`
-}
+const lastOf = ({ year, month }: YearMonth) => new Date(year, month + 1, 0)
 
 /**
- * Reservas · Agenda semanal (diseño A2): cuadrícula de 7 días × horarios con las reservas activas
- * (pendiente en contorno, confirmada en dorado) y los bloqueos en trama; el detalle va a la derecha.
+ * Reservas: dos meses en pantalla (el actual y el siguiente) con una marca por reserva
+ * (contorno = pendiente, dorado = confirmada, dorado oscuro = terminada) y trama en los días cerrados.
+ * A la derecha, los horarios del día elegido y el detalle de la reserva.
  */
 export function AdminAgenda() {
   const { refreshSummary, onError } = useAdmin()
   const [today] = useState(() => startOfDay(new Date()))
-  const [monday, setMonday] = useState(() => mondayOf(new Date()))
+  const current: YearMonth = { year: today.getFullYear(), month: today.getMonth() }
+  const [start, setStart] = useState<YearMonth>(current)
+  const [day, setDay] = useState(() => toISODate(today))
   const [bookings, setBookings] = useState<AdminBooking[]>([])
   const [blocks, setBlocks] = useState<AdminBlock[]>([])
   const [pickedId, setPickedId] = useState<string | null>(null)
@@ -38,8 +35,8 @@ export function AdminAgenda() {
   const [tick, setTick] = useState(0)
   const [charge, setCharge] = useState<'confirm' | 'edit' | null>(null)
 
-  const from = toISODate(monday)
-  const to = toISODate(addDays(monday, 6))
+  const from = toISODate(new Date(start.year, start.month, 1))
+  const to = toISODate(lastOf(addMonths(start, 1)))
 
   useEffect(() => {
     let alive = true
@@ -57,17 +54,21 @@ export function AdminAgenda() {
   }, [from, to, tick, onError])
 
   const reload = useCallback(() => setTick((t) => t + 1), [])
+  // En tiempo real: una reserva nueva o un cambio desde otra sesión vuelve a cargar
+  useAdminLive(['booking', 'block'], reload)
 
-  const days = Array.from({ length: 7 }, (_, i) => addDays(monday, i))
   const active = bookings.filter((b) => b.status !== 'CANCELLED')
-  const cancelled = bookings.length - active.length
-  const bookingAt = (iso: string, time: string) => active.find((b) => b.date === iso && b.startTime === time)
-  const blockAt = (iso: string, time: string) =>
-    blocks.find((b) => b.date === iso && (b.startTime === null || b.startTime === time))
+  const dayBookings = bookings.filter((b) => b.date === day)
+  const cancelledToday = dayBookings.filter((b) => b.status === 'CANCELLED')
+  const bookingAt = (time: string) => dayBookings.find((b) => b.startTime === time && b.status !== 'CANCELLED')
+  const blockAt = (time: string) => blocks.find((b) => b.date === day && (b.startTime === null || b.startTime === time))
 
-  // Seleccionada: la elegida o, si no, la primera pendiente de la semana
+  // Seleccionada: la elegida o, si no, la primera del día (pendiente primero)
   const picked =
-    bookings.find((b) => b.id === pickedId) ?? active.find((b) => b.status === 'PENDING') ?? active[0] ?? null
+    bookings.find((b) => b.id === pickedId) ??
+    dayBookings.find((b) => b.status === 'PENDING') ??
+    dayBookings.find((b) => b.status !== 'CANCELLED') ??
+    null
 
   const setStatus = async (status: BookingStatus) => {
     if (!picked) return
@@ -84,89 +85,96 @@ export function AdminAgenda() {
     }
   }
 
+  const selDate = dateFromISO(day)
+  const pendingCount = active.filter((b) => b.status === 'PENDING' && b.date >= toISODate(today)).length
+
   return (
     <>
       <title>Reservas · Panel</title>
+      <div className="hf-admin__head">
+        <div>
+          <h1 className="hf-admin__title">Reservas</h1>
+          <p className="hf-admin__lead">{pendingCount ? `${pendingCount} por confirmar en estos dos meses.` : 'Nada por confirmar en estos dos meses.'}</p>
+        </div>
+        <div className="hf-agenda__legend">
+          <span><i className="hf-agenda__key hf-agenda__key--pending" />Pendiente</span>
+          <span><i className="hf-agenda__key hf-agenda__key--done" />Confirmada</span>
+          <span><i className="hf-agenda__key hf-agenda__key--finished" />Terminada</span>
+          <span><i className="hf-agenda__key hf-agenda__key--blocked" />Cerrado</span>
+        </div>
+      </div>
+      {error && <p className="hf-admin__error" role="alert">{error}</p>}
+
       <div className="hf-agenda">
-        <section className="hf-agenda__week" aria-label="Semana">
-          <div className="hf-agenda__top">
-            <div className="hf-agenda__nav">
-              <button type="button" className="hf-admin__arrow" aria-label="Semana anterior" onClick={() => setMonday((m) => addDays(m, -7))}>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M10 3 5 8l5 5" /></svg>
-              </button>
-              <h1 className="hf-agenda__title" aria-live="polite">{weekTitle(monday)}</h1>
-              <button type="button" className="hf-admin__arrow" aria-label="Semana siguiente" onClick={() => setMonday((m) => addDays(m, 7))}>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="m6 3 5 5-5 5" /></svg>
-              </button>
-              <button type="button" className="hf-admin__btn hf-admin__btn--ghost hf-admin__btn--sm" onClick={() => setMonday(mondayOf(new Date()))}>
-                Hoy
-              </button>
-            </div>
-            <div className="hf-agenda__legend">
-              <span><i className="hf-agenda__key hf-agenda__key--pending" />Pendiente</span>
-              <span><i className="hf-agenda__key hf-agenda__key--done" />Confirmada</span>
-              <span><i className="hf-agenda__key hf-agenda__key--finished" />Terminada</span>
-              <span><i className="hf-agenda__key hf-agenda__key--blocked" />Bloqueado</span>
-            </div>
-          </div>
+        <div className="hf-agenda__cal">
+          <MonthPair
+            start={start}
+            today={today}
+            selected={day}
+            canPrev={compareMonths(start, addMonths(current, -12)) > 0}
+            onShift={(d) => setStart((m) => addMonths(m, d))}
+            onSelect={(d) => {
+              setDay(toISODate(d))
+              setPickedId(null)
+            }}
+            dayInfo={(iso) => {
+              const list = active.filter((b) => b.date === iso).sort((a, b) => a.startTime.localeCompare(b.startTime))
+              const dayBlocks = blocks.filter((b) => b.date === iso)
+              return {
+                closed: dayBlocks.some((b) => b.startTime === null),
+                partial: dayBlocks.length > 0,
+                marks: list.map((b) => STATUS_MARK[b.status]).filter((m): m is DayMark => !!m),
+              }
+            }}
+          />
+        </div>
 
-          {error && <p className="hf-admin__error" role="alert">{error}</p>}
+        <div className="hf-agenda__side">
+          <section className="hf-agenda__dayview" aria-label="Horarios del día">
+            <span className="hf-agenda__kicker">Día elegido</span>
+            <h2 className="hf-agenda__dayname">
+              {WEEKDAYS[(selDate.getDay() + 6) % 7]} {selDate.getDate()} de {MONTHS[selDate.getMonth()]}
+            </h2>
+            <ol className="hf-agenda__slots">
+              {timeSlots.map((time) => {
+                const b = bookingAt(time)
+                const block = blockAt(time)
+                return (
+                  <li key={time} className="hf-agenda__slot">
+                    <span className="hf-agenda__slot-time">{formatTime(time)}</span>
+                    {b ? (
+                      <button
+                        type="button"
+                        className={`hf-agenda__cell hf-agenda__cell--${b.status === 'PENDING' ? 'pending' : b.status === 'COMPLETED' ? 'finished' : 'done'}`}
+                        aria-pressed={picked?.id === b.id}
+                        aria-label={`${b.project}, ${b.service}, ${STATUS_LABEL[b.status]}`}
+                        onClick={() => setPickedId(b.id)}
+                      >
+                        <span className="hf-agenda__project">{b.project}</span>
+                        <span className="hf-agenda__service">{b.service}</span>
+                      </button>
+                    ) : block ? (
+                      <span className="hf-agenda__cell hf-agenda__cell--blocked">{block.reason || (block.startTime ? 'Bloqueado' : 'Cerrado')}</span>
+                    ) : (
+                      <span className="hf-agenda__cell hf-agenda__cell--free">Libre</span>
+                    )}
+                  </li>
+                )
+              })}
+            </ol>
+            {cancelledToday.length > 0 && (
+              <div className="hf-agenda__cancelled">
+                <span className="hf-agenda__muted">Canceladas este día:</span>
+                {cancelledToday.map((b) => (
+                  <button key={b.id} type="button" className="hf-admin__btn hf-admin__btn--ghost hf-admin__btn--sm" onClick={() => setPickedId(b.id)}>
+                    {formatTime(b.startTime)} · {b.project}
+                  </button>
+                ))}
+              </div>
+            )}
+          </section>
 
-          <div className="hf-agenda__scroll">
-            <div className="hf-agenda__grid">
-              <span />
-              {days.map((d, i) => (
-                <div
-                  key={i}
-                  className={`hf-agenda__day ${d.getTime() === today.getTime() ? 'is-today' : ''} ${d < today ? 'is-past' : ''}`}
-                >
-                  <span className="hf-agenda__wd">{WEEKDAYS_SHORT[i]}</span>
-                  <span className="hf-agenda__n">{d.getDate()}</span>
-                </div>
-              ))}
-              {timeSlots.map((time) => (
-                <div key={time} className="hf-agenda__row">
-                  <span className="hf-agenda__time">{formatTime(time)}</span>
-                  {days.map((d) => {
-                    const iso = toISODate(d)
-                    const b = bookingAt(iso, time)
-                    if (b) {
-                      return (
-                        <button
-                          key={iso}
-                          type="button"
-                          className={`hf-agenda__cell hf-agenda__cell--${b.status === 'PENDING' ? 'pending' : b.status === 'COMPLETED' ? 'finished' : 'done'}`}
-                          aria-pressed={picked?.id === b.id}
-                          aria-label={`${b.project}, ${b.service}, ${STATUS_LABEL[b.status]}`}
-                          onClick={() => setPickedId(b.id)}
-                        >
-                          <span className="hf-agenda__project">{b.project}</span>
-                          <span className="hf-agenda__service">{b.service}</span>
-                        </button>
-                      )
-                    }
-                    const block = blockAt(iso, time)
-                    if (block) {
-                      return (
-                        <div key={iso} className="hf-agenda__cell hf-agenda__cell--blocked">
-                          {block.reason || (block.startTime ? 'Bloqueado' : 'Cerrado')}
-                        </div>
-                      )
-                    }
-                    return <div key={iso} className="hf-agenda__cell hf-agenda__cell--free" />
-                  })}
-                </div>
-              ))}
-            </div>
-          </div>
-          {cancelled > 0 && (
-            <p className="hf-agenda__note">
-              {cancelled} {cancelled === 1 ? 'reserva cancelada' : 'reservas canceladas'} esta semana (no ocupan horario).
-            </p>
-          )}
-        </section>
-
-        <aside className="hf-agenda__detail" aria-label="Detalle de la reserva">
+          <aside className="hf-agenda__detail" aria-label="Detalle de la reserva">
           <svg className="hf-agenda__rings" viewBox="0 0 320 320" fill="none" aria-hidden="true" focusable="false">
             {[150, 120, 90, 60].map((r) => (
               <circle key={r} cx="160" cy="160" r={r} stroke="currentColor" />
@@ -239,9 +247,10 @@ export function AdminAgenda() {
               </div>
             </>
           ) : (
-            <p className="hf-agenda__muted">No hay reservas esta semana.</p>
+            <p className="hf-agenda__muted">Elige un día con reservas o un horario ocupado para ver el detalle.</p>
           )}
-        </aside>
+          </aside>
+        </div>
       </div>
       {charge && picked && (
         <ChargeModal

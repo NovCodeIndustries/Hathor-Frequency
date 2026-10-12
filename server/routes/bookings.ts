@@ -7,6 +7,7 @@ import { fail, invalid } from '../lib/errors'
 import { isUniqueViolation } from '../lib/prismaErrors'
 import { serviceFromLabel } from '../lib/services'
 import { bookingSchema, monthSchema } from '../schemas'
+import { emitAdmin, emitAvailability } from '../lib/siteEvents'
 
 /** Mensaje cuando el horario ya no está libre (el frontend lo muestra tal cual) */
 const SLOT_TAKEN = 'Ese horario acaba de ocuparse. Elige otro.'
@@ -37,6 +38,9 @@ bookings.post('/', async (c) => {
     if (isUniqueViolation(err)) return fail(c, 409, SLOT_TAKEN)
     throw err
   }
+  // El panel ve la reserva nueva y los demás visitantes ven el horario ocupado, al instante
+  emitAdmin('booking')
+  emitAvailability()
   return c.json({ ok: true }, 201)
 })
 

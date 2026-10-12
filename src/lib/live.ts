@@ -13,10 +13,13 @@ let started = false
 const POLL_MS = 15_000
 const SSE_TIMEOUT_MS = 6_000
 
-/** Escucha un evento del canal (`site`, `content`) */
-export function onLive(event: string, handler: Handler) {
+/** Escucha un evento del canal (`site`, `content`, `stats`, `availability`, `reviews`); devuelve cómo dejar de escuchar */
+export function onLive(event: string, handler: Handler): () => void {
   if (!handlers.has(event)) handlers.set(event, new Set())
   handlers.get(event)!.add(handler)
+  return () => {
+    handlers.get(event)?.delete(handler)
+  }
 }
 
 /** Función para volver a pedir los datos: al reconectar, al volver a la pestaña y en el respaldo sin SSE */
@@ -47,7 +50,7 @@ export function startLive() {
     startPolling()
   }, SSE_TIMEOUT_MS)
 
-  for (const name of ['site', 'content', 'stats']) {
+  for (const name of ['site', 'content', 'stats', 'availability', 'reviews']) {
     events.addEventListener(name, (e) => {
       let data: unknown
       try {

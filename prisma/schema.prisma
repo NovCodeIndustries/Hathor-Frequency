@@ -139,9 +139,17 @@ model BlockedSlot {
 model AdminUser {
   id           String         @id @default(uuid()) @db.Uuid
   email        String         @unique @db.VarChar(254)
+  /// Nombre completo (se arma con los cuatro campos)
   name         String         @db.VarChar(120)
+  firstName    String         @default("") @map("first_name") @db.VarChar(60)
+  middleName   String?        @map("middle_name") @db.VarChar(60)
+  lastName     String         @default("") @map("last_name") @db.VarChar(60)
+  secondLastName String?      @map("second_last_name") @db.VarChar(60)
+  phone        String?        @db.VarChar(20)
   /// scrypt: "salt:hash" en hex
   passwordHash String         @map("password_hash") @db.VarChar(200)
+  /// Usuario principal (ROOT_ADMIN_EMAIL): siempre existe, no se puede borrar y es el único que administra usuarios
+  isRoot       Boolean        @default(false) @map("is_root")
   createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
   sessions     AdminSession[]
 

@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { contactTopics } from '../../data/site'
 import { adminApi, formatStamp, type AdminContact } from '../../lib/adminApi'
 import { useAdmin } from '../../lib/useAdmin'
 import './AdminContacts.css'
+import { useAdminLive } from '../../lib/useAdminLive'
 
 /** Contactos (diseño C1): quién pidió información, sobre qué tema y si ya se atendió */
 export function AdminContacts() {
@@ -11,9 +12,11 @@ export function AdminContacts() {
   const [topic, setTopic] = useState('')
   const [error, setError] = useState('')
 
-  useEffect(() => {
+  const load = useCallback(() => {
     adminApi.contacts().then(setContacts).catch((err) => setError(onError(err)))
   }, [onError])
+  useEffect(load, [load])
+  useAdminLive(['contact'], load)
 
   const toggle = async (c: AdminContact) => {
     try {
