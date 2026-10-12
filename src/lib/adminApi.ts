@@ -35,6 +35,8 @@ export interface AdminUserRow extends AdminUser {
   middleName: string | null
   secondLastName: string | null
   phone: string | null
+  /** "YYYY-MM-DD" o null: ese día la web festeja su cumpleaños */
+  birthDate: string | null
   /** Bloqueada por intentos fallidos hasta esa hora, solo si sigue vigente (se quita sola o con una contraseña nueva) */
   lockedUntil: string | null
   createdAt: string
@@ -50,6 +52,8 @@ export interface NewAdminUser {
   secondLastName?: string
   phone: string
   role: AdminRole
+  /** "YYYY-MM-DD"; vacío o null = sin fecha */
+  birthDate?: string | null
   password: string
 }
 
@@ -67,6 +71,8 @@ export interface AdminSummary {
   contentChanges: number
   /** Web en mantenimiento (panel · Sitio) */
   maintenance: MaintenanceState
+  /** Quién del equipo cumple años hoy ("Nombre Apellido") */
+  birthdays: string[]
 }
 
 /** Modo mantenimiento de la web completa */

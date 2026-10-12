@@ -190,3 +190,7 @@
   .hf-dash__channels { gap: 6px; }
   .hf-dash__funnel-row { grid-template-columns: 110px 1fr 56px; }
 }
+
+/* Temporada o cumpleaños, bajo el saludo */
+.hf-dash__season { margin: 8px 0 0; display: flex; align-items: center; gap: 8px; font-size: 15px; font-style: italic; color: var(--season-acc, var(--c-gold)); }
+.hf-dash__season.is-mine { font-family: var(--font-display); font-style: normal; font-size: 20px; color: var(--c-gold); text-shadow: 0 0 18px rgba(242,201,76,0.35); }

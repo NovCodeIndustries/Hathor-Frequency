@@ -149,6 +149,8 @@ model AdminUser {
   lastName       String            @default("") @map("last_name") @db.VarChar(60)
   secondLastName String?           @map("second_last_name") @db.VarChar(60)
   phone          String?           @db.VarChar(20)
+  /// Fecha de nacimiento: ese día la web festeja su cumpleaños (temporada `cumple`); la web solo recibe el nombre
+  birthDate      DateTime?         @map("birth_date") @db.Date
   /// scrypt: "salt:hash" en hex
   passwordHash   String            @map("password_hash") @db.VarChar(200)
   /// Usuario principal (ROOT_ADMIN_EMAIL): siempre existe, no se puede borrar y es el único que administra usuarios

@@ -35,6 +35,8 @@ export interface ItemsForm {
   normalize?: (list: Record<string, unknown>[]) => Record<string, unknown>[]
   /** Con esto la lista lleva buscador: el texto en el que se busca cada elemento */
   searchOf?: (x: Record<string, unknown>) => string
+  /** Texto de ejemplo del buscador ("Buscar artista por nombre o género") */
+  searchHint?: string
 }
 
 /** Sección por grupos (la columna izquierda son grupos de campos) */
@@ -100,6 +102,8 @@ export const sectionForms: Record<ContentKey, SectionForm> = {
     titleOf: (x) => String(x.name || 'Nuevo paquete'),
     subOf: (x) => `${x.tag || 'Sin etiqueta'} · ${x.price || 'Sin precio'}`,
     moduleOf: (x) => `paquetes.${x.id}`,
+    searchOf: (x) => [x.name, x.tag, x.short, x.price, ...((x.includes as string[] | undefined) ?? [])].join(' '),
+    searchHint: 'Buscar paquete por nombre, etiqueta o qué incluye',
     newItem: (list) => ({
       id: uniqueId('nuevo-paquete', list.map((p) => String(p.id))),
       n: '',
@@ -170,6 +174,7 @@ export const sectionForms: Record<ContentKey, SectionForm> = {
     subOf: (x) => `${x.code} · ${x.genre || 'Sin género'}`,
     moduleOf: (x) => `artistas.${String(x.code).toLowerCase()}`,
     searchOf: (x) => `${x.name} ${x.genre} ${x.code}`,
+    searchHint: 'Buscar artista por nombre o género',
     newItem: (list) => {
       // "Tu banda" (B14) es la fila fija: su código no se usa
       const taken = new Set([...list.map((a) => String(a.code)), 'B14'])
@@ -214,6 +219,8 @@ export const sectionForms: Record<ContentKey, SectionForm> = {
     titleOf: (x) => String(x.q || 'Nueva pregunta'),
     subOf: (x) => String(x.category || 'Sin categoría'),
     moduleOf: (x) => `faq.${x.id}`,
+    searchOf: (x) => `${x.q} ${x.a} ${x.category}`,
+    searchHint: 'Buscar en preguntas, respuestas o categoría',
     newItem: (list) => ({ id: uniqueId(slugify('nueva pregunta'), list.map((f) => String(f.id))), category: String(list[list.length - 1]?.category ?? 'General'), q: '', a: '' }),
     itemFields: [
       { kind: 'text', key: 'category', label: 'Categoría', max: 40, hint: 'Las preguntas de la misma categoría van juntas' },

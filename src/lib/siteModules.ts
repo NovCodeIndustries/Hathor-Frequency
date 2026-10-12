@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { isModuleOn, linkModuleOf, moduleById, parentOf } from '../data/modules'
+import { setBirthdays } from '../data/seasons'
 import { onLive, onRefresh } from './live'
 import { PANEL_ORIGIN } from './origins'
 
@@ -124,9 +125,11 @@ async function fetchPublished(timeout = 5000): Promise<void> {
   try {
     const res = await fetch('/api/site', { signal: AbortSignal.timeout(timeout), cache: 'no-store' })
     if (!res.ok) return
-    const { disabled: ids, maintenance } = (await res.json()) as { disabled: string[]; maintenance?: Maintenance }
+    const { disabled: ids, maintenance, birthdays } = (await res.json()) as { disabled: string[]; maintenance?: Maintenance; birthdays?: string[] }
     applyPublished(ids)
     applyMaintenance(maintenance)
+    // Cumpleaños del equipo hoy: la temporada `cumple` (se lee al cargar la página, useSeason)
+    setBirthdays(birthdays ?? [])
   } catch {
     // sin red: se queda la copia
   }

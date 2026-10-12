@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { availabilityBetween } from '../lib/availability'
+import { birthdaysToday } from '../lib/birthdays'
 import { publishedContent } from '../lib/content'
 import { monthRange } from '../lib/dates'
 import { invalid } from '../lib/errors'
@@ -19,11 +20,11 @@ export function mountPublicReads(api: Hono) {
     return c.json(await publishedContent())
   })
 
-  /** GET /api/site: módulos apagados que ve el público y si la web está en mantenimiento */
+  /** GET /api/site: módulos apagados que ve el público, si la web está en mantenimiento y quién cumple años hoy */
   api.get('/site', async (c) => {
     c.header('Cache-Control', 'no-cache')
-    const [site, maintenance] = await Promise.all([publishedDisabled(), getMaintenance()])
-    return c.json({ ...site, maintenance: publicMaintenance(maintenance) })
+    const [site, maintenance, birthdays] = await Promise.all([publishedDisabled(), getMaintenance(), birthdaysToday()])
+    return c.json({ ...site, maintenance: publicMaintenance(maintenance), birthdays })
   })
 
   /** GET /api/site/stats: cifras que salen de la base (proyectos terminados y artistas publicados) */

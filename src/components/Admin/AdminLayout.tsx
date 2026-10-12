@@ -4,6 +4,9 @@ import { STAFF_ROUTES, AdminApiError, adminApi, formatStamp, shortName, type Adm
 import type { AdminContext } from '../../lib/useAdmin'
 import './AdminLayout.css'
 import './MaintenanceModal.css'
+import { useSeason } from '../../lib/useSeason'
+import { SeasonGarland } from '../Season/SeasonGarland'
+import { Glyph } from '../Ufo/seasonArt'
 import { startAdminLive, stopAdminLive, useAdminLive } from '../../lib/useAdminLive'
 
 /**
@@ -16,6 +19,8 @@ export function AdminLayout() {
   const [admin, setAdmin] = useState<AdminUser | null>(null)
   const [summary, setSummary] = useState<AdminSummary | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
+  // Temporada del mes o cumpleaños del equipo: adorno arriba y glifo junto al logo (como en la web)
+  const season = useSeason()
   // Cerrar el menú móvil al cambiar de página
   const [lastPath, setLastPath] = useState(location.pathname)
   if (location.pathname !== lastPath) {
@@ -115,7 +120,14 @@ export function AdminLayout() {
       <meta name="robots" content="noindex" />
       <aside className={`hf-admin__side ${menuOpen ? 'is-open' : ''}`}>
         <div className="hf-admin__brand">
-          <span className="hf-admin__logo">HATHOR</span>
+          <span className="hf-admin__logo">
+            HATHOR
+            {season && (
+              <span className="hf-admin__logo-badge" aria-hidden="true">
+                <Glyph name={season.page.logo} size={16} />
+              </span>
+            )}
+          </span>
           <span className="hf-admin__sub">FREQUENCY</span>
           <span className="hf-admin__tag">Panel del estudio</span>
         </div>
@@ -155,7 +167,8 @@ export function AdminLayout() {
           </button>
         </div>
       </aside>
-      <main className="hf-admin__main">
+      <main className={`hf-admin__main ${season ? 'has-season' : ''}`}>
+        {season && <SeasonGarland season={season} top />}
         {summary?.maintenance.enabled && (
           <div className="hf-admin__maint" role="status">
             <span>

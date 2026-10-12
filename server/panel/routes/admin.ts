@@ -21,6 +21,7 @@ import { adminSite } from './site'
 import { users } from './users'
 import { publishedDisabled } from '../../shared/lib/site'
 import { getMaintenance } from '../../shared/lib/maintenance'
+import { birthdaysToday } from '../../shared/lib/birthdays'
 import { bookingSlots } from '../../shared/lib/slots'
 import { isBlocked } from '../../shared/lib/availability'
 import { serviceFromLabel } from '../../shared/lib/services'
@@ -110,7 +111,7 @@ admin.get('/events/poll', async (c) => {
 
 /** Contadores de las pestañas del panel */
 admin.get('/summary', async (c) => {
-  const [pendingBookings, pendingReviews, openContacts, draft, published, contentDirty, maintenance] = await Promise.all([
+  const [pendingBookings, pendingReviews, openContacts, draft, published, contentDirty, maintenance, birthdays] = await Promise.all([
     prisma.booking.count({ where: { status: BookingStatus.PENDING, date: { gte: dateFromISO(todayISO()) } } }),
     prisma.review.count({ where: { status: ReviewStatus.PENDING } }),
     prisma.contactRequest.count({ where: { handledAt: null } }),
@@ -118,13 +119,14 @@ admin.get('/summary', async (c) => {
     publishedDisabled(),
     contentChanges(),
     getMaintenance(),
+    birthdaysToday(),
   ])
   // Cambios del panel · Sitio sin publicar
   const d = draft?.disabled ?? published.disabled
   const siteChanges = d.filter((id) => !published.disabled.includes(id)).length + published.disabled.filter((id) => !d.includes(id)).length
   // El rol STAFF solo ve sus contadores
-  if (c.get('admin').role === 'STAFF') return c.json({ pendingBookings, openContacts, pendingReviews: 0, siteChanges: 0, contentChanges: 0, maintenance })
-  return c.json({ pendingBookings, pendingReviews, openContacts, siteChanges, contentChanges: contentDirty.length, maintenance })
+  if (c.get('admin').role === 'STAFF') return c.json({ pendingBookings, openContacts, pendingReviews: 0, siteChanges: 0, contentChanges: 0, maintenance, birthdays })
+  return c.json({ pendingBookings, pendingReviews, openContacts, siteChanges, contentChanges: contentDirty.length, maintenance, birthdays })
 })
 
 // ── Reservas ──────────────────────────────────────────────

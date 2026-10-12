@@ -41,7 +41,7 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
   const [list, setList] = useState<AdminUserRow[] | null>(null)
   const [error, setError] = useState('')
   const [msg, setMsg] = useState('')
-  const EMPTY: NewAdminUser & { repeat: string } = { firstName: '', middleName: '', lastName: '', secondLastName: '', phone: '', role: 'ADMIN', password: '', repeat: '' }
+  const EMPTY: NewAdminUser & { repeat: string } = { firstName: '', middleName: '', lastName: '', secondLastName: '', phone: '', role: 'ADMIN', birthDate: '', password: '', repeat: '' }
   const [form, setForm] = useState(EMPTY)
   const [show, setShow] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -78,6 +78,7 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
     if (form.password !== form.repeat) return setError('Las contraseñas no coinciden.')
     const { repeat: _repeat, ...user } = form
     const clean = Object.fromEntries(Object.entries(user).map(([k, v]) => [k, k === 'password' ? v : String(v ?? '').trim()])) as unknown as NewAdminUser
+    clean.birthDate = clean.birthDate || null
     if (await run(() => adminApi.createUser(clean), (u) => `Usuario creado: ${u.email}`)) {
       setForm(EMPTY)
       setShow(false)
@@ -112,6 +113,7 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
                   <td data-label="Correo" className="hf-acontacts__muted">
                     {u.email}
                     {u.phone && <span className="hf-ausers__phone">{u.phone}</span>}
+                    {u.birthDate && <span className="hf-ausers__phone">Cumpleaños: {birthdayLabel(u.birthDate)}</span>}
                   </td>
                   <td data-label="Rol">
                     {u.isRoot ? (
@@ -187,6 +189,7 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
             </output>
             <span className="hf-ausers__match">Inicial del primer nombre + primer apellido. Si ya existe, se le agrega un número.</span>
           </div>
+          <BirthDateField value={form.birthDate ?? ''} onChange={(birthDate) => setForm({ ...form, birthDate })} />
           <RolePicker value={form.role} onChange={(role) => setForm({ ...form, role })} />
           <label className="hf-admin__field" htmlFor={`${id}-pwd`}>
             Contraseña (mín. 10)
@@ -312,6 +315,23 @@ function MyPassword({ name, email, onError }: { name: string; email: string; onE
   )
 }
 
+const MONTH_NAMES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+/** "3 de marzo" a partir de "YYYY-MM-DD" */
+const birthdayLabel = (iso: string) => `${Number(iso.slice(8, 10))} de ${MONTH_NAMES[Number(iso.slice(5, 7)) - 1]}`
+
+/** Fecha de nacimiento (día, mes y año): ese día la web festeja su cumpleaños con su nombre */
+function BirthDateField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const id = useId()
+  const [max] = useState(() => new Date().toISOString().slice(0, 10))
+  return (
+    <label className="hf-admin__field" htmlFor={`${id}-birth`}>
+      Fecha de nacimiento (opcional)
+      <input id={`${id}-birth`} className="hf-admin__input hf-ausers__date" type="date" min="1900-01-01" max={max} value={value} onChange={(e) => onChange(e.target.value)} />
+      <span className="hf-ausers__match">{value ? `Su cumpleaños (${birthdayLabel(value)}) se festeja en la web con su nombre.` : 'Ese día la web festeja su cumpleaños con su nombre.'}</span>
+    </label>
+  )
+}
+
 /** Rol de un usuario: dos pills con su descripción debajo */
 function RolePicker({ value, onChange }: { value: AdminRole; onChange: (r: AdminRole) => void }) {
   const id = useId()
@@ -343,6 +363,7 @@ function EditUser({ user, busy, onCancel, onSave }: { user: AdminUserRow; busy: 
     secondLastName: user.secondLastName ?? '',
     phone: user.phone ?? '',
     role: user.role,
+    birthDate: user.birthDate ?? '',
   })
   const [regenerate, setRegenerate] = useState(false)
   const first = useRef<HTMLInputElement>(null)
@@ -360,7 +381,7 @@ function EditUser({ user, busy, onCancel, onSave }: { user: AdminUserRow; busy: 
   const submit = (e: FormEvent) => {
     e.preventDefault()
     const clean = Object.fromEntries(Object.entries(f).map(([k, v]) => [k, String(v ?? '').trim()])) as unknown as AdminUserProfile
-    onSave({ ...clean, regenerateEmail: canRegenerate && regenerate })
+    onSave({ ...clean, birthDate: clean.birthDate || null, regenerateEmail: canRegenerate && regenerate })
   }
 
   return (
@@ -401,6 +422,7 @@ function EditUser({ user, busy, onCancel, onSave }: { user: AdminUserRow; busy: 
             Correo
             <output className="hf-ausers__email is-empty">{user.email}</output>
           </div>
+          <BirthDateField value={f.birthDate ?? ''} onChange={(birthDate) => setF({ ...f, birthDate })} />
         </div>
         {user.isRoot ? (
           <p className="hf-ausers__muted">El usuario principal siempre es Admin, y su correo no cambia: es el de ROOT_ADMIN_EMAIL en .env.</p>

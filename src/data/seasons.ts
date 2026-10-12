@@ -2,14 +2,16 @@
  * Temporadas del sitio (canvas del platillo https://claude.ai/artifact/G3ndhJatQyyn9ZNA7UpeBZ y
  * de las páginas https://claude.ai/artifact/YL2L4g49hnmmboNEfLuRR4).
  * - Las de mes se activan el día 1 y se quitan al terminar el mes (hora local del visitante).
- * - Los cumpleaños (`date`) solo duran ese día y, ese día, tienen prioridad sobre la del mes.
+ * - Cumpleaños (`cumple`): sale de la fecha de nacimiento de los usuarios del panel (`GET /api/site` · `birthdays`,
+ *   calculado en hora de CDMX). Solo dura ese día y gana sobre la del mes; lleva el nombre de quien cumple.
  * Durante una temporada el platillo sale disfrazado y sus 6 acciones reemplazan a las normales, y las
- * páginas llevan su capa fija (`page`). Con `?temporada=<id>` en la URL se fuerza una (para probarla).
+ * páginas llevan su capa fija (`page`). Con `?temporada=<id>` en la URL se fuerza una (para probarla);
+ * `?temporada=cumple&cumple=Ana` prueba el cumpleaños con ese nombre.
  */
 
 export type SeasonId =
   | 'anoNuevo' | 'amor' | 'nino' | 'madres' | 'independencia' | 'halloween' | 'muertos' | 'navidad'
-  | 'cumpleMarzo' | 'cumpleAbril'
+  | 'cumple'
 
 export type GlyphName =
   | 'heart' | 'pumpkin' | 'bat' | 'flower' | 'skull' | 'snow' | 'gift' | 'star' | 'bell' | 'candle'
@@ -75,56 +77,46 @@ export interface Season {
 const VERDE = '#1F8A4C'
 const ROJO = '#C8102E'
 
-// TODO: nombres de quienes cumplen (marcadores [..]); cada cumpleaños puede tener su propio nombre
-const BIRTHDAY_NAME = '[NOMBRE]'
 const PARTY = ['#F2C94C', '#E8577D', '#3FA9F5', '#7bb342', '#F2C94C']
 
-export const seasons: Season[] = [
-  {
-    id: 'cumpleMarzo',
-    name: 'Cumpleaños · 3 de marzo',
-    month: 2,
-    date: { month: 2, day: 3 },
-    acc: '#F2C94C',
-    beam: 'rgba(232,87,125,0.4)',
-    light: '#E8577D',
-    home: { kind: 'fireworks', colors: ['#F2C94C', '#E8577D', '#3FA9F5'], message: '¡Feliz cumpleaños, ' + BIRTHDAY_NAME + '!', confetti: true },
-    faders: { colors: PARTY, motion: 'countdown' },
-    track: { target: 0, glyphs: ['gift', 'cake'], note: 'Para ' + BIRTHDAY_NAME + ' ♥' },
-    day: { day: 3, glyph: 'cake', tip: 'Cumpleaños de ' + BIRTHDAY_NAME },
-    email: 'pastel@andromeda.fm',
-    ticker: { word: '¡Feliz cumple!', color: '#E8577D' },
-    page: {
-      garland: { kind: 'confetti', colors: PARTY },
-      logo: 'cake', sep: '★', ticker: '¡Feliz cumpleaños, ' + BIRTHDAY_NAME + '!', footer: 'Hoy cumple ' + BIRTHDAY_NAME + ' ♥',
-      label: 'cake', particle: 'balloon', heroClose: 'está de fiesta.',
-      caps: PARTY,
-      placeholder: 'Tu correo · y tu felicitación', eyebrow: 'Estudio · Hoy hay pastel',
-    },
-  },
-  {
-    id: 'cumpleAbril',
-    name: 'Cumpleaños · 16 de abril',
-    month: 3,
-    date: { month: 3, day: 16 },
-    acc: '#F2C94C',
-    beam: 'rgba(232,87,125,0.4)',
-    light: '#E8577D',
-    home: { kind: 'fireworks', colors: ['#F2C94C', '#E8577D', '#3FA9F5'], message: '¡Feliz cumpleaños, ' + BIRTHDAY_NAME + '!', confetti: true },
-    faders: { colors: PARTY, motion: 'countdown' },
-    track: { target: 0, glyphs: ['gift', 'cake'], note: 'Para ' + BIRTHDAY_NAME + ' ♥' },
-    day: { day: 16, glyph: 'cake', tip: 'Cumpleaños de ' + BIRTHDAY_NAME },
-    email: 'pastel@andromeda.fm',
-    ticker: { word: '¡Feliz cumple!', color: '#E8577D' },
-    page: {
-      garland: { kind: 'confetti', colors: PARTY },
-      logo: 'cake', sep: '★', ticker: '¡Feliz cumpleaños, ' + BIRTHDAY_NAME + '!', footer: 'Hoy cumple ' + BIRTHDAY_NAME + ' ♥',
-      label: 'cake', particle: 'balloon', heroClose: 'está de fiesta.',
-      caps: PARTY,
-      placeholder: 'Tu correo · y tu felicitación', eyebrow: 'Estudio · Hoy hay pastel',
-    },
-  },
+/** "Ana" · "Ana y Beto" · "Ana, Beto y Caro" */
+const joinNames = (names: string[]) => (names.length < 2 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} y ${names[names.length - 1]}`)
 
+/** Temporada de cumpleaños para quienes cumplen hoy (`date` = hoy) */
+export function birthdaySeason(names: string[], date = new Date()): Season {
+  const who = joinNames(names)
+  const day = date.getDate()
+  return {
+    id: 'cumple',
+    name: `Cumpleaños de ${who}`,
+    month: date.getMonth(),
+    date: { month: date.getMonth(), day },
+    acc: '#F2C94C',
+    beam: 'rgba(232,87,125,0.4)',
+    light: '#E8577D',
+    home: { kind: 'fireworks', colors: ['#F2C94C', '#E8577D', '#3FA9F5'], message: `¡Feliz cumpleaños, ${who}!`, confetti: true },
+    faders: { colors: PARTY, motion: 'countdown' },
+    track: { target: 0, glyphs: ['gift', 'cake'], note: `Para ${who} ♥` },
+    day: { day, glyph: 'cake', tip: `Cumpleaños de ${who}` },
+    email: 'pastel@andromeda.fm',
+    ticker: { word: '¡Feliz cumple!', color: '#E8577D' },
+    page: {
+      garland: { kind: 'confetti', colors: PARTY },
+      logo: 'cake', sep: '★', ticker: `¡Feliz cumpleaños, ${who}!`, footer: `Hoy cumple${names.length > 1 ? 'n' : ''} ${who} ♥`,
+      label: 'cake', particle: 'balloon', heroClose: 'está de fiesta.',
+      caps: PARTY,
+      placeholder: 'Tu correo · y tu felicitación', eyebrow: 'Estudio · Hoy hay pastel',
+    },
+  }
+}
+
+/** Quién del equipo cumple hoy; lo llena `loadSiteModules` con `GET /api/site` antes de pintar */
+let birthdayNames: string[] = []
+export const setBirthdays = (names: string[]) => {
+  birthdayNames = names.filter(Boolean)
+}
+
+export const seasons: Season[] = [
   {
     id: 'anoNuevo',
     name: 'Año Nuevo',
@@ -296,10 +288,12 @@ export const seasons: Season[] = [
   },
 ]
 
-/** Temporada activa en la fecha dada (o la forzada con `?temporada=`), o null. Un cumpleaños gana ese día */
+/** Temporada activa en la fecha dada (o la forzada con `?temporada=`), o null. Un cumpleaños del equipo gana ese día */
 export function currentSeason(date = new Date()): Season | null {
-  const forced = new URLSearchParams(window.location.search).get('temporada')
+  const params = new URLSearchParams(window.location.search)
+  const forced = params.get('temporada')
+  if (forced === 'cumple') return birthdaySeason(params.get('cumple')?.split(',').map((n) => n.trim()) ?? (birthdayNames.length ? birthdayNames : ['Hathor']), date)
   if (forced) return seasons.find((s) => s.id === forced) ?? null
-  const birthday = seasons.find((s) => s.date && s.date.month === date.getMonth() && s.date.day === date.getDate())
-  return birthday ?? seasons.find((s) => !s.date && s.month === date.getMonth()) ?? null
+  if (birthdayNames.length) return birthdaySeason(birthdayNames, date)
+  return seasons.find((s) => s.month === date.getMonth()) ?? null
 }

@@ -301,7 +301,7 @@ function SectionEditor({ sectionKey: key, onSection }: { sectionKey: ContentKey;
                       id={`${key}-search`}
                       type="search"
                       className="hf-admin__search-input"
-                      placeholder={`Buscar ${form.itemLabel} por nombre o género`}
+                      placeholder={form.searchHint ?? `Buscar ${form.itemLabel}`}
                       autoComplete="off"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
@@ -316,7 +316,7 @@ function SectionEditor({ sectionKey: key, onSection }: { sectionKey: ContentKey;
                 )}
                 {searching && (
                   <p className="hf-acontent__search-count" role="status">
-                    {matches.length ? `${matches.length} de ${items.length}` : `Ningún ${form.itemLabel} coincide con “${query.trim()}”.`}
+                    {matches.length ? `${matches.length} de ${items.length}` : `Sin resultados para “${query.trim()}”.`}
                   </p>
                 )}
                 {items.map((it, i) => (searching && !matches.includes(i) ? null : (

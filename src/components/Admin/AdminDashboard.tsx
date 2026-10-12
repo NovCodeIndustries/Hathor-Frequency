@@ -7,6 +7,8 @@ import { useAdmin } from '../../lib/useAdmin'
 import { ChargeModal, type ChargeTarget } from './ChargeModal'
 import './AdminDashboard.css'
 import { useAdminLive } from '../../lib/useAdminLive'
+import { useSeason } from '../../lib/useSeason'
+import { Glyph } from '../Ufo/seasonArt'
 
 const RANGES: { value: DashboardRange; label: string }[] = [
   { value: 'week', label: 'Semana' },
@@ -40,7 +42,19 @@ function greeting() {
  * arriba "Hoy primero" (línea de tiempo y pendientes) y abajo el "Master del periodo" con medidores de consola.
  */
 export function AdminDashboard() {
-  const { admin, refreshSummary, onError } = useAdmin()
+  const { admin, summary, refreshSummary, onError } = useAdmin()
+  const season = useSeason()
+  // Cumpleaños del equipo (te felicita si eres tú) o el mensaje de la temporada del mes
+  const myName = shortName(admin)
+  const birthdays = summary?.birthdays ?? []
+  const others = birthdays.filter((n) => n !== myName)
+  const seasonLine = birthdays.includes(myName)
+    ? { mine: true, text: `¡Feliz cumpleaños, ${myName}!${others.length ? ` Hoy también cumple${others.length > 1 ? 'n' : ''} ${others.join(' y ')}.` : ''}` }
+    : birthdays.length
+      ? { mine: false, text: `Hoy cumple${birthdays.length > 1 ? 'n' : ''} años ${birthdays.join(' y ')}. ¡Mánda${birthdays.length > 1 ? 'les' : 'le'} una felicitación!` }
+      : season
+        ? { mine: false, text: season.page.footer }
+        : null
   const [range, setRange] = useState<DashboardRange>('month')
   const [data, setData] = useState<Dashboard | null>(null)
   const [error, setError] = useState('')
@@ -99,6 +113,12 @@ export function AdminDashboard() {
         <h1 className="hf-dash__title">
           {greeting()}, <span>{shortName(admin)}.</span>
         </h1>
+        {seasonLine && (
+          <p className={`hf-dash__season ${seasonLine.mine ? 'is-mine' : ''}`}>
+            {season && <Glyph name={season.page.logo} size={18} />}
+            {seasonLine.text}
+          </p>
+        )}
         <p className="hf-admin__lead">
           Hoy {sessionsToday === 1 ? 'hay 1 sesión' : `hay ${sessionsToday} sesiones`}
           {pendingCount > 0 && ` y ${pendingCount} ${pendingCount === 1 ? 'reserva espera' : 'reservas esperan'} confirmación`}.

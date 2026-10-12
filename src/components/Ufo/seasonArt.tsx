@@ -258,8 +258,7 @@ export function SaucerCostume({ id }: { id: SeasonId }) {
           ))}
         </g>
       )
-    case 'cumpleMarzo':
-    case 'cumpleAbril':
+    case 'cumple':
       // Gorro de fiesta y dos globos amarrados al borde
       return (
         <g>
