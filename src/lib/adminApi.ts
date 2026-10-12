@@ -30,13 +30,15 @@ export interface AdminUserRow extends AdminUser {
   createdAt: string
 }
 
+/** Nombre y teléfono de un usuario, lo que se edita en Usuarios */
+export type AdminUserProfile = Omit<NewAdminUser, 'password'>
+
 export interface NewAdminUser {
   firstName: string
   middleName?: string
   lastName: string
   secondLastName?: string
   phone: string
-  email: string
   password: string
 }
 
@@ -330,6 +332,7 @@ export const adminApi = {
   createUser: (user: NewAdminUser) => request<AdminUserRow>('POST', '/users', user),
   setUserPassword: (id: string, password: string) => request<{ ok: true }>('PATCH', `/users/${id}/password`, { password }),
   deleteUser: (id: string) => request<{ ok: true }>('DELETE', `/users/${id}`),
+  updateUser: (id: string, profile: AdminUserProfile & { regenerateEmail?: boolean }) => request<AdminUserRow>('PATCH', `/users/${id}`, profile),
   mySessions: () => request<AdminSessionRow[]>('GET', '/users/me/sessions'),
   closeSession: (id: string) => request<{ ok: true }>('DELETE', `/users/me/sessions/${id}`),
   closeOtherSessions: () => request<{ ok: true; closed: number }>('DELETE', '/users/me/sessions'),

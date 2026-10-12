@@ -38,6 +38,10 @@ export function AdminLayout() {
     adminApi.me().then(setAdmin).catch(toLogin)
   }, [toLogin])
 
+  const refreshMe = useCallback(() => {
+    adminApi.me().then(setAdmin).catch(() => {})
+  }, [])
+
   const refreshSummary = useCallback(() => {
     adminApi.summary().then(setSummary).catch(() => {})
   }, [])
@@ -133,7 +137,7 @@ export function AdminLayout() {
         </div>
       </aside>
       <main className="hf-admin__main">
-        <Outlet context={{ admin, summary, refreshSummary, onError } satisfies AdminContext} />
+        <Outlet context={{ admin, summary, refreshSummary, refreshMe, onError } satisfies AdminContext} />
       </main>
     </div>
   )

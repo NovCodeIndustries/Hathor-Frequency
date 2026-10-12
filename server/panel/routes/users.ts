@@ -5,6 +5,7 @@ import { prisma } from '../../shared/db'
 import { parseBody } from '../../shared/lib/body'
 import { fail } from '../../shared/lib/errors'
 import { emitAdmin } from '../../shared/lib/siteEvents'
+import { staffDomain, staffEmailLocal } from '../../../src/data/staff'
 
 /** /api/admin/users: el principal administra usuarios; cualquiera cambia su propia contraseña */
 export const users = new Hono<{ Variables: AdminVariables }>()
@@ -70,6 +71,27 @@ users.get('/access-log', onlyRoot, async (c) =>
   ),
 )
 
+/** Nombre y teléfono de un usuario (los mismos campos que al darlo de alta) */
+const profileSchema = z.object({
+  firstName: part(60).min(1, 'Escribe el primer nombre'),
+  middleName: part(60).optional(),
+  lastName: part(60).min(1, 'Escribe el primer apellido'),
+  secondLastName: part(60).optional(),
+  phone: z.string().trim().regex(/^[\d+()\s-]{8,20}$/, 'Teléfono inválido'),
+})
+
+/** Correo libre para "jnunez": jnunez@…, o jnunez2@…, jnunez3@… (sin contar el del propio usuario) */
+async function freeStaffEmail(local: string, exceptId?: string): Promise<string> {
+  const taken = new Set(
+    (await prisma.adminUser.findMany({ where: { email: { startsWith: local }, id: exceptId ? { not: exceptId } : undefined }, select: { email: true } })).map(
+      (u) => u.email,
+    ),
+  )
+  let email = `${local}@${staffDomain}`
+  for (let n = 2; taken.has(email); n++) email = `${local}${n}@${staffDomain}`
+  return email
+}
+
 users.get('/', onlyRoot, async (c) => {
   const rows = await prisma.adminUser.findMany({ select, orderBy: [{ isRoot: 'desc' }, { createdAt: 'asc' }] })
   // Solo se manda el bloqueo si sigue vigente
@@ -78,21 +100,12 @@ users.get('/', onlyRoot, async (c) => {
 })
 
 users.post('/', onlyRoot, async (c) => {
-  const body = await parseBody(
-    c,
-    z.object({
-      firstName: part(60).min(1, 'Escribe el primer nombre'),
-      middleName: part(60).optional(),
-      lastName: part(60).min(1, 'Escribe el primer apellido'),
-      secondLastName: part(60).optional(),
-      phone: z.string().trim().regex(/^[\d+()\s-]{8,20}$/, 'Teléfono inválido'),
-      email: z.string().trim().toLowerCase().max(254).pipe(z.email('Correo inválido')),
-      password,
-    }),
-  )
+  const body = await parseBody(c, profileSchema.extend({ password }))
   if (body instanceof Response) return body
-  const taken = await prisma.adminUser.findUnique({ where: { email: body.email } })
-  if (taken) return fail(c, 409, 'Ya existe un usuario con ese correo', { email: 'Ya existe' })
+  // El correo se genera: primera letra del primer nombre + primer apellido; si ya existe, jnunez2, jnunez3…
+  const local = staffEmailLocal(body.firstName, body.lastName)
+  if (!local) return fail(c, 400, 'Datos inválidos', { firstName: 'Usa letras en el nombre y el apellido' })
+  const email = await freeStaffEmail(local)
   const user = await prisma.adminUser.create({
     data: {
       firstName: body.firstName,
@@ -101,13 +114,51 @@ users.post('/', onlyRoot, async (c) => {
       secondLastName: body.secondLastName || null,
       phone: body.phone,
       name: fullName({ ...body, middleName: body.middleName || undefined, secondLastName: body.secondLastName || undefined }),
-      email: body.email,
+      email,
       passwordHash: await hashPassword(body.password),
     },
     select,
   })
   emitAdmin('users')
   return c.json(user, 201)
+})
+
+/**
+ * El principal edita el nombre y el teléfono de un usuario. Con `regenerateEmail`, el correo se vuelve a armar
+ * con el nombre nuevo (el del principal no cambia: es ROOT_ADMIN_EMAIL). Cambiar el correo cierra sus sesiones.
+ */
+users.patch('/:id', onlyRoot, async (c) => {
+  const body = await parseBody(c, profileSchema.extend({ regenerateEmail: z.boolean().optional() }))
+  if (body instanceof Response) return body
+  const id = c.req.param('id')
+  if (!z.uuid().safeParse(id).success) return fail(c, 404, 'Usuario no encontrado')
+  const user = await prisma.adminUser.findUnique({ where: { id } })
+  if (!user) return fail(c, 404, 'Usuario no encontrado')
+  let email = user.email
+  if (body.regenerateEmail && !user.isRoot) {
+    const local = staffEmailLocal(body.firstName, body.lastName)
+    if (!local) return fail(c, 400, 'Datos inválidos', { firstName: 'Usa letras en el nombre y el apellido' })
+    email = await freeStaffEmail(local, id)
+  }
+  const middleName = body.middleName || null
+  const secondLastName = body.secondLastName || null
+  const updated = await prisma.adminUser.update({
+    where: { id },
+    data: {
+      firstName: body.firstName,
+      middleName,
+      lastName: body.lastName,
+      secondLastName,
+      phone: body.phone,
+      name: fullName({ ...body, middleName: middleName ?? undefined, secondLastName: secondLastName ?? undefined }),
+      email,
+    },
+    select,
+  })
+  // Con otro correo entra con el nuevo: sus sesiones se cierran (de la tuya, todas menos esta)
+  if (email !== user.email) await prisma.adminSession.deleteMany({ where: { userId: id, id: { not: c.get('sessionId') } } })
+  emitAdmin('users')
+  return c.json(updated)
 })
 
 /** El principal pone una contraseña nueva a otro usuario (y le cierra las sesiones) */

@@ -29,3 +29,13 @@
 .hf-ausers__session { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 0; border-top: 1px solid var(--c-line-3); font-size: 15px; }
 .hf-ausers__session:first-child { border-top: 0; }
 .hf-ausers__here { margin-left: 8px; }
+.hf-ausers__email { box-sizing: border-box; height: 48px; padding: 0 20px; display: flex; align-items: center; border: 1px dashed var(--c-line-2); border-radius: var(--radius-pill); color: var(--c-gold); font-size: 15px; letter-spacing: 0; text-transform: none; overflow-wrap: anywhere; }
+.hf-ausers__email.is-empty { color: var(--c-text-3); }
+/* Editar usuario: la ventana de confirmación, más ancha */
+.hf-asite__confirm.hf-ausers__edit { max-width: 640px; max-height: calc(100vh - 48px); overflow-y: auto; }
+.hf-ausers__grid--two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.hf-ausers__check { display: flex; align-items: flex-start; gap: 12px; font-size: 15px; cursor: pointer; }
+.hf-ausers__check input { margin-top: 3px; width: 18px; height: 18px; accent-color: var(--c-gold); flex: none; }
+@media (max-width: 767px) {
+  .hf-ausers__grid--two { grid-template-columns: 1fr; }
+}

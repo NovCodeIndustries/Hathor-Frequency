@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useId, useState, type FormEvent } from 'react'
-import { adminApi, describeDevice, formatStamp, type AccessLogRow, type AdminSessionRow, type AdminUserRow, type NewAdminUser } from '../../lib/adminApi'
+import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from 'react'
+import { adminApi, describeDevice, formatStamp, type AccessLogRow, type AdminSessionRow, type AdminUserProfile, type AdminUserRow, type NewAdminUser } from '../../lib/adminApi'
+import { staffEmail, staffEmailLocal } from '../../data/staff'
 import { useAdmin } from '../../lib/useAdmin'
 import './AdminSite.css'
 import './AdminUsers.css'
@@ -11,7 +12,7 @@ import { useAdminLive } from '../../lib/useAdminLive'
  * (el principal no se puede borrar) y ve el registro de accesos.
  */
 export function AdminUsers() {
-  const { admin, onError } = useAdmin()
+  const { admin, onError, refreshMe } = useAdmin()
   return (
     <>
       <title>{admin.isRoot ? 'Usuarios' : 'Mi cuenta'} · Panel</title>
@@ -26,7 +27,7 @@ export function AdminUsers() {
         </div>
       </div>
       <div className="hf-ausers">
-        {admin.isRoot && <UsersAdmin meId={admin.id} onError={onError} />}
+        {admin.isRoot && <UsersAdmin meId={admin.id} onError={onError} onSelfEdited={refreshMe} />}
         <MyPassword name={admin.name} email={admin.email} onError={onError} />
         <MySessions onError={onError} />
         {admin.isRoot && <AccessLog onError={onError} />}
@@ -35,18 +36,19 @@ export function AdminUsers() {
   )
 }
 
-function UsersAdmin({ meId, onError }: { meId: string; onError: (e: unknown) => string }) {
+function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e: unknown) => string; onSelfEdited: () => void }) {
   const id = useId()
   const [list, setList] = useState<AdminUserRow[] | null>(null)
   const [error, setError] = useState('')
   const [msg, setMsg] = useState('')
-  const EMPTY: NewAdminUser & { repeat: string } = { firstName: '', middleName: '', lastName: '', secondLastName: '', phone: '', email: '', password: '', repeat: '' }
+  const EMPTY: NewAdminUser & { repeat: string } = { firstName: '', middleName: '', lastName: '', secondLastName: '', phone: '', password: '', repeat: '' }
   const [form, setForm] = useState(EMPTY)
   const [show, setShow] = useState(false)
   const [busy, setBusy] = useState(false)
   const [resetId, setResetId] = useState<string | null>(null)
   const [resetPwd, setResetPwd] = useState('')
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [editId, setEditId] = useState<string | null>(null)
 
   const load = useCallback(() => {
     adminApi.users().then(setList).catch((err) => setError(onError(err)))
@@ -54,13 +56,13 @@ function UsersAdmin({ meId, onError }: { meId: string; onError: (e: unknown) => 
   useEffect(load, [load])
   useAdminLive(['users'], load)
 
-  const run = async (fn: () => Promise<unknown>, ok: string) => {
+  const run = async <T,>(fn: () => Promise<T>, ok: string | ((result: T) => string)) => {
     setBusy(true)
     setError('')
     setMsg('')
     try {
-      await fn()
-      setMsg(ok)
+      const result = await fn()
+      setMsg(typeof ok === 'function' ? ok(result) : ok)
       load()
       return true
     } catch (err) {
@@ -76,13 +78,15 @@ function UsersAdmin({ meId, onError }: { meId: string; onError: (e: unknown) => 
     if (form.password !== form.repeat) return setError('Las contraseñas no coinciden.')
     const { repeat: _repeat, ...user } = form
     const clean = Object.fromEntries(Object.entries(user).map(([k, v]) => [k, k === 'password' ? v : String(v ?? '').trim()])) as unknown as NewAdminUser
-    if (await run(() => adminApi.createUser(clean), `Usuario ${clean.email} creado.`)) {
+    if (await run(() => adminApi.createUser(clean), (u) => `Usuario creado: ${u.email}`)) {
       setForm(EMPTY)
       setShow(false)
     }
   }
 
   const target = list?.find((u) => u.id === deleteId)
+  const editing = list?.find((u) => u.id === editId)
+  const newEmail = staffEmail(form.firstName, form.lastName)
 
   return (
     <>
@@ -137,6 +141,7 @@ function UsersAdmin({ meId, onError }: { meId: string; onError: (e: unknown) => 
                       </form>
                     ) : (
                       <span className="hf-ausers__actions">
+                        <button type="button" className="hf-admin__btn hf-admin__btn--sm" onClick={() => setEditId(u.id)}>Editar</button>
                         <button type="button" className="hf-admin__btn hf-admin__btn--sm" onClick={() => (setResetId(u.id), setResetPwd(''))}>Cambiar contraseña</button>
                         {!u.isRoot && (
                           <button type="button" className="hf-admin__btn hf-admin__btn--ghost hf-admin__btn--sm" onClick={() => setDeleteId(u.id)}>Quitar acceso</button>
@@ -171,10 +176,13 @@ function UsersAdmin({ meId, onError }: { meId: string; onError: (e: unknown) => 
             Teléfono
             <input id={`${id}-phone`} className="hf-admin__input" type="tel" inputMode="tel" required pattern="[0-9+()\s\-]{8,20}" title="Al menos 8 dígitos" placeholder="+52 55 0000 0000" autoComplete="off" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
           </label>
-          <label className="hf-admin__field" htmlFor={`${id}-email`}>
+          <div className="hf-admin__field">
             Correo
-            <input id={`${id}-email`} className="hf-admin__input" type="email" required autoComplete="off" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-          </label>
+            <output className={`hf-ausers__email ${newEmail ? '' : 'is-empty'}`} aria-live="polite">
+              {newEmail || 'Se arma con el nombre y el apellido'}
+            </output>
+            <span className="hf-ausers__match">Inicial del primer nombre + primer apellido. Si ya existe, se le agrega un número.</span>
+          </div>
           <label className="hf-admin__field" htmlFor={`${id}-pwd`}>
             Contraseña (mín. 10)
             <span className="hf-ausers__pwd">
@@ -202,6 +210,23 @@ function UsersAdmin({ meId, onError }: { meId: string; onError: (e: unknown) => 
         <p className="hf-ausers__muted">Comparte la contraseña por un medio seguro; podrá cambiarla en "Mi cuenta".</p>
         <button type="submit" className="hf-admin__btn hf-admin__btn--primary hf-ausers__submit" disabled={busy || form.password.length < 10 || form.password !== form.repeat}>Crear usuario</button>
       </form>
+
+      {editing && (
+        <EditUser
+          user={editing}
+          busy={busy}
+          onCancel={() => setEditId(null)}
+          onSave={async (profile) => {
+            const ok = await run(() => adminApi.updateUser(editing.id, profile), (u) =>
+              u.email !== editing.email ? `Datos de ${u.name} guardados. Su correo ahora es ${u.email}.` : `Datos de ${u.name} guardados.`,
+            )
+            if (ok) {
+              setEditId(null)
+              if (editing.id === meId) onSelfEdited()
+            }
+          }}
+        />
+      )}
 
       {target && (
         <div className="hf-asite__modal">
@@ -279,6 +304,96 @@ function MyPassword({ name, email, onError }: { name: string; email: string; onE
       {msg && <p className="hf-ausers__ok" role="status">{msg}</p>}
       <button type="submit" className="hf-admin__btn hf-admin__btn--primary hf-ausers__submit" disabled={busy || f.next.length < 10 || f.next !== f.repeat}>Cambiar contraseña</button>
     </form>
+  )
+}
+
+/** Parte local del correo sin el número que se agrega cuando ya existía ("jnunez2" → "jnunez") */
+const emailBase = (email: string) => email.split('@')[0].replace(/\d+$/, '')
+
+/** Ventana para editar el nombre y el teléfono de un usuario; el correo se puede volver a armar con el nombre nuevo */
+function EditUser({ user, busy, onCancel, onSave }: { user: AdminUserRow; busy: boolean; onCancel: () => void; onSave: (p: AdminUserProfile & { regenerateEmail: boolean }) => void }) {
+  const id = useId()
+  const [f, setF] = useState<AdminUserProfile>({
+    firstName: user.firstName,
+    middleName: user.middleName ?? '',
+    lastName: user.lastName,
+    secondLastName: user.secondLastName ?? '',
+    phone: user.phone ?? '',
+  })
+  const [regenerate, setRegenerate] = useState(false)
+  const first = useRef<HTMLInputElement>(null)
+  useEffect(() => first.current?.focus(), [])
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onCancel()
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onCancel])
+
+  // El correo del principal no cambia (es ROOT_ADMIN_EMAIL); a los demás se les ofrece si el nombre ya no cuadra
+  const proposed = staffEmail(f.firstName, f.lastName)
+  const canRegenerate = !user.isRoot && !!proposed && staffEmailLocal(f.firstName, f.lastName) !== emailBase(user.email)
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault()
+    const clean = Object.fromEntries(Object.entries(f).map(([k, v]) => [k, String(v ?? '').trim()])) as unknown as AdminUserProfile
+    onSave({ ...clean, regenerateEmail: canRegenerate && regenerate })
+  }
+
+  return (
+    <div className="hf-asite__modal">
+      <button type="button" className="hf-asite__backdrop" aria-label="Cerrar" tabIndex={-1} onClick={onCancel} />
+      <form className="hf-asite__confirm hf-ausers__edit" role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} onSubmit={submit}>
+        <h2 id={`${id}-title`} className="hf-asite__confirm-title">
+          Editar a <span className="hf-asite__gold">{user.name}</span>
+        </h2>
+        <div className="hf-ausers__grid hf-ausers__grid--two">
+          {(
+            [
+              ['firstName', 'Primer nombre', true],
+              ['middleName', 'Segundo nombre (opcional)', false],
+              ['lastName', 'Primer apellido', true],
+              ['secondLastName', 'Segundo apellido (opcional)', false],
+            ] as const
+          ).map(([key, label, required], i) => (
+            <label key={key} className="hf-admin__field" htmlFor={`${id}-${key}`}>
+              {label}
+              <input
+                ref={i === 0 ? first : undefined}
+                id={`${id}-${key}`}
+                className="hf-admin__input"
+                required={required}
+                maxLength={60}
+                autoComplete="off"
+                value={f[key] ?? ''}
+                onChange={(e) => setF({ ...f, [key]: e.target.value })}
+              />
+            </label>
+          ))}
+          <label className="hf-admin__field" htmlFor={`${id}-phone`}>
+            Teléfono
+            <input id={`${id}-phone`} className="hf-admin__input" type="tel" inputMode="tel" required pattern="[0-9+()\s\-]{8,20}" title="Al menos 8 dígitos" autoComplete="off" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
+          </label>
+          <div className="hf-admin__field">
+            Correo
+            <output className="hf-ausers__email is-empty">{user.email}</output>
+          </div>
+        </div>
+        {user.isRoot && <p className="hf-ausers__muted">El correo del usuario principal no cambia: es el de ROOT_ADMIN_EMAIL en .env.</p>}
+        {canRegenerate && (
+          <label className="hf-ausers__check">
+            <input type="checkbox" checked={regenerate} onChange={(e) => setRegenerate(e.target.checked)} />
+            <span>
+              Cambiar su correo a <span className="hf-asite__gold">{proposed}</span>
+              <span className="hf-ausers__phone">Entrará con el correo nuevo y se cerrarán sus sesiones. Si ya existe, se le agrega un número.</span>
+            </span>
+          </label>
+        )}
+        <div className="hf-asite__confirm-actions">
+          <button type="button" className="hf-admin__btn" onClick={onCancel}>Cancelar</button>
+          <button type="submit" className="hf-admin__btn hf-admin__btn--primary" disabled={busy}>Guardar</button>
+        </div>
+      </form>
+    </div>
   )
 }
 

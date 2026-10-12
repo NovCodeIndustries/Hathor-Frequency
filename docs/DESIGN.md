@@ -774,8 +774,10 @@ Cambio del 2026-10-11. Es privado y, desde el 2026-10-12, **es otra app y otro s
   - En la agenda, la terminada se ve en dorado secundario con ✓ y sigue ocupando su horario.
   - La web recibe la cifra nueva al instante (SSE `stats`).
 - **Usuarios** (`/admin/usuarios`, `AdminUsers.tsx`; sin ronda de diseño, mismo estilo de tabla que Contactos):
-  - el **usuario principal** ve la tabla de accesos (nombre, correo y teléfono, rol Principal/Admin, alta; "Cambiar contraseña" en línea y "Quitar acceso" con confirmación);
-  - "Nuevo usuario admin" pide primer nombre, segundo nombre (opcional), primer apellido, segundo apellido (opcional), teléfono, correo, contraseña con Mostrar y **repetir contraseña**. Mientras escribes dice si coinciden, y no deja crear si no coinciden;
+  - el **usuario principal** ve la tabla de accesos (nombre, correo y teléfono, rol Principal/Admin, alta; "Editar", "Cambiar contraseña" en línea y "Quitar acceso" con confirmación);
+  - **Editar** (cambio del 2026-10-12) abre una ventana de 640px (la de confirmación, más ancha; una columna en móvil) con los cuatro campos del nombre y el teléfono, y el correo actual en la pill punteada. Si el nombre nuevo ya no cuadra con el correo, aparece la casilla "Cambiar su correo a …" (apagada por defecto): entrará con el correo nuevo y se cierran sus sesiones. El correo del principal no cambia. Esc o el fondo cierran la ventana;
+  - "Nuevo usuario admin" pide primer nombre, segundo nombre (opcional), primer apellido, segundo apellido (opcional), teléfono, contraseña con Mostrar y **repetir contraseña**. Mientras escribes dice si coinciden, y no deja crear si no coinciden;
+  - **el correo no se escribe: se genera** (cambio del 2026-10-12) con la inicial del primer nombre + el primer apellido + `@hathorfrequency.mx`, en minúsculas y sin acentos, ñ, espacios ni signos ("José" + "Núñez" → `jnunez@hathorfrequency.mx`). Se ve mientras escribes, en una pill punteada (dorada; gris mientras falta el nombre). Si ya existe, la API le agrega un número (`jnunez2`), y el aviso dice cuál quedó ("Usuario creado: …");
   - cualquier admin ve **"Mi cuenta"**: contraseña actual, nueva y repetir (con el mismo aviso);
   - el saludo de Inicio y la barra usan **primer nombre + primer apellido** ("Buenas tardes, Xavier Ruiz.").
   - la pestaña dice "Usuarios" para el principal y "Mi cuenta" para los demás.

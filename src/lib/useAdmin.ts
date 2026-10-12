@@ -7,6 +7,8 @@ export interface AdminContext {
   summary: AdminSummary | null
   /** Recarga los contadores de las pestañas tras un cambio */
   refreshSummary: () => void
+  /** Vuelve a leer mi usuario (tras editar mi nombre en Usuarios) */
+  refreshMe: () => void
   /** Mensaje del error; si la sesión expiró (401) manda al login */
   onError: (err: unknown) => string
 }
