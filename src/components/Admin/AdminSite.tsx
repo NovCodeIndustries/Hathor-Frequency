@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { globalModules, moduleById, pageModuleOf, pageModules } from '../../data/modules'
 import { adminApi, formatStamp, type SiteState, type SiteVersionInfo } from '../../lib/adminApi'
 import { WEB_ORIGIN, WEB_URL } from '../../lib/origins'
+import { MaintenanceModal } from './MaintenanceModal'
 import type { EditMessage } from '../../lib/siteModules'
 import { useAdmin } from '../../lib/useAdmin'
 import './AdminSite.css'
@@ -47,14 +48,17 @@ const withEdit = (path: string) => `${WEB_URL}${path}${path.includes('?') ? '&' 
  * la web real en modo edición dentro de un iframe, con switches por módulo; borrador → Publicar.
  */
 export function AdminSite() {
-  const { refreshSummary, onError } = useAdmin()
+  const { refreshSummary, onError, summary } = useAdmin()
   const frameRef = useRef<HTMLIFrameElement>(null)
   const [state, setState] = useState<SiteState | null>(null)
   const draftRef = useRef<string[]>([])
   const [src, setSrc] = useState('/')
   const [path, setPath] = useState('/')
   const [mobile, setMobile] = useState(false)
-  const [panel, setPanel] = useState<'globals' | 'history' | 'publish' | null>(null)
+  const [panel, setPanel] = useState<'globals' | 'history' | 'publish' | 'maintenance' | null>(() =>
+    new URLSearchParams(window.location.search).has('mantenimiento') ? 'maintenance' : null,
+  )
+  const maintenance = summary?.maintenance
   const [history, setHistory] = useState<SiteVersionInfo[] | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -162,6 +166,14 @@ export function AdminSite() {
           </p>
         </div>
         <div className="hf-asite__actions">
+          <button
+            type="button"
+            className={`hf-admin__btn hf-admin__btn--sm ${maintenance?.enabled ? 'hf-admin__btn--primary' : 'hf-admin__btn--ghost'}`}
+            aria-haspopup="dialog"
+            onClick={() => setPanel('maintenance')}
+          >
+            {maintenance?.enabled ? 'En mantenimiento' : 'Mantenimiento'}
+          </button>
           <button type="button" className="hf-admin__btn hf-admin__btn--ghost hf-admin__btn--sm" aria-expanded={panel === 'history'} onClick={openHistory}>
             Historial
           </button>
@@ -290,6 +302,19 @@ export function AdminSite() {
           <iframe key={src} ref={frameRef} src={withEdit(src)} title={`Vista previa de ${current.label}`} className="hf-asite__frame" />
         </div>
       </div>
+
+      {/* Mantenimiento: apagar la web completa, al instante */}
+      {panel === 'maintenance' && maintenance && (
+        <MaintenanceModal
+          state={maintenance}
+          onClose={() => setPanel(null)}
+          onSaved={() => {
+            setPanel(null)
+            refreshSummary()
+          }}
+          onError={onError}
+        />
+      )}
 
       {/* P · Confirmar publicación */}
       {panel === 'publish' && (

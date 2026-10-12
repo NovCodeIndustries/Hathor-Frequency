@@ -6,7 +6,8 @@ import { Ticker } from '../Ticker/Ticker'
 import { Ufo } from '../Ufo/Ufo'
 import { Welcome } from '../Welcome/Welcome'
 import { trackPageview } from '../../lib/analytics'
-import { isEditMode, isPanelFrame, postToPanel, useModule } from '../../lib/siteModules'
+import { isEditMode, isPanelFrame, postToPanel, useMaintenance, useModule } from '../../lib/siteModules'
+import { Maintenance } from '../Maintenance/Maintenance'
 import { useSeason } from '../../lib/useSeason'
 import './Layout.css'
 import { Module } from '../shared/Module'
@@ -21,13 +22,14 @@ export function Layout() {
   const showTicker = useModule('global.ticker')
   const showUfo = useModule('global.ufo')
   const showWelcome = useModule('global.welcome')
+  const maintenance = useMaintenance()
 
   // Una vista de Umami por ruta pública; en el modo edición del panel no se cuenta y se avisa la ruta al panel
   const { search } = useLocation()
   useEffect(() => {
     if (isEditMode()) postToPanel({ type: 'hf-edit-route', path: pathname + search })
-    else if (!isPanelFrame()) trackPageview()
-  }, [pathname, search])
+    else if (!isPanelFrame() && !maintenance) trackPageview()
+  }, [pathname, search, maintenance])
 
   // Acento de la temporada en la raíz: lo heredan las páginas y los modales (que se montan en <body>)
   useLayoutEffect(() => {
@@ -40,6 +42,9 @@ export function Layout() {
       delete root.dataset.season
     }
   }, [season])
+
+  // Web en mantenimiento (panel · Sitio): todas las rutas muestran la misma pantalla, sin nav ni footer
+  if (maintenance) return <Maintenance state={maintenance} />
 
   return (
     <div className="hf-layout">

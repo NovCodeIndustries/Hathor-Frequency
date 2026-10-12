@@ -5,7 +5,8 @@ import { prisma } from '../../shared/db'
 import { parseBody } from '../../shared/lib/body'
 import { fail } from '../../shared/lib/errors'
 import { cleanIds, publishedDisabled } from '../../shared/lib/site'
-import { emitAdmin, emitSitePublished } from '../../shared/lib/siteEvents'
+import { emitAdmin, emitLive, emitSitePublished } from '../../shared/lib/siteEvents'
+import { getMaintenance, publicMaintenance } from '../../shared/lib/maintenance'
 import { broadcastStats } from '../../shared/lib/stats'
 
 /** /api/admin/site/*: borrador, publicar, descartar, historial y restaurar */
@@ -71,4 +72,41 @@ adminSite.post('/restore/:id', async (c) => {
   const updatedByName = c.get('admin').name
   await prisma.siteDraft.upsert({ where: { id: 1 }, create: { id: 1, disabled, updatedByName }, update: { disabled, updatedByName } })
   return c.json(await draftOrPublished())
+})
+
+/** GET /api/admin/site/maintenance: estado del modo mantenimiento */
+adminSite.get('/maintenance', async (c) => c.json(await getMaintenance()))
+
+/**
+ * PUT /api/admin/site/maintenance: apaga o enciende la web completa, al instante (sin borrador).
+ * Al apagarla se guardan el mensaje y el regreso estimado; al encenderla se borran.
+ */
+adminSite.put('/maintenance', async (c) => {
+  const body = await parseBody(
+    c,
+    z.object({
+      enabled: z.boolean(),
+      message: z.string().trim().max(300, 'Máximo 300 caracteres').optional(),
+      until: z.iso.datetime({ offset: true }).nullable().optional(),
+    }),
+  )
+  if (body instanceof Response) return body
+  const updatedByName = c.get('admin').name
+  const current = await getMaintenance()
+  const data = body.enabled
+    ? {
+        enabled: true,
+        message: body.message || null,
+        until: body.until ? new Date(body.until) : null,
+        // Si ya estaba apagada (solo cambia el mensaje), se conserva desde cuándo
+        startedAt: current.enabled && current.startedAt ? new Date(current.startedAt) : new Date(),
+        updatedByName,
+      }
+    : { enabled: false, message: null, until: null, startedAt: null, updatedByName }
+  await prisma.siteMaintenance.upsert({ where: { id: 1 }, create: { id: 1, ...data }, update: data })
+  const state = await getMaintenance()
+  // La web abierta cambia al instante (pantalla de mantenimiento o de vuelta al sitio)
+  emitLive('maintenance', publicMaintenance(state))
+  emitAdmin('site')
+  return c.json(state)
 })

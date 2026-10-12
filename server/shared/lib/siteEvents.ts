@@ -75,7 +75,7 @@ export function onLiveEvent(l: Listener): () => void {
   return () => listeners.delete(l)
 }
 
-export type LiveEvent = 'site' | 'content' | 'stats' | 'availability' | 'reviews' | 'refresh'
+export type LiveEvent = 'site' | 'content' | 'stats' | 'availability' | 'reviews' | 'maintenance' | 'refresh'
 
 function deliverLive(event: LiveEvent, data: unknown) {
   for (const l of listeners) l(event, data)

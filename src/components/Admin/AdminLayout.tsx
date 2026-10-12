@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router'
-import { AdminApiError, adminApi, shortName, type AdminSummary, type AdminUser } from '../../lib/adminApi'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
+import { AdminApiError, adminApi, formatStamp, shortName, type AdminSummary, type AdminUser } from '../../lib/adminApi'
 import type { AdminContext } from '../../lib/useAdmin'
 import './AdminLayout.css'
+import './MaintenanceModal.css'
 import { startAdminLive, stopAdminLive, useAdminLive } from '../../lib/useAdminLive'
 
 /**
@@ -45,6 +46,15 @@ export function AdminLayout() {
   const refreshSummary = useCallback(() => {
     adminApi.summary().then(setSummary).catch(() => {})
   }, [])
+
+  const turnOn = async () => {
+    try {
+      await adminApi.setMaintenance({ enabled: false })
+    } catch {
+      // el aviso sigue; se reintenta desde el botón
+    }
+    refreshSummary()
+  }
 
   useEffect(() => {
     if (admin) refreshSummary()
@@ -137,6 +147,23 @@ export function AdminLayout() {
         </div>
       </aside>
       <main className="hf-admin__main">
+        {summary?.maintenance.enabled && (
+          <div className="hf-admin__maint" role="status">
+            <span>
+              <strong>La web está en mantenimiento</strong>
+              {summary.maintenance.startedAt && ` desde el ${formatStamp(summary.maintenance.startedAt)}`}
+              {summary.maintenance.updatedByName && ` · la apagó ${summary.maintenance.updatedByName}`}. Los visitantes ven la pantalla de mantenimiento.
+            </span>
+            <span className="hf-admin__maint-actions">
+              {location.pathname !== '/admin/sitio' && (
+                <Link to="/admin/sitio?mantenimiento=1" className="hf-admin__btn hf-admin__btn--sm">Ajustar</Link>
+              )}
+              <button type="button" className="hf-admin__btn hf-admin__btn--primary hf-admin__btn--sm" onClick={turnOn}>
+                Encender la web
+              </button>
+            </span>
+          </div>
+        )}
         <Outlet context={{ admin, summary, refreshSummary, refreshMe, onError } satisfies AdminContext} />
       </main>
     </div>

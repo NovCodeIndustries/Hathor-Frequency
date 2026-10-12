@@ -20,6 +20,7 @@ import { streamSSE } from 'hono/streaming'
 import { adminSite } from './site'
 import { users } from './users'
 import { publishedDisabled } from '../../shared/lib/site'
+import { getMaintenance } from '../../shared/lib/maintenance'
 import { bookingSlots } from '../../shared/lib/slots'
 import { isBlocked } from '../../shared/lib/availability'
 import { serviceFromLabel } from '../../shared/lib/services'
@@ -108,18 +109,19 @@ admin.get('/events/poll', async (c) => {
 
 /** Contadores de las pestañas del panel */
 admin.get('/summary', async (c) => {
-  const [pendingBookings, pendingReviews, openContacts, draft, published, contentDirty] = await Promise.all([
+  const [pendingBookings, pendingReviews, openContacts, draft, published, contentDirty, maintenance] = await Promise.all([
     prisma.booking.count({ where: { status: BookingStatus.PENDING, date: { gte: dateFromISO(todayISO()) } } }),
     prisma.review.count({ where: { status: ReviewStatus.PENDING } }),
     prisma.contactRequest.count({ where: { handledAt: null } }),
     prisma.siteDraft.findUnique({ where: { id: 1 }, select: { disabled: true } }),
     publishedDisabled(),
     contentChanges(),
+    getMaintenance(),
   ])
   // Cambios del panel · Sitio sin publicar
   const d = draft?.disabled ?? published.disabled
   const siteChanges = d.filter((id) => !published.disabled.includes(id)).length + published.disabled.filter((id) => !d.includes(id)).length
-  return c.json({ pendingBookings, pendingReviews, openContacts, siteChanges, contentChanges: contentDirty.length })
+  return c.json({ pendingBookings, pendingReviews, openContacts, siteChanges, contentChanges: contentDirty.length, maintenance })
 })
 
 // ── Reservas ──────────────────────────────────────────────

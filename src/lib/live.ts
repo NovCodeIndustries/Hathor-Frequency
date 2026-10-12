@@ -39,7 +39,11 @@ export function startLive() {
   started = true
   const dispatch = (name: string, data: unknown) => handlers.get(name)?.forEach((h) => h(data))
   const startPolling = () => {
-    longPoll<{ event: string; data: unknown }>('/api/site/events/poll', (items) => items.forEach((i) => dispatch(i.event, i.data)), refreshAll)
+    longPoll<{ event: string; data: unknown }>(
+      '/api/site/events/poll',
+      (items) => items.forEach((i) => (i.event === 'refresh' ? refreshAll() : dispatch(i.event, i.data))),
+      refreshAll,
+    )
   }
 
   document.addEventListener('visibilitychange', () => {
@@ -55,7 +59,7 @@ export function startLive() {
     startPolling()
   }, SSE_TIMEOUT_MS)
 
-  for (const name of ['site', 'content', 'stats', 'availability', 'reviews']) {
+  for (const name of ['site', 'content', 'stats', 'availability', 'reviews', 'maintenance']) {
     events.addEventListener(name, (e) => {
       let data: unknown
       try {
@@ -66,6 +70,8 @@ export function startLive() {
       dispatch(name, data)
     })
   }
+  // El servidor pide volver a pedir todo (aviso demasiado grande o se perdieron avisos)
+  events.addEventListener('refresh', refreshAll)
   // "hello" llega en cada conexión, también al reconectar tras un corte
   let first = true
   events.addEventListener('hello', () => {

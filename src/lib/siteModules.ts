@@ -14,20 +14,51 @@ import { PANEL_ORIGIN } from './origins'
  */
 
 const CACHE_KEY = 'hf-site-disabled'
+const MAINTENANCE_KEY = 'hf-site-maintenance'
+
+/** Web en mantenimiento (panel · Sitio): se ve la pantalla de mantenimiento en lugar del sitio */
+export interface Maintenance {
+  enabled: boolean
+  message: string | null
+  /** Regreso estimado (ISO), solo informativo */
+  until: string | null
+}
+
+const NO_MAINTENANCE: Maintenance = { enabled: false, message: null, until: null }
 
 interface Snapshot {
   disabled: ReadonlySet<string>
+  maintenance: Maintenance
   edit: boolean
   /** Vista previa del panel · Contenido (`?modo=vista`): sin marcos, sin bienvenida ni platillo */
   preview: boolean
 }
 
-let snap: Snapshot = { disabled: new Set(), edit: false, preview: false }
+let snap: Snapshot = { disabled: new Set(), maintenance: NO_MAINTENANCE, edit: false, preview: false }
 const listeners = new Set<() => void>()
 
 function update(patch: Partial<Snapshot>) {
   snap = { ...snap, ...patch }
   listeners.forEach((l) => l())
+}
+
+function readMaintenance(): Maintenance {
+  try {
+    const raw = localStorage.getItem(MAINTENANCE_KEY)
+    return raw ? (JSON.parse(raw) as Maintenance) : NO_MAINTENANCE
+  } catch {
+    return NO_MAINTENANCE
+  }
+}
+
+function applyMaintenance(m: Maintenance | undefined) {
+  const maintenance = m?.enabled ? m : NO_MAINTENANCE
+  update({ maintenance })
+  try {
+    localStorage.setItem(MAINTENANCE_KEY, JSON.stringify(maintenance))
+  } catch {
+    // sin almacenamiento: no pasa nada
+  }
 }
 
 function readCache(): string[] {
@@ -93,8 +124,9 @@ async function fetchPublished(timeout = 5000): Promise<void> {
   try {
     const res = await fetch('/api/site', { signal: AbortSignal.timeout(timeout), cache: 'no-store' })
     if (!res.ok) return
-    const { disabled: ids } = (await res.json()) as { disabled: string[] }
+    const { disabled: ids, maintenance } = (await res.json()) as { disabled: string[]; maintenance?: Maintenance }
     applyPublished(ids)
+    applyMaintenance(maintenance)
   } catch {
     // sin red: se queda la copia
   }
@@ -102,7 +134,7 @@ async function fetchPublished(timeout = 5000): Promise<void> {
 
 /** Carga lo publicado (máx. 1.5 s) y, dentro del panel, el modo edición; nunca falla */
 export async function loadSiteModules(): Promise<void> {
-  update({ disabled: new Set(readCache()) })
+  update({ disabled: new Set(readCache()), maintenance: readMaintenance() })
   const mode = inFrame() ? new URLSearchParams(window.location.search).get('modo') : null
   if (mode === 'edicion') {
     await startEditMode()
@@ -112,6 +144,7 @@ export async function loadSiteModules(): Promise<void> {
   await fetchPublished(1500)
   // Al publicar en el panel, la web cambia al instante (src/lib/live.ts)
   onLive('site', (data) => applyPublished((data as { disabled: string[] }).disabled))
+  onLive('maintenance', (data) => applyMaintenance(data as Maintenance))
   onRefresh(() => void fetchPublished())
 }
 
@@ -137,6 +170,12 @@ function visible(id: string, s: Snapshot): boolean {
 /** ¿Se pinta el módulo? (en modo edición casi todo se pinta, lo apagado atenuado) */
 export function useModule(id: string): boolean {
   return visible(id, useSnap())
+}
+
+/** Mantenimiento vigente para quien visita; null si la web está abierta o dentro del panel (edición y vista previa) */
+export function useMaintenance(): Maintenance | null {
+  const s = useSnap()
+  return s.maintenance.enabled && !s.edit && !s.preview ? s.maintenance : null
 }
 
 /** ¿Estamos en el modo edición del panel? */

@@ -748,6 +748,13 @@ Cambio del 2026-10-11. Es privado y, desde el 2026-10-12, **es otra app y otro s
     - el historial muestra fecha, quién, qué ocultó o mostró y "Restaurar", que copia esa versión al borrador.
   - El contador de cambios sin publicar va en la pestaña "Sitio" de la barra lateral.
   - **Al publicar, la web abierta cambia al instante**, sin recargar: si estás viendo una página que se oculta, pasa a "Próximamente". Por el túnel temporal, que no deja pasar el SSE, llega por long-polling: tarda unos 6 s en cambiar de modo al abrir la página y después cada aviso llega en menos de 1 s.
+  - **Mantenimiento · apagar la web completa** (`MaintenanceModal.tsx`, cambio del 2026-10-12; sin ronda de diseño, con el estilo de las ventanas del panel y la pantalla de "Próximamente"):
+    - botón "Mantenimiento" en la barra, antes de Historial (ghost); con la web apagada dice "En mantenimiento" en dorado relleno;
+    - ventana de 520px: "¿Apagar *la web completa?*", qué pasa, mensaje para los visitantes (opcional, 300 caracteres; vacío = "Estamos afinando el estudio. En un rato volvemos a sonar.") y regreso estimado (opcional; solo se muestra, la web no se enciende sola). Cancelar / "Apagar la web";
+    - **se aplica al instante, sin borrador ni Publicar**. Con la web apagada, la ventana dice "La web está *en mantenimiento*" con "Encender la web" / "Guardar cambios";
+    - mientras dure, **todo el panel** muestra arriba un aviso dorado: "La web está en mantenimiento desde el {fecha}, la apagó {nombre}" con "Ajustar" (abre la ventana en Sitio) y "Encender la web";
+    - Sitio y Contenido siguen mostrando la web real en sus iframes, para seguir trabajando.
+  - **Pantalla de mantenimiento (web pública)** (`components/Maintenance/`): reemplaza todas las rutas, sin nav, footer, ticker, platillo ni bienvenida, y con `noindex`. Ocupa la pantalla completa, centrada sobre el disco de "Próximamente" (420px, 20%): el lockup "HATHOR / FREQUENCY", eyebrow "En mantenimiento" con líneas a ambos lados, "Volvemos *pronto.*" (dorado), el mensaje en `#bbb` (18px; 16px en móvil), "Regreso estimado: hoy/mañana/el 14 de octubre a las …" en cursiva dorada (solo si no ha pasado) y las redes del sitio. Llega en vivo (evento `maintenance`) y los formularios responden 503.
 - **Contenido** (`/admin/contenido`, `AdminContent.tsx`, `ContentForm.tsx`, `contentForms.ts`): editar textos, precios y listas sin tocar código. Diseños C1 + vista previa de C2 + F1–F6, cambio del 2026-10-11.
   - **Secciones** (pestañas, con punto dorado si tienen cambios):
     - Servicios: solo textos; los 5 canales son fijos;

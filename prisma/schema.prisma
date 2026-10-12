@@ -197,6 +197,22 @@ model AdminLoginEvent {
   @@map("admin_login_events")
 }
 
+/// Modo mantenimiento de la web completa (una sola fila, id = 1). Se aplica al instante, sin borrador:
+/// la web muestra la pantalla de mantenimiento y los formularios responden 503. El panel sigue funcionando.
+model SiteMaintenance {
+  id            Int       @id @default(1)
+  enabled       Boolean   @default(false)
+  /// Mensaje para los visitantes (vacío = el texto por defecto)
+  message       String?   @db.VarChar(300)
+  /// Regreso estimado que se muestra ("Volvemos hoy a las 6:00 p. m."); no la vuelve a encender sola
+  until         DateTime? @db.Timestamptz(6)
+  startedAt     DateTime? @map("started_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  updatedByName String?   @map("updated_by_name") @db.VarChar(120)
+
+  @@map("site_maintenance")
+}
+
 /// Borrador de módulos apagados del panel · Sitio (una sola fila, id = 1)
 model SiteDraft {
   id            Int      @id @default(1)

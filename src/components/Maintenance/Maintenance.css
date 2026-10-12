@@ -1,0 +1,45 @@
+/* Web en mantenimiento: pantalla completa con el disco de "Próximamente" y el lockup del logo */
+.hf-maint {
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
+  min-height: 100dvh;
+  box-sizing: border-box;
+  padding: 64px var(--pad-x);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  text-align: center;
+  background: var(--c-bg);
+  color: var(--c-text);
+}
+.hf-maint > :not(.hf-maint__rings) { position: relative; }
+
+.hf-maint__rings {
+  position: absolute;
+  left: calc(50% - 210px);
+  top: calc(50% - 210px);
+  width: 420px;
+  height: 420px;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.hf-maint__logo { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-bottom: 16px; }
+.hf-maint__logo-main { font-family: var(--font-display); font-size: 30px; font-weight: 600; letter-spacing: .32em; padding-left: .32em; }
+.hf-maint__logo-sub { font-family: var(--font-display); font-size: 12px; letter-spacing: .5em; padding-left: .5em; text-transform: uppercase; color: var(--c-text-2); }
+
+.hf-maint__title { margin: 0; }
+.hf-maint__text { margin: 0; max-width: 520px; font-size: 18px; line-height: 1.6; color: var(--c-text-2); }
+.hf-maint__back { margin: 0; font-style: italic; font-size: 16px; color: var(--c-gold); }
+
+.hf-maint__social { margin-top: 16px; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 28px; font-size: 13px; letter-spacing: .18em; text-transform: uppercase; }
+.hf-maint__social a { color: var(--c-text-2); text-decoration: none; transition: color .2s; }
+.hf-maint__social a:hover { color: var(--c-gold); }
+
+@media (max-width: 767px) {
+  .hf-maint { padding: 48px 16px; gap: 20px; }
+  .hf-maint__text { font-size: 16px; }
+}

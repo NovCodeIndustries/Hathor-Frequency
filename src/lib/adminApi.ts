@@ -54,6 +54,18 @@ export interface AdminSummary {
   siteChanges: number
   /** Secciones del panel · Contenido con cambios sin publicar */
   contentChanges: number
+  /** Web en mantenimiento (panel · Sitio) */
+  maintenance: MaintenanceState
+}
+
+/** Modo mantenimiento de la web completa */
+export interface MaintenanceState {
+  enabled: boolean
+  message: string | null
+  /** Regreso estimado (ISO) */
+  until: string | null
+  startedAt: string | null
+  updatedByName: string | null
 }
 
 export interface FieldIssue {
@@ -320,6 +332,8 @@ export const adminApi = {
   discardSite: () => request<SiteState>('POST', '/site/discard', {}),
   siteHistory: () => request<SiteVersionInfo[]>('GET', '/site/history'),
   restoreSite: (id: string) => request<SiteState>('POST', `/site/restore/${id}`, {}),
+  maintenance: () => request<MaintenanceState>('GET', '/site/maintenance'),
+  setMaintenance: (m: { enabled: boolean; message?: string; until?: string | null }) => request<MaintenanceState>('PUT', '/site/maintenance', m),
 
   contentDirty: () => request<{ dirty: string[] }>('GET', '/content'),
   content: (key: string) => request<ContentState>('GET', `/content/${key}`),

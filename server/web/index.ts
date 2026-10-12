@@ -1,6 +1,7 @@
 import { createApi, startServer } from '../shared/http'
 import { fail } from '../shared/lib/errors'
 import { rateLimit } from '../shared/lib/rateLimit'
+import { getMaintenance } from '../shared/lib/maintenance'
 import { isPublishedOn } from '../shared/lib/site'
 import { mountPublicReads } from '../shared/routes/read'
 import { bookings } from './routes/bookings'
@@ -17,6 +18,14 @@ const api = createApi('web')
 // Formularios públicos: 10 envíos por IP cada 10 minutos
 const publicPosts = rateLimit({ max: 10, windowMs: 10 * 60_000 })
 for (const path of ['/contact', '/bookings', '/reviews']) api.post(path, publicPosts)
+
+// Web en mantenimiento (panel · Sitio): no se aceptan envíos
+for (const path of ['/contact', '/bookings', '/reviews']) {
+  api.post(path, async (c, next) => {
+    if ((await getMaintenance()).enabled) return fail(c, 503, 'La web está en mantenimiento. Intenta más tarde.')
+    await next()
+  })
+}
 
 // Formularios de páginas apagadas en el panel · Sitio: no se aceptan envíos
 const formModule: Record<string, string> = { '/contact': 'page.contacto', '/bookings': 'page.reservar', '/reviews': 'opiniones.dejar' }

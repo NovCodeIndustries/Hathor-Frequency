@@ -3,6 +3,7 @@ import { availabilityBetween } from '../lib/availability'
 import { publishedContent } from '../lib/content'
 import { monthRange } from '../lib/dates'
 import { invalid } from '../lib/errors'
+import { getMaintenance, publicMaintenance } from '../lib/maintenance'
 import { publishedDisabled } from '../lib/site'
 import { computeStats } from '../lib/stats'
 import { monthSchema } from '../schemas'
@@ -18,10 +19,11 @@ export function mountPublicReads(api: Hono) {
     return c.json(await publishedContent())
   })
 
-  /** GET /api/site: módulos apagados que ve el público */
+  /** GET /api/site: módulos apagados que ve el público y si la web está en mantenimiento */
   api.get('/site', async (c) => {
     c.header('Cache-Control', 'no-cache')
-    return c.json(await publishedDisabled())
+    const [site, maintenance] = await Promise.all([publishedDisabled(), getMaintenance()])
+    return c.json({ ...site, maintenance: publicMaintenance(maintenance) })
   })
 
   /** GET /api/site/stats: cifras que salen de la base (proyectos terminados y artistas publicados) */
