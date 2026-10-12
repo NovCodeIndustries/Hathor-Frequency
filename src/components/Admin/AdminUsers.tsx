@@ -18,8 +18,8 @@ export function AdminUsers() {
           <h1 className="hf-admin__title">{admin.isRoot ? 'Usuarios' : 'Mi cuenta'}</h1>
           <p className="hf-admin__lead">
             {admin.isRoot
-              ? 'Eres el usuario principal: puedes crear y borrar usuarios del panel (a ti no te puedes borrar).'
-              : 'Cambia tu contraseña. Para crear o borrar usuarios, pídelo al usuario principal.'}
+              ? 'Eres el usuario principal: puedes crear y quitar accesos al panel.'
+              : 'Cambia tu contraseña. Para crear o quitar accesos, pídelo al usuario principal.'}
           </p>
         </div>
       </div>
@@ -128,7 +128,7 @@ function UsersAdmin({ meId, onError }: { meId: string; onError: (e: unknown) => 
                       <span className="hf-ausers__actions">
                         <button type="button" className="hf-admin__btn hf-admin__btn--sm" onClick={() => (setResetId(u.id), setResetPwd(''))}>Cambiar contraseña</button>
                         {!u.isRoot && (
-                          <button type="button" className="hf-admin__btn hf-admin__btn--ghost hf-admin__btn--sm" onClick={() => setDeleteId(u.id)}>Borrar usuario</button>
+                          <button type="button" className="hf-admin__btn hf-admin__btn--ghost hf-admin__btn--sm" onClick={() => setDeleteId(u.id)}>Quitar acceso</button>
                         )}
                       </span>
                     )}
@@ -197,9 +197,9 @@ function UsersAdmin({ meId, onError }: { meId: string; onError: (e: unknown) => 
           <button type="button" className="hf-asite__backdrop" aria-label="Cerrar" tabIndex={-1} onClick={() => setDeleteId(null)} />
           <div className="hf-asite__confirm" role="dialog" aria-modal="true" aria-labelledby={`${id}-del`}>
             <h2 id={`${id}-del`} className="hf-asite__confirm-title">
-              ¿Borrar a <span className="hf-asite__gold">{target.name}?</span>
+              ¿Quitar el acceso a <span className="hf-asite__gold">{target.name}?</span>
             </h2>
-            <p className="hf-ausers__muted">Se borra la cuenta de {target.email}: ya no podrá entrar al panel y se cierran sus sesiones. El usuario principal no se puede borrar.</p>
+            <p className="hf-ausers__muted">{target.email} ya no podrá entrar al panel y se cierran sus sesiones.</p>
             <div className="hf-asite__confirm-actions">
               <button type="button" className="hf-admin__btn" onClick={() => setDeleteId(null)}>Cancelar</button>
               <button
@@ -207,11 +207,11 @@ function UsersAdmin({ meId, onError }: { meId: string; onError: (e: unknown) => 
                 className="hf-admin__btn hf-admin__btn--primary"
                 disabled={busy}
                 onClick={async () => {
-                  await run(() => adminApi.deleteUser(target.id), `Usuario ${target.email} borrado.`)
+                  await run(() => adminApi.deleteUser(target.id), `Acceso de ${target.email} quitado.`)
                   setDeleteId(null)
                 }}
               >
-                Borrar usuario
+                Quitar acceso
               </button>
             </div>
           </div>

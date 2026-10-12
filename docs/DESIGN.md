@@ -760,7 +760,7 @@ Cambio del 2026-10-11. Es privado: va fuera del Layout público (sin Nav, Ufo, t
   - En la agenda, la terminada se ve en dorado secundario con ✓ y sigue ocupando su horario.
   - La web recibe la cifra nueva al instante (SSE `stats`).
 - **Usuarios** (`/admin/usuarios`, `AdminUsers.tsx`; sin ronda de diseño, mismo estilo de tabla que Contactos):
-  - el **usuario principal** ve la tabla de accesos (nombre, correo y teléfono, rol Principal/Admin, alta; "Cambiar contraseña" en línea y "Borrar usuario" con confirmación; el principal no tiene ese botón y la API rechaza borrarlo);
+  - el **usuario principal** ve la tabla de accesos (nombre, correo y teléfono, rol Principal/Admin, alta; "Cambiar contraseña" en línea y "Quitar acceso" con confirmación);
   - "Nuevo usuario admin" pide primer nombre, segundo nombre (opcional), primer apellido, segundo apellido (opcional), teléfono, correo, contraseña con Mostrar y **repetir contraseña**. Mientras escribes dice si coinciden, y no deja crear si no coinciden;
   - cualquier admin ve **"Mi cuenta"**: contraseña actual, nueva y repetir (con el mismo aviso);
   - el saludo de Inicio y la barra usan **primer nombre + primer apellido** ("Buenas tardes, Xavier Ruiz.").
