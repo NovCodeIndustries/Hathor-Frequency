@@ -1,6 +1,7 @@
 import { artists } from './artists'
 import { faqs } from './faq'
 import { packages } from './packages'
+import { plugins } from './plugins'
 import { services } from './services'
 
 /**
@@ -31,6 +32,7 @@ export const pageModules: ModuleDef[] = [
   { id: 'page.contacto', label: 'Contacto', kind: 'page', route: '/contacto' },
   { id: 'page.faq', label: 'FAQs', kind: 'page', route: '/faq' },
   { id: 'page.estudio', label: 'Estudio', kind: 'page', route: '/estudio' },
+  { id: 'page.plugins', label: 'Plugins', kind: 'page', route: '/plugins' },
 ]
 
 const sections: ModuleDef[] = [
@@ -44,6 +46,7 @@ const sections: ModuleDef[] = [
   { id: 'estudio.videos', label: 'Videos', kind: 'section', parent: 'page.estudio' },
   { id: 'estudio.equipo', label: 'Equipo', kind: 'section', parent: 'page.estudio' },
   { id: 'estudio.visita', label: 'Visita', kind: 'section', parent: 'page.estudio' },
+  { id: 'plugins.demo', label: 'Antes y después', kind: 'section', parent: 'page.plugins' },
 ]
 
 const items: ModuleDef[] = [
@@ -51,6 +54,7 @@ const items: ModuleDef[] = [
   ...packages.map((p) => ({ id: `paquetes.${p.id}`, label: `Paquete ${p.name}`, kind: 'item' as const, parent: 'servicios.paquetes' })),
   ...artists.map((a) => ({ id: `artistas.${a.code.toLowerCase()}`, label: a.name, kind: 'item' as const, parent: 'page.artistas' })),
   ...faqs.map((f) => ({ id: `faq.${f.id}`, label: f.q, kind: 'item' as const, parent: 'page.faq' })),
+  ...plugins.map((p) => ({ id: `plugins.${p.id}`, label: `Plugin ${p.name}`, kind: 'item' as const, parent: 'page.plugins' })),
 ]
 
 export const globalModules: ModuleDef[] = [
@@ -74,6 +78,7 @@ export const artistModule = (code: string) => `artistas.${code.toLowerCase()}`
 export const packageModule = (id: string) => `paquetes.${id}`
 export const serviceModule = (id: string) => `servicios.${id}`
 export const faqModule = (id: string) => `faq.${id}`
+export const pluginModule = (id: string) => `plugins.${id}`
 
 /** Elementos de listas creados en el panel · Contenido (no están en el registro): su padre sale del prefijo */
 const ITEM_PARENT: Record<string, string> = {
@@ -81,8 +86,9 @@ const ITEM_PARENT: Record<string, string> = {
   paquetes: 'servicios.paquetes',
   faq: 'page.faq',
   servicios: 'page.servicios',
+  plugins: 'page.plugins',
 }
-export const DYNAMIC_ITEM = /^(artistas|paquetes|faq)\.[a-z0-9-]{1,40}$/
+export const DYNAMIC_ITEM = /^(artistas|paquetes|faq|plugins)\.[a-z0-9-]{1,40}$/
 
 export function parentOf(id: string): string | undefined {
   const m = moduleById.get(id)

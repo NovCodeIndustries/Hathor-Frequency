@@ -6,14 +6,16 @@ import { WEB_ORIGIN, WEB_URL } from '../../lib/origins'
 import type { PreviewMessage } from '../../lib/content'
 import { useAdmin } from '../../lib/useAdmin'
 import { ContentForm } from './ContentForm'
-import { sectionForms, setAt, type ItemsForm } from './contentForms'
+import { sectionForms, setAt, stable, type ItemsForm } from './contentForms'
 import './AdminContent.css'
 import { useAdminLive } from '../../lib/useAdminLive'
 
 type Obj = Record<string, unknown>
 type Phase = 'idle' | 'saving' | 'publishing' | 'published'
 
-const isKey = (k: string | null): k is ContentKey => contentSections.some((s) => s.key === k)
+/** Pestañas de Contenido: las secciones con página propia en el panel (Plugins) se editan allá */
+const tabSections = contentSections.filter((s) => !s.ownPage)
+const isKey = (k: string | null): k is ContentKey => tabSections.some((s) => s.key === k)
 const PREVIEW_KEY = 'hf-content-preview'
 const withPreview = (path: string) => `${WEB_URL}${path}${path.includes('?') ? '&' : '?'}modo=vista`
 
@@ -234,7 +236,7 @@ function SectionEditor({ sectionKey: key, onSection }: { sectionKey: ContentKey;
       {issues.length > 0 && <span className="hf-cfield__error">Corrige {issues.length === 1 ? 'el error' : `los ${issues.length} errores`} antes de publicar.</span>}
     </div>
   )
-  const changesInOther = dirtyKeys.filter((k) => k !== key)
+  const changesInOther = dirtyKeys.filter((k) => k !== key && tabSections.some((s) => s.key === k))
 
   return (
     <>
@@ -243,7 +245,7 @@ function SectionEditor({ sectionKey: key, onSection }: { sectionKey: ContentKey;
       <div className="hf-acontent__head">
         <h1 className="hf-admin__title">Contenido</h1>
         <div className="hf-acontent__tabs" role="tablist" aria-label="Sección">
-          {contentSections.map((s) => {
+          {tabSections.map((s) => {
             const has = s.key === key ? dirty : dirtyKeys.includes(s.key)
             return (
               <button
@@ -478,20 +480,6 @@ function swap<T>(list: T[], a: number, b: number): T[] {
   return next
 }
 
-/** Copia de un elemento con id (o código de artista) nuevo y "(copia)" en el nombre */
-/** JSON con las claves ordenadas, para comparar sin importar el orden (la base reordena las claves) */
-function stable(v: unknown): string {
-  if (Array.isArray(v)) return `[${v.map(stable).join(',')}]`
-  if (v && typeof v === 'object') {
-    const o = v as Obj
-    return `{${Object.keys(o)
-      .filter((k) => o[k] !== undefined)
-      .sort()
-      .map((k) => `${JSON.stringify(k)}:${stable(o[k])}`)
-      .join(',')}}`
-  }
-  return JSON.stringify(v ?? null)
-}
 
 /** Qué elementos (por nombre) y si los textos generales cambiaron respecto a lo publicado */
 function pendingChanges(form: ItemsForm, draft: Obj, published: Obj): { names: string[]; general: boolean; keys: string[] } {
@@ -509,6 +497,7 @@ function pendingChanges(form: ItemsForm, draft: Obj, published: Obj): { names: s
 /** Minúsculas y sin acentos, para buscar "Sofia" y encontrar "Sofía" */
 const fold = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 
+/** Copia de un elemento con id (o código de artista) nuevo y "(copia)" en el nombre */
 function duplicate(form: ItemsForm, items: Obj[], i: number): Obj {
   const fresh = form.newItem!(items)
   const copy: Obj = { ...items[i] }

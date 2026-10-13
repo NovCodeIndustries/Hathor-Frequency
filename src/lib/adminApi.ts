@@ -77,6 +77,8 @@ export interface AdminSummary {
   siteChanges: number
   /** Secciones del panel · Contenido con cambios sin publicar */
   contentChanges: number
+  /** Ficha de plugins con cambios sin publicar (panel · Plugins): 0 o 1 */
+  pluginChanges: number
   /** Web en mantenimiento (panel · Sitio) */
   maintenance: MaintenanceState
   /** Quién del equipo cumple años hoy ("Nombre Apellido") */
@@ -111,7 +113,7 @@ export interface ContentState {
 export interface MediaEntry {
   name: string
   path: string
-  kind: 'dir' | 'image' | 'video' | 'other'
+  kind: 'dir' | 'image' | 'video' | 'audio' | 'other'
   size: number
   modifiedAt: string
 }
@@ -123,6 +125,38 @@ export interface MediaListing {
   parent: string | null
   query?: string
   entries: MediaEntry[]
+}
+
+/** Versión de un plugin (panel · Plugins · Versiones) */
+export interface PluginRelease {
+  id: string
+  pluginId: string
+  version: string
+  notes: string
+  macPath: string | null
+  winPath: string | null
+  current: boolean
+  createdAt: string
+  createdByName: string
+  downloads: number
+}
+
+export interface NewPluginRelease {
+  version: string
+  notes: string
+  macPath: string
+  winPath: string
+  current: boolean
+}
+
+/** Cifras del panel · Plugins: descargas de 30 días (y de los 30 anteriores), por plugin, visitas y versión actual */
+export interface PluginStats {
+  last30: number
+  prev30: number
+  perPlugin: Record<string, { last30: number; total: number }>
+  /** Vistas de /plugins en Umami (null sin Umami) */
+  visits: number | null
+  current: Record<string, { version: string; mac: boolean; win: boolean }>
 }
 
 export interface ContentVersionInfo {
@@ -389,6 +423,14 @@ export const adminApi = {
   discardContent: (key: string) => request<ContentState>('POST', `/content/${key}/discard`, {}),
   contentHistory: (key: string) => request<ContentVersionInfo[]>('GET', `/content/${key}/history`),
   restoreContent: (key: string, id: string) => request<ContentState>('POST', `/content/${key}/restore/${id}`, {}),
+
+  pluginStats: () => request<PluginStats>('GET', '/plugins/stats'),
+  pluginReleases: (pluginId: string) => request<PluginRelease[]>('GET', `/plugins/${pluginId}/releases`),
+  createPluginRelease: (pluginId: string, r: NewPluginRelease) => request<PluginRelease>('POST', `/plugins/${pluginId}/releases`, r),
+  updatePluginRelease: (id: string, patch: Partial<Pick<PluginRelease, 'notes' | 'macPath' | 'winPath'>> & { current?: true }) =>
+    request<PluginRelease>('PATCH', `/plugins/releases/${id}`, patch),
+  deletePluginRelease: (id: string) => request<{ ok: true }>('DELETE', `/plugins/releases/${id}`),
+
   users: () => request<AdminUserRow[]>('GET', '/users'),
   createUser: (user: NewAdminUser) => request<AdminUserRow>('POST', '/users', user),
   newTempPassword: (id: string) => request<{ tempPassword: string }>('POST', `/users/${id}/temp-password`, {}),

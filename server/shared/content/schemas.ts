@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { bookingServices, maxSlots, timePattern } from '../../../src/data/booking'
 import type { ContentKey } from '../../../src/data/content'
+import { pluginFormats, pluginSystems } from '../../../src/data/plugins'
 import { services } from '../../../src/data/services'
 
 /** Validación de cada sección del panel · Contenido. El borrador se guarda aunque falle; publicar, no. */
@@ -107,6 +108,34 @@ export const contentSchemas: Record<ContentKey, z.ZodType> = {
       .array(z.object({ id, category: req(40), q: req(200), a: req(1500) }))
       .max(60)
       .superRefine(unique((f: { id: string }) => f.id, 'Id repetido')),
+  }),
+
+  plugins: z.object({
+    intro: req(300),
+    items: z
+      .array(
+        z
+          .object({
+            id,
+            name: req(60),
+            category: req(40),
+            status: z.enum(['available', 'beta', 'soon']),
+            short: req(140),
+            description: req(1500),
+            formats: z.array(z.enum(pluginFormats)).max(pluginFormats.length).superRefine(unique((f: string) => f, 'Formato repetido')),
+            systems: z.array(z.enum(pluginSystems)).max(pluginSystems.length).superRefine(unique((s: string) => s, 'Sistema repetido')),
+            free: z.boolean(),
+            price: opt(20),
+            link: z.string().trim().max(500).refine((v) => v === '' || /^https:\/\/\S+$/.test(v), 'URL https://'),
+            controls: z.array(req(12)).min(2, 'Al menos 2 perillas').max(4, 'Máximo 4 perillas'),
+            image: media,
+            demoBefore: media,
+            demoAfter: media,
+          })
+          .refine((p) => p.status === 'soon' || p.formats.length > 0, { message: 'Marca al menos un formato', path: ['formats'] }),
+      )
+      .max(40)
+      .superRefine(unique((p: { id: string }) => p.id, 'Id repetido')),
   }),
 
   estudio: z.object({

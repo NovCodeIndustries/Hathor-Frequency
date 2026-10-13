@@ -1,5 +1,6 @@
 import { bookingServices, maxSlots } from '../../data/booking'
 import { slugify, type ContentKey } from '../../data/content'
+import { pluginFormats, pluginStatusLabel, pluginSystems } from '../../data/plugins'
 
 /**
  * Formularios del panel · Contenido (diseño C1): qué campos tiene cada sección.
@@ -12,7 +13,9 @@ export type Field =
   | { kind: 'number'; key: string; label: string; step?: number; nullable?: boolean; hint?: string }
   | { kind: 'checkbox'; key: string; label: string }
   | { kind: 'select'; key: string; label: string; options: { value: string; label: string }[] }
-  | { kind: 'media'; key: string; label: string; accept: 'image' | 'video'; hint?: string; wide?: boolean }
+  | { kind: 'media'; key: string; label: string; accept: 'image' | 'video' | 'audio'; hint?: string; wide?: boolean }
+  /** Varias opciones fijas que se encienden o apagan (formatos de un plugin); se guarda la lista en el orden de `options` */
+  | { kind: 'chips'; key: string; label: string; options: readonly string[]; hint?: string }
   | { kind: 'lines'; key: string; label: string; itemLabel: string; max?: number; placeholder?: string }
   /** Lista de horas "HH:MM" (24 h), ordenada y sin repetir; se muestra en 12 h */
   | { kind: 'times'; key: string; label: string; max: number; hint?: string }
@@ -235,6 +238,53 @@ export const sectionForms: Record<ContentKey, SectionForm> = {
     ],
   },
 
+  // Se edita en panel · Plugins (K3), no en las pestañas de Contenido
+  plugins: {
+    type: 'items',
+    general: [{ kind: 'textarea', key: 'intro', label: 'Texto bajo el título de /plugins', max: 300 }],
+    itemLabel: 'plugin',
+    canAdd: true,
+    titleOf: (x) => String(x.name || 'Nuevo plugin'),
+    subOf: (x) => `${x.category || 'Sin tipo'} · ${pluginStatusLabel[x.status as keyof typeof pluginStatusLabel] ?? ''}`,
+    moduleOf: (x) => `plugins.${x.id}`,
+    searchOf: (x) => `${x.name} ${x.category} ${x.short}`,
+    searchHint: 'Buscar por nombre o tipo',
+    // "demo" es el módulo de la sección Antes y después
+    newItem: (list) => ({
+      id: uniqueId('nuevo-plugin', [...list.map((p) => String(p.id)), 'demo']),
+      name: 'Nuevo plugin',
+      category: '',
+      status: 'soon',
+      short: '',
+      description: '',
+      formats: [],
+      systems: [],
+      free: false,
+      price: '',
+      link: '',
+      controls: ['Input', 'Mix'],
+      image: '',
+      demoBefore: '',
+      demoAfter: '',
+    }),
+    itemFields: [
+      { kind: 'text', key: 'name', label: 'Nombre', max: 60 },
+      { kind: 'text', key: 'category', label: 'Tipo', max: 40, placeholder: 'Dinámica, EQ, Reverb…', hint: 'Agrupa los filtros de la página' },
+      { kind: 'select', key: 'status', label: 'Estado', options: Object.entries(pluginStatusLabel).map(([value, label]) => ({ value, label })) },
+      { kind: 'text', key: 'short', label: 'Descripción corta (pedal)', max: 140 },
+      { kind: 'textarea', key: 'description', label: 'Descripción completa', max: 1500 },
+      { kind: 'chips', key: 'formats', label: 'Formatos', options: pluginFormats },
+      { kind: 'chips', key: 'systems', label: 'Sistemas', options: pluginSystems },
+      { kind: 'checkbox', key: 'free', label: 'Es gratis' },
+      { kind: 'money', key: 'price', label: 'Precio · MXN', hint: 'Si es gratis no se muestra' },
+      { kind: 'url', key: 'link', label: 'Link de tienda o beta', placeholder: 'https://…', hint: 'Vacío = se descarga la versión actual (pestaña Versiones)', wide: true },
+      { kind: 'lines', key: 'controls', label: 'Perillas que se dibujan (2 a 4)', itemLabel: 'perilla', max: 12, placeholder: 'Drive' },
+      { kind: 'media', key: 'image', label: 'Captura de la interfaz', accept: 'image', wide: true },
+      { kind: 'media', key: 'demoBefore', label: 'Demo · Antes (sin el plugin)', accept: 'audio', wide: true },
+      { kind: 'media', key: 'demoAfter', label: 'Demo · Después (con el plugin)', accept: 'audio', wide: true },
+    ],
+  },
+
   estudio: {
     type: 'groups',
     groups: [
@@ -415,3 +465,17 @@ export function setAt<T>(obj: T, path: (string | number)[], value: unknown): T {
 }
 
 export const keyPath = (key: string) => key.split('.')
+
+/** JSON con las claves ordenadas, para comparar sin importar el orden (la base reordena las claves) */
+export function stable(v: unknown): string {
+  if (Array.isArray(v)) return `[${v.map(stable).join(',')}]`
+  if (v && typeof v === 'object') {
+    const o = v as Record<string, unknown>
+    return `{${Object.keys(o)
+      .filter((k) => o[k] !== undefined)
+      .sort()
+      .map((k) => `${JSON.stringify(k)}:${stable(o[k])}`)
+      .join(',')}}`
+  }
+  return JSON.stringify(v ?? null)
+}

@@ -4,6 +4,7 @@ export const navLeft: NavLink[] = [
   { label: 'Servicios', href: '/servicios' },
   { label: 'Artistas', href: '/artistas' },
   { label: 'Opiniones', href: '/opiniones' },
+  { label: 'Plugins', href: '/plugins' },
 ]
 
 // /estudio aún no tiene diseño: muestra una página "Próximamente" (docs/DESIGN.md §12)

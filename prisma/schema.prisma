@@ -305,3 +305,39 @@ model ContentVersion {
   @@index([key, publishedAt])
   @@map("content_versions")
 }
+
+/// Versión de un plugin (panel · Plugins · Versiones). La marcada `current` es la que se descarga en la web;
+/// el índice único parcial `plugin_releases_current_key` (SQL crudo en la migración `plugins`) garantiza una por plugin
+model PluginRelease {
+  id            String           @id @default(uuid()) @db.Uuid
+  /// Id del plugin en el contenido `plugins` (src/data/plugins.ts)
+  pluginId      String           @map("plugin_id") @db.VarChar(40)
+  version       String           @db.VarChar(30)
+  notes         String           @db.VarChar(2000)
+  /// Instaladores: ruta /media/… del HDD o URL https; null = sin instalador para ese sistema
+  macPath       String?          @map("mac_path") @db.VarChar(500)
+  winPath       String?          @map("win_path") @db.VarChar(500)
+  current       Boolean          @default(false)
+  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  createdByName String           @map("created_by_name") @db.VarChar(120)
+  downloads     PluginDownload[]
+
+  @@unique([pluginId, version])
+  @@index([pluginId, createdAt])
+  @@map("plugin_releases")
+}
+
+/// Cada descarga (o clic al link de tienda) desde /plugins; sin datos de quien descarga
+model PluginDownload {
+  id        String         @id @default(uuid()) @db.Uuid
+  pluginId  String         @map("plugin_id") @db.VarChar(40)
+  releaseId String?        @map("release_id") @db.Uuid
+  release   PluginRelease? @relation(fields: [releaseId], references: [id], onDelete: SetNull)
+  /// mac | win | link
+  target    String         @db.VarChar(10)
+  createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([pluginId, createdAt])
+  @@index([createdAt])
+  @@map("plugin_downloads")
+}

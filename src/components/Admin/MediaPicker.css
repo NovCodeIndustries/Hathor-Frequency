@@ -51,6 +51,7 @@
 .hf-mpick__tile.is-current { border-color: var(--c-gold); box-shadow: var(--glow-cap); }
 .hf-mpick__thumb { height: 96px; border-radius: 4px; overflow: hidden; display: grid; place-items: center; background: #000; color: var(--c-gold); font-size: 26px; }
 .hf-mpick__thumb img, .hf-mpick__thumb video { width: 100%; height: 100%; object-fit: cover; }
+.hf-mpick__ext { font-size: 13px; letter-spacing: .14em; }
 .hf-mpick__tile--dir .hf-mpick__thumb { background: rgba(242,201,76,0.06); }
 .hf-mpick__name { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hf-mpick__size { font-size: 11px; color: var(--c-text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

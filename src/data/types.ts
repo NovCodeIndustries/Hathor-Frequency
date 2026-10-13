@@ -140,3 +140,43 @@ export interface Review {
   rating: number
   text: string
 }
+
+/** Estado de un plugin en la web: el LED del pedal se enciende solo si está disponible */
+export type PluginStatus = 'available' | 'beta' | 'soon'
+export type PluginFormat = 'VST3' | 'AU' | 'AAX' | 'CLAP'
+export type PluginSystem = 'macOS' | 'Windows' | 'Linux'
+
+/** Plugin de audio desarrollado por el estudio (`/plugins`, panel · Plugins) */
+export interface Plugin {
+  /** Id fijo: módulo `plugins.<id>` del panel · Sitio y llave de sus versiones y descargas */
+  id: string
+  name: string
+  /** Tipo ("Dinámica", "EQ"…): agrupa los filtros de la página */
+  category: string
+  status: PluginStatus
+  /** Una línea para el pedal / la unidad del rack */
+  short: string
+  /** Descripción completa (panel de detalle) */
+  description: string
+  formats: PluginFormat[]
+  systems: PluginSystem[]
+  free: boolean
+  /** Precio en MXN ya formateado ("$1,200"); se ignora si es gratis */
+  price: string
+  /** Tienda, beta o descarga externa (https); vacío = se descarga la versión actual del estudio */
+  link: string
+  /** Nombres de las perillas que se dibujan (2 a 4) */
+  controls: string[]
+  /** Captura de la interfaz (ruta /media/… o URL) */
+  image?: string
+  /** Demo "Antes y después": la misma toma sin y con el plugin (audio) */
+  demoBefore?: string
+  demoAfter?: string
+}
+
+/** Versión actual de cada plugin (`GET /api/plugins/releases`) */
+export interface PluginReleaseInfo {
+  version: string
+  mac: boolean
+  win: boolean
+}

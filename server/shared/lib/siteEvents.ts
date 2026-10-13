@@ -4,7 +4,7 @@ import { prisma } from '../db'
 /**
  * Avisos en vivo entre la web y el panel, que son procesos separados:
  * - a la web abierta (`GET /api/site/events`, SSE): `site` al publicar módulos, `content` al publicar una sección,
- *   `stats`, `availability`, `reviews` y `refresh` (volver a pedir todo);
+ *   `stats`, `availability`, `reviews`, `plugins` (versiones) y `refresh` (volver a pedir todo);
  * - al panel (`GET /api/admin/events`): qué cambió (`booking`, `contact`, …).
  * Cada aviso se entrega a este proceso y se manda a los demás por PostgreSQL (`NOTIFY hf_events`); cada proceso
  * escucha con `LISTEN` (`listenEvents`). Si el otro servicio está apagado el aviso se pierde sin más:
@@ -75,7 +75,7 @@ export function onLiveEvent(l: Listener): () => void {
   return () => listeners.delete(l)
 }
 
-export type LiveEvent = 'site' | 'content' | 'stats' | 'availability' | 'reviews' | 'maintenance' | 'refresh'
+export type LiveEvent = 'site' | 'content' | 'stats' | 'availability' | 'reviews' | 'maintenance' | 'plugins' | 'refresh'
 
 function deliverLive(event: LiveEvent, data: unknown) {
   for (const l of listeners) l(event, data)
@@ -92,8 +92,8 @@ export const emitSitePublished = (disabled: string[]) => emitLive('site', { disa
 // ── Avisos del panel (solo admins con sesión: GET /api/admin/events) ──
 
 /** Qué cambió: el panel recarga los contadores de la barra y la vista que lo muestre */
-export type AdminEventKind = 'booking' | 'contact' | 'review' | 'block' | 'site' | 'content' | 'users' | 'dedications'
-const ADMIN_KINDS: AdminEventKind[] = ['booking', 'contact', 'review', 'block', 'site', 'content', 'users', 'dedications']
+export type AdminEventKind = 'booking' | 'contact' | 'review' | 'block' | 'site' | 'content' | 'users' | 'dedications' | 'plugins'
+const ADMIN_KINDS: AdminEventKind[] = ['booking', 'contact', 'review', 'block', 'site', 'content', 'users', 'dedications', 'plugins']
 
 type AdminListener = (kind: AdminEventKind) => void
 const adminListeners = new Set<AdminListener>()

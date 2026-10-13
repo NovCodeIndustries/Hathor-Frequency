@@ -2,11 +2,12 @@ import { artists, artistsIntro } from './artists'
 import { servicePrices, timeSlots, type bookingServices } from './booking'
 import { faqs } from './faq'
 import { packages, packagesDisclaimer, packagesIntro, packagesNote } from './packages'
+import { plugins, pluginsIntro } from './plugins'
 import { services, servicesIntro } from './services'
 import { slogan, socials, whatsapp } from './site'
 import { stats } from './stats'
 import { studioAbout, studioGear, studioMap, studioRooms, studioValues, studioVideo, studioVisit } from './studio'
-import type { Artist, Faq, Package, SocialLink, Stat, StudioGear, StudioRoom, StudioValue, StudioVideoService } from './types'
+import type { Artist, Faq, Package, Plugin, SocialLink, Stat, StudioGear, StudioRoom, StudioValue, StudioVideoService } from './types'
 
 /**
  * Contenido editable desde el panel · Contenido (`/admin/contenido`).
@@ -26,6 +27,8 @@ export interface ContentMap {
   /** Sin la fila "Tu banda" (es fija y la agrega la página) */
   artistas: { intro: string; items: Artist[] }
   faq: { items: Faq[] }
+  /** Se edita en panel · Plugins (no en Contenido), con sus versiones y descargas */
+  plugins: { intro: string; items: Plugin[] }
   estudio: {
     rooms: StudioRoom[]
     about: string[]
@@ -52,6 +55,7 @@ export const contentDefaults: ContentMap = {
   horarios: { slots: [...timeSlots] },
   artistas: { intro: artistsIntro, items: artists.filter((a) => !a.cta) },
   faq: { items: faqs },
+  plugins: { intro: pluginsIntro, items: plugins },
   estudio: {
     rooms: studioRooms,
     about: studioAbout,
@@ -64,14 +68,18 @@ export const contentDefaults: ContentMap = {
   sitio: { slogan, stats, whatsapp: { ...whatsapp }, socials },
 }
 
-/** Secciones en el orden de las pestañas, con la página donde se ve cada una */
-export const contentSections: { key: ContentKey; label: string; preview: string }[] = [
+/**
+ * Secciones en el orden de las pestañas, con la página donde se ve cada una.
+ * `ownPage`: se edita en su propia sección del panel y no sale en las pestañas de Contenido.
+ */
+export const contentSections: { key: ContentKey; label: string; preview: string; ownPage?: string }[] = [
   { key: 'servicios', label: 'Servicios', preview: '/servicios' },
   { key: 'paquetes', label: 'Paquetes', preview: '/servicios?vista=paquetes' },
   { key: 'precios', label: 'Precios base', preview: '/reservar' },
   { key: 'horarios', label: 'Horarios', preview: '/reservar' },
   { key: 'artistas', label: 'Artistas', preview: '/artistas' },
   { key: 'faq', label: 'FAQs', preview: '/faq' },
+  { key: 'plugins', label: 'Plugins', preview: '/plugins', ownPage: '/admin/plugins' },
   { key: 'estudio', label: 'Estudio', preview: '/estudio' },
   { key: 'sitio', label: 'Datos del sitio', preview: '/' },
 ]

@@ -3,8 +3,18 @@ import { createPortal } from 'react-dom'
 import { adminApi, type MediaEntry, type MediaListing } from '../../lib/adminApi'
 import './MediaPicker.css'
 
+/** Qué se puede elegir: `file` es cualquier archivo (instaladores de plugins) */
+export type MediaAccept = 'image' | 'video' | 'audio' | 'file'
+
+const NOUN: Record<MediaAccept, { one: string; many: string }> = {
+  image: { one: 'foto', many: 'fotos' },
+  video: { one: 'video', many: 'videos' },
+  audio: { one: 'audio', many: 'audios' },
+  file: { one: 'archivo', many: 'archivos' },
+}
+
 interface MediaPickerProps {
-  accept: 'image' | 'video'
+  accept: MediaAccept
   /** Ruta actual del campo, para abrir en su carpeta */
   current: string
   onPick: (path: string) => void
@@ -59,7 +69,7 @@ export function MediaPicker({ accept, current, onPick, onClose }: MediaPickerPro
     }
   }, [dir, debounced])
 
-  const entries = (data?.entries ?? []).filter((e) => e.kind === 'dir' || e.kind === accept)
+  const entries = (data?.entries ?? []).filter((e) => e.kind === 'dir' || e.kind === accept || accept === 'file')
   const crumbs = dir === '/media' ? ['/media'] : dir.split('/').slice(1).map((_, i, all) => '/' + all.slice(0, i + 1).join('/'))
 
   const open = (e: MediaEntry) => {
@@ -76,7 +86,7 @@ export function MediaPicker({ accept, current, onPick, onClose }: MediaPickerPro
       <div className="hf-mpick__card" role="dialog" aria-modal="true" aria-labelledby={`${id}-title`}>
         <div className="hf-mpick__head">
           <h2 id={`${id}-title`} className="hf-mpick__title">
-            Elegir {accept === 'image' ? 'foto' : 'video'} <span>del HDD</span>
+            Elegir {NOUN[accept].one} <span>del HDD</span>
           </h2>
           <button type="button" className="hf-mpick__close" aria-label="Cerrar" onClick={onClose}>
             <svg width="12" height="12" viewBox="0 0 16 16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" /></svg>
@@ -128,8 +138,10 @@ export function MediaPicker({ accept, current, onPick, onClose }: MediaPickerPro
                   <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" aria-hidden="true"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6H9l2 2h8.5A1.5 1.5 0 0 1 21 9.5v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z" /></svg>
                 ) : e.kind === 'image' ? (
                   <img src={e.path} alt="" loading="lazy" />
-                ) : (
+                ) : e.kind === 'video' ? (
                   <video src={e.path} muted preload="metadata" />
+                ) : (
+                  <span className="hf-mpick__ext" aria-hidden="true">{e.kind === 'audio' ? '♪' : ''}{e.name.split('.').pop()?.toUpperCase()}</span>
                 )}
               </span>
               <span className="hf-mpick__name">{e.name}</span>
@@ -137,7 +149,7 @@ export function MediaPicker({ accept, current, onPick, onClose }: MediaPickerPro
             </button>
           ))}
           {data && data.configured && entries.length === 0 && (
-            <p className="hf-mpick__muted hf-mpick__empty">{debounced ? 'Nada con ese nombre.' : `No hay ${accept === 'image' ? 'fotos' : 'videos'} ni carpetas aquí.`}</p>
+            <p className="hf-mpick__muted hf-mpick__empty">{debounced ? 'Nada con ese nombre.' : `No hay ${NOUN[accept].many} ni carpetas aquí.`}</p>
           )}
         </div>
       </div>

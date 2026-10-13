@@ -46,22 +46,37 @@ export interface Visits {
   bookingViews: number
 }
 
+/** Vistas por ruta; la métrica se llama "url" en v2 y "path" en v3 */
+async function pagesOf(q: string): Promise<{ x: string; y: number }[]> {
+  for (const type of ['url', 'path']) {
+    try {
+      return (await get(`/api/websites/${WEBSITE}/metrics?${q}&type=${type}`)) as { x: string; y: number }[]
+    } catch {
+      // probar el otro nombre
+    }
+  }
+  return []
+}
+
+/** Vistas de las rutas que empiezan con `prefix` (p. ej. /plugins) entre dos instantes (ms); null sin Umami */
+export async function pathViews(prefix: string, startAt: number, endAt: number): Promise<number | null> {
+  if (!umamiConfigured) return null
+  try {
+    const pages = await pagesOf(`startAt=${startAt}&endAt=${endAt}`)
+    return pages.filter((p) => p.x?.startsWith(prefix)).reduce((s, p) => s + p.y, 0)
+  } catch (err) {
+    console.warn('[umami]', (err as Error).message)
+    return null
+  }
+}
+
 /** Visitas entre dos instantes (ms) */
 export async function visitsBetween(startAt: number, endAt: number): Promise<Visits | null> {
   if (!umamiConfigured) return null
   try {
     const q = `startAt=${startAt}&endAt=${endAt}`
     const stats = (await get(`/api/websites/${WEBSITE}/stats?${q}`)) as Record<string, unknown>
-    // La métrica de rutas se llama "url" en v2 y "path" en v3
-    let pages: { x: string; y: number }[] = []
-    for (const type of ['url', 'path']) {
-      try {
-        pages = (await get(`/api/websites/${WEBSITE}/metrics?${q}&type=${type}`)) as typeof pages
-        break
-      } catch {
-        // probar el otro nombre
-      }
-    }
+    const pages = await pagesOf(q)
     return {
       visitors: num(stats.visitors),
       pageviews: num(stats.pageviews),

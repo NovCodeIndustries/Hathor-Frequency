@@ -167,6 +167,7 @@ export function AdminLayout() {
     { to: '/admin/contactos', label: 'Contactos', count: summary?.openContacts, kind: 'muted' },
     { to: '/admin/sitio', label: 'Sitio', count: summary?.siteChanges, kind: 'gold' },
     { to: '/admin/contenido', label: 'Contenido', count: summary?.contentChanges, kind: 'gold' },
+    { to: '/admin/plugins', label: 'Plugins', count: summary?.pluginChanges, kind: 'gold' },
     { to: '/admin/usuarios', label: admin.isRoot ? 'Usuarios' : 'Mi cuenta' },
   ]
   const tabs = staffOnly ? allTabs.filter((t) => STAFF_ROUTES.includes(t.to)) : allTabs

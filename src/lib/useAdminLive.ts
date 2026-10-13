@@ -7,8 +7,8 @@ import { longPoll } from './longPoll'
  * Sin SSE (p. ej. el túnel rápido de Cloudflare) los avisos llegan por long-polling (`/api/admin/events/poll`).
  */
 
-export type AdminEventKind = 'booking' | 'contact' | 'review' | 'block' | 'site' | 'content' | 'users' | 'dedications'
-const ALL: AdminEventKind[] = ['booking', 'contact', 'review', 'block', 'site', 'content', 'users', 'dedications']
+export type AdminEventKind = 'booking' | 'contact' | 'review' | 'block' | 'site' | 'content' | 'users' | 'dedications' | 'plugins'
+const ALL: AdminEventKind[] = ['booking', 'contact', 'review', 'block', 'site', 'content', 'users', 'dedications', 'plugins']
 
 type Listener = (kind: AdminEventKind) => void
 const listeners = new Set<Listener>()

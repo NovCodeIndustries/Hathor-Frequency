@@ -7,10 +7,11 @@ import { mountPublicReads } from '../shared/routes/read'
 import { bookings } from './routes/bookings'
 import { contact } from './routes/contact'
 import { live } from './routes/live'
+import { plugins } from './routes/plugins'
 import { reviews } from './routes/reviews'
 
 /**
- * API de la web pública (servicio `web`): formularios, lecturas públicas y avisos en vivo.
+ * API de la web pública (servicio `web`): formularios, lecturas públicas, avisos en vivo y descargas de plugins.
  * No monta nada del panel: `/api/admin/*` no existe aquí. Habla con el panel solo por PostgreSQL.
  */
 const api = createApi('web')
@@ -41,5 +42,6 @@ api.route('/site', live)
 api.route('/contact', contact)
 api.route('/bookings', bookings)
 api.route('/reviews', reviews)
+api.route('/plugins', plugins)
 
 startServer('web', api, Number(process.env.WEB_API_PORT ?? 3000))

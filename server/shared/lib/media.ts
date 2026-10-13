@@ -34,7 +34,7 @@ export async function mediaExists(urlPath: string): Promise<boolean | null> {
 
 // ── Buscador de archivos del panel ──
 
-export type MediaKind = 'dir' | 'image' | 'video' | 'other'
+export type MediaKind = 'dir' | 'image' | 'video' | 'audio' | 'other'
 
 export interface MediaEntry {
   name: string
@@ -47,7 +47,9 @@ export interface MediaEntry {
 
 const IMAGE = /\.(jpe?g|png|webp|gif|avif|svg)$/i
 const VIDEO = /\.(mp4|webm|mov|m4v)$/i
-const kindOf = (name: string, isDir: boolean): MediaKind => (isDir ? 'dir' : IMAGE.test(name) ? 'image' : VIDEO.test(name) ? 'video' : 'other')
+const AUDIO = /\.(mp3|wav|m4a|aac|ogg|oga|flac|aiff?)$/i
+const kindOf = (name: string, isDir: boolean): MediaKind =>
+  isDir ? 'dir' : IMAGE.test(name) ? 'image' : VIDEO.test(name) ? 'video' : AUDIO.test(name) ? 'audio' : 'other'
 
 /** Carpeta de `/media` o `/media/...` dentro de MEDIA_DIR (null si sale de la carpeta) */
 function mediaDir(urlPath: string): string | null {

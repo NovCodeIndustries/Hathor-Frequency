@@ -116,6 +116,18 @@ export const GUIDES: Record<string, Guide> = {
       help('Contenido'),
     ],
   },
+  plugins: {
+    key: 'plugins',
+    name: 'Plugins',
+    steps: [
+      { say: '¡Hola! Soy el alien del estudio.', text: 'Te enseño Plugins: lo que sale en la página /plugins de la web, sus versiones y cuánto se descargan.' },
+      { target: '[data-guide="plugins-kpis"]', say: '¿Cómo van?', text: 'Descargas de los últimos 30 días, el más descargado, cuántos están en beta y las visitas a /plugins.' },
+      { target: '[data-guide="plugins-list"]', say: 'Todos los plugins.', text: 'Toca uno para abrirlo. La barra dorada son sus descargas del mes; "Borrador" marca lo que aún no publicas.' },
+      { target: '[data-guide="plugins-tabs"]', say: 'Ficha y Versiones.', text: 'En la Ficha editas lo que se ve en la web. En Versiones subes cada instalador y marcas cuál es la actual: esa es la que se descarga.', tip: 'Si pones un link de tienda en la Ficha, el botón de la web lleva ahí en vez de descargar.' },
+      { target: '[data-guide="plugins-publish"]', say: 'Cuando esté listo, publícalo.', text: 'La ficha se guarda sola como borrador. Las versiones no: se aplican al guardarlas.' },
+      help('Plugins'),
+    ],
+  },
   usuarios: {
     key: 'usuarios',
     name: 'Usuarios',
@@ -140,6 +152,7 @@ export function guideFor(pathname: string): Guide | null {
     '/admin/contactos': 'contactos',
     '/admin/sitio': 'sitio',
     '/admin/contenido': 'contenido',
+    '/admin/plugins': 'plugins',
     '/admin/usuarios': 'usuarios',
   }
   const key = map[pathname.replace(/\/+$/, '') || '/admin']

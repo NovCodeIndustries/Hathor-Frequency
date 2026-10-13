@@ -5,13 +5,14 @@ import { publishedContent } from '../lib/content'
 import { monthRange } from '../lib/dates'
 import { invalid } from '../lib/errors'
 import { getMaintenance, publicMaintenance } from '../lib/maintenance'
+import { currentReleases } from '../lib/plugins'
 import { publishedDisabled } from '../lib/site'
 import { computeStats } from '../lib/stats'
 import { monthSchema } from '../schemas'
 
 /**
  * Lecturas públicas que montan la web y el panel (el panel las usa en Sitio, Contenido y la Agenda):
- * `/content`, `/site`, `/site/stats` y `/availability`. Solo lectura, sin datos personales.
+ * `/content`, `/site`, `/site/stats`, `/availability` y `/plugins/releases`. Solo lectura, sin datos personales.
  */
 export function mountPublicReads(api: Hono) {
   /** GET /api/content: lo publicado de cada sección */
@@ -31,6 +32,12 @@ export function mountPublicReads(api: Hono) {
   api.get('/site/stats', async (c) => {
     c.header('Cache-Control', 'no-cache')
     return c.json(await computeStats())
+  })
+
+  /** GET /api/plugins/releases: versión actual de cada plugin (panel · Plugins · Versiones) */
+  api.get('/plugins/releases', async (c) => {
+    c.header('Cache-Control', 'no-cache')
+    return c.json(await currentReleases())
   })
 
   /** GET /api/availability?month=YYYY-MM */

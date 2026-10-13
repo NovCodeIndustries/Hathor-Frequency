@@ -22,6 +22,7 @@ const router = createBrowserRouter([
       { path: 'bloqueos', element: <Navigate to="/admin/reservas" replace /> },
       { path: 'usuarios', lazy: async () => ({ Component: (await import('../components/Admin/AdminUsers')).AdminUsers }) },
       { path: 'contenido', lazy: async () => ({ Component: (await import('../components/Admin/AdminContent')).AdminContent }) },
+      { path: 'plugins', lazy: async () => ({ Component: (await import('../components/Admin/AdminPlugins')).AdminPlugins }) },
       { path: 'sitio', lazy: async () => ({ Component: (await import('../components/Admin/AdminSite')).AdminSite }) },
       { path: '*', element: <Navigate to="/admin" replace /> },
     ],

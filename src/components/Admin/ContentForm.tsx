@@ -119,6 +119,28 @@ function FieldView({ field, data, path, issues, onChange }: { field: Field; data
       )
     case 'media':
       return <MediaField id={id} cls={cls} label={label} help={help} value={String(value ?? '')} accept={field.accept} onChange={(v) => onChange(path, v)} />
+    case 'chips': {
+      const on = (value as string[]) ?? []
+      return (
+        <fieldset className={`${cls} hf-cchips`}>
+          <legend className="hf-cfield__label">{field.label}</legend>
+          <span className="hf-cchips__row">
+            {field.options.map((o) => (
+              <button
+                key={o}
+                type="button"
+                className="hf-cchip"
+                aria-pressed={on.includes(o)}
+                onClick={() => onChange(path, field.options.filter((x) => (x === o ? !on.includes(o) : on.includes(x))))}
+              >
+                {o}
+              </button>
+            ))}
+          </span>
+          {help}
+        </fieldset>
+      )
+    }
     case 'lines':
       return <LinesField field={field} cls={cls} value={(value as string[]) ?? []} path={path} issues={issues} onChange={onChange} />
     case 'times':
@@ -268,8 +290,20 @@ function ListField({ field, cls, data, value, path, issues, onChange }: { field:
 
 const IMG = /\.(jpe?g|png|webp|gif|avif)$/i
 const VID = /\.(mp4|webm|mov)$/i
+const AUD = /\.(mp3|wav|m4a|aac|ogg|oga|flac)$/i
 
-function MediaField({ id, cls, label, help, value, accept, onChange }: { id: string; cls: string; label: ReactNode; help: ReactNode; value: string; accept: 'image' | 'video'; onChange: (v: string) => void }) {
+const EMPTY: Record<'image' | 'video' | 'audio', string> = {
+  image: 'Sin imagen: se muestra el marcador.',
+  video: 'Sin video: se muestra el marcador.',
+  audio: 'Sin audio: no se muestra.',
+}
+const PLACEHOLDER: Record<'image' | 'video' | 'audio', string> = {
+  image: '/media/artistas/ralo/01.jpg',
+  video: 'https://www.youtube-nocookie.com/embed/…',
+  audio: '/media/plugins/demo-antes.mp3',
+}
+
+function MediaField({ id, cls, label, help, value, accept, onChange }: { id: string; cls: string; label: ReactNode; help: ReactNode; value: string; accept: 'image' | 'video' | 'audio'; onChange: (v: string) => void }) {
   const v = value.trim()
   const isMedia = v.startsWith('/media/')
   const isUrl = /^https:\/\/\S+$/.test(v)
@@ -288,9 +322,7 @@ function MediaField({ id, cls, label, help, value, accept, onChange }: { id: str
   const state = check?.path === v ? check.exists : undefined
   const bad = (!!v && !isMedia && !isUrl) || (isMedia && state === false)
   const msg = !v
-    ? accept === 'image'
-      ? 'Sin imagen: se muestra el marcador.'
-      : 'Sin video: se muestra el marcador.'
+    ? EMPTY[accept]
     : isMedia
       ? state === true
         ? 'Encontrada en el HDD de medios.'
@@ -305,12 +337,13 @@ function MediaField({ id, cls, label, help, value, accept, onChange }: { id: str
 
   const showImg = !!v && (isMedia || isUrl) && accept === 'image' && (IMG.test(v) || isUrl) && state !== false
   const showVid = !!v && isMedia && accept === 'video' && VID.test(v) && state !== false
+  const showAud = !!v && (isMedia || isUrl) && accept === 'audio' && AUD.test(v) && state !== false
 
   return (
     <label className={`${cls} ${bad ? 'has-error' : ''}`} htmlFor={id}>
       {label}
       <span className="hf-cmedia__row">
-        <input id={id} className="hf-cinput" value={value} placeholder={accept === 'image' ? '/media/artistas/ralo/01.jpg' : 'https://www.youtube-nocookie.com/embed/…'} onChange={(e) => onChange(e.target.value)} />
+        <input id={id} className="hf-cinput" value={value} placeholder={PLACEHOLDER[accept]} onChange={(e) => onChange(e.target.value)} />
         <button type="button" className="hf-admin__btn hf-admin__btn--sm hf-cmedia__browse" onClick={() => setPicking(true)}>
           Buscar archivo
         </button>
@@ -327,9 +360,13 @@ function MediaField({ id, cls, label, help, value, accept, onChange }: { id: str
         />
       )}
       <span className="hf-cmedia">
-        <span className={`hf-cmedia__thumb ${showImg || showVid ? 'has-media' : ''}`}>
-          {showImg ? <img src={v} alt="" loading="lazy" /> : showVid ? <video src={v} muted preload="metadata" /> : <span>{v ? 'Sin vista previa' : 'Marcador'}</span>}
-        </span>
+        {showAud ? (
+          <audio className="hf-cmedia__audio" src={v} controls preload="none" />
+        ) : (
+          <span className={`hf-cmedia__thumb ${showImg || showVid ? 'has-media' : ''}`}>
+            {showImg ? <img src={v} alt="" loading="lazy" /> : showVid ? <video src={v} muted preload="metadata" /> : <span>{v ? 'Sin vista previa' : 'Marcador'}</span>}
+          </span>
+        )}
         <span className={bad ? 'hf-cfield__error' : 'hf-cfield__hint'}>{msg}</span>
       </span>
       {help}

@@ -21,6 +21,7 @@ import { streamSSE } from 'hono/streaming'
 import { adminSite } from './site'
 import { users } from './users'
 import { dedications } from './dedications'
+import { adminPlugins } from './plugins'
 import { publishedDisabled } from '../../shared/lib/site'
 import { getMaintenance } from '../../shared/lib/maintenance'
 import { birthdaysToday, isBirthdayToday } from '../../shared/lib/birthdays'
@@ -128,8 +129,10 @@ admin.get('/summary', async (c) => {
   const d = draft?.disabled ?? published.disabled
   const siteChanges = d.filter((id) => !published.disabled.includes(id)).length + published.disabled.filter((id) => !d.includes(id)).length
   // El rol STAFF solo ve sus contadores
-  if (c.get('admin').role === 'STAFF') return c.json({ pendingBookings, openContacts, pendingReviews: 0, siteChanges: 0, contentChanges: 0, maintenance, birthdays })
-  return c.json({ pendingBookings, pendingReviews, openContacts, siteChanges, contentChanges: contentDirty.length, maintenance, birthdays })
+  if (c.get('admin').role === 'STAFF') return c.json({ pendingBookings, openContacts, pendingReviews: 0, siteChanges: 0, contentChanges: 0, pluginChanges: 0, maintenance, birthdays })
+  // Plugins se edita en su propia sección del panel: su punto va en esa pestaña, no en Contenido
+  const pluginChanges = contentDirty.includes('plugins') ? 1 : 0
+  return c.json({ pendingBookings, pendingReviews, openContacts, siteChanges, contentChanges: contentDirty.length - pluginChanges, pluginChanges, maintenance, birthdays })
 })
 
 // ── Reservas ──────────────────────────────────────────────
@@ -400,3 +403,7 @@ admin.get('/media/check', async (c) => {
 // ── Contenido ─────────────────────────────────────────────
 
 admin.route('/content', adminContent)
+
+// ── Plugins (versiones y descargas; la ficha es el contenido `plugins`) ──
+
+admin.route('/plugins', adminPlugins)

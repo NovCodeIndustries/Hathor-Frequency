@@ -15,7 +15,7 @@ let started = false
 
 const SSE_TIMEOUT_MS = 6_000
 
-/** Escucha un evento del canal (`site`, `content`, `stats`, `availability`, `reviews`); devuelve cómo dejar de escuchar */
+/** Escucha un evento del canal (`site`, `content`, `stats`, `availability`, `reviews`, `plugins`); devuelve cómo dejar de escuchar */
 export function onLive(event: string, handler: Handler): () => void {
   if (!handlers.has(event)) handlers.set(event, new Set())
   handlers.get(event)!.add(handler)
@@ -59,7 +59,7 @@ export function startLive() {
     startPolling()
   }, SSE_TIMEOUT_MS)
 
-  for (const name of ['site', 'content', 'stats', 'availability', 'reviews', 'maintenance']) {
+  for (const name of ['site', 'content', 'stats', 'availability', 'reviews', 'maintenance', 'plugins']) {
     events.addEventListener(name, (e) => {
       let data: unknown
       try {

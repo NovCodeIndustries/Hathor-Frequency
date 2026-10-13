@@ -3,6 +3,7 @@ import { Booking } from '../components/Booking/Booking'
 import { Contact } from '../components/Contact/Contact'
 import { Faq } from '../components/Faq/Faq'
 import { Hero } from '../components/Hero/Hero'
+import { Plugins } from '../components/Plugins/Plugins'
 import { Reviews } from '../components/Reviews/Reviews'
 import { Services } from '../components/Services/Services'
 import { Studio } from '../components/Studio/Studio'
@@ -99,6 +100,15 @@ export function StudioPage() {
     <PageGate id="page.estudio" title="Estudio">
       <title>{`Estudio · ${SITE}`}</title>
       <Studio />
+    </PageGate>
+  )
+}
+
+export function PluginsPage() {
+  return (
+    <PageGate id="page.plugins" title="Plugins">
+      <title>{`Plugins · ${SITE}`}</title>
+      <Plugins />
     </PageGate>
   )
 }

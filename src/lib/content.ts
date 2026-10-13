@@ -117,6 +117,10 @@ export function contentItemLabel(moduleId: string): string | undefined {
   }
   if (kind === 'faq') return getContent('faq').items.find((f) => f.id === id)?.q
   if (kind === 'servicios') return getContent('servicios').items.find((x) => x.id === id)?.name
+  if (kind === 'plugins') {
+    const p = getContent('plugins').items.find((x) => x.id === id)
+    return p && `Plugin ${p.name}`
+  }
   return undefined
 }
 

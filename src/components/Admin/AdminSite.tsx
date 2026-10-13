@@ -26,7 +26,7 @@ function moduleTitle(id: string): string {
   const m = moduleById.get(id)
   if (!m) {
     // Elemento creado en Contenido: "Artistas · Nuevo artista"
-    const page = { artistas: 'Artistas', paquetes: 'Servicios', faq: 'FAQs' }[id.split('.')[0]]
+    const page = { artistas: 'Artistas', paquetes: 'Servicios', faq: 'FAQs', plugins: 'Plugins' }[id.split('.')[0]]
     const label = contentItemLabel(id)
     return label && page ? `${page} · ${label}` : id
   }

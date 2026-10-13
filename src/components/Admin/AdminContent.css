@@ -195,6 +195,26 @@ select.hf-cinput { background: var(--c-surface-2); }
 .hf-cmedia__row .hf-cinput { flex: 1; min-width: 0; }
 .hf-cmedia__browse { flex: none; border-color: var(--c-gold); color: var(--c-gold); }
 .hf-cmedia { display: flex; align-items: center; gap: 12px; }
+.hf-cmedia__audio { flex: none; width: 260px; max-width: 100%; height: 36px; }
+
+/* Opciones que se encienden o apagan (formatos de un plugin) */
+.hf-cchips { border: 0; margin: 0; padding: 0; min-width: 0; }
+.hf-cchips__row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.hf-cchip {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--c-line-2);
+  background: transparent;
+  color: var(--c-text-2);
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: .14em;
+  cursor: pointer;
+  transition: color .2s, border-color .2s, background .2s;
+}
+.hf-cchip:hover { color: var(--c-text); border-color: var(--c-text-2); }
+.hf-cchip[aria-pressed="true"] { color: var(--c-gold); border-color: var(--c-gold); background: rgba(242,201,76,0.12); }
 .hf-cmedia__thumb { flex: none; width: 120px; height: 68px; border-radius: 4px; overflow: hidden; display: grid; place-items: center; border: 1px dashed var(--c-line-2); background: repeating-linear-gradient(135deg, #0d0d0d 0 2px, transparent 2px 7px); font-size: 11px; color: var(--c-text-3); text-align: center; }
 .hf-cmedia__thumb.has-media { border: 1px solid var(--c-gold); background: #000; }
 .hf-cmedia__thumb img, .hf-cmedia__thumb video { width: 100%; height: 100%; object-fit: cover; }
