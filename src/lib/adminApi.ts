@@ -21,6 +21,8 @@ export interface AdminUser {
   /** Usuario principal: no se puede borrar y administra a los demás */
   isRoot: boolean
   role: AdminRole
+  /** Vistas del panel que ve si es STAFF (ids de src/data/panelViews.ts); ADMIN ve todo */
+  views: string[]
   /** Hoy es su cumpleaños (CDMX): el panel lo festeja una vez al día */
   birthday: boolean
   /** Entró con una contraseña temporal: la bienvenida (W5) le pide poner la suya */
@@ -29,14 +31,11 @@ export interface AdminUser {
   guidesSeen: string[]
 }
 
-/** ADMIN: todo el panel · STAFF: solo Agenda, Contactos y Mi cuenta */
+/** ADMIN: todo el panel · STAFF: solo las vistas que se le dan (`views`) y Mi cuenta */
 export type AdminRole = 'ADMIN' | 'STAFF'
 
 export const ROLE_LABEL: Record<AdminRole, string> = { ADMIN: 'Admin', STAFF: 'Staff' }
-export const ROLE_HINT: Record<AdminRole, string> = { ADMIN: 'Todo el panel', STAFF: 'Solo Agenda, Contactos y Mi cuenta' }
-
-/** Rutas del panel que ve el rol STAFF (el servidor también lo exige) */
-export const STAFF_ROUTES = ['/admin/reservas', '/admin/contactos', '/admin/usuarios']
+export const ROLE_HINT: Record<AdminRole, string> = { ADMIN: 'Todo el panel', STAFF: 'Solo las vistas que elijas, más Mi cuenta' }
 
 export interface AdminUserRow extends AdminUser {
   middleName: string | null
@@ -61,6 +60,8 @@ export interface NewAdminUser {
   secondLastName?: string
   phone: string
   role: AdminRole
+  /** Vistas del panel si es STAFF (src/data/panelViews.ts) */
+  views: string[]
   /** "YYYY-MM-DD"; vacío o null = sin fecha */
   birthDate?: string | null
 }

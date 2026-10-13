@@ -1,4 +1,5 @@
 import { Hono, type MiddlewareHandler } from 'hono'
+import { DEFAULT_STAFF_VIEWS, panelViewIds } from '../../../src/data/panelViews'
 import { z } from 'zod'
 import { hashPassword, verifyPassword, type AdminVariables } from '../auth'
 import { prisma } from '../../shared/db'
@@ -19,7 +20,7 @@ const onlyRoot: MiddlewareHandler<{ Variables: AdminVariables }> = async (c, nex
 }
 
 const password = z.string().min(10, 'Mínimo 10 caracteres').max(200)
-const select = { id: true, username: true, name: true, firstName: true, middleName: true, lastName: true, secondLastName: true, phone: true, isRoot: true, role: true, birthDate: true, lockedUntil: true, tempPassword: true, mustChangePassword: true, createdAt: true } as const
+const select = { id: true, username: true, name: true, firstName: true, middleName: true, lastName: true, secondLastName: true, phone: true, isRoot: true, role: true, views: true, birthDate: true, lockedUntil: true, tempPassword: true, mustChangePassword: true, createdAt: true } as const
 const part = (max: number) => z.string().trim().max(max)
 /** Nombre completo: primer nombre, segundo nombre, primer apellido, segundo apellido */
 const fullName = (u: { firstName: string; middleName?: string; lastName: string; secondLastName?: string }) =>
@@ -109,8 +110,14 @@ const profileSchema = z.object({
   lastName: part(60).min(1, 'Escribe el primer apellido'),
   secondLastName: part(60).optional(),
   phone: z.string().trim().regex(/^[\d+()\s-]{8,20}$/, 'Teléfono inválido'),
-  /** ADMIN: todo el panel · STAFF: solo Agenda, Contactos y Mi cuenta */
+  /** ADMIN: todo el panel · STAFF: solo sus vistas (`views`) y Mi cuenta */
   role: z.enum(AdminRole).optional(),
+  /** Vistas del panel que ve si es STAFF (src/data/panelViews.ts) */
+  views: z
+    .array(z.enum(panelViewIds as [string, ...string[]]))
+    .max(panelViewIds.length)
+    .transform((v) => panelViewIds.filter((id) => v.includes(id)))
+    .optional(),
   /** "YYYY-MM-DD": ese día la web festeja su cumpleaños; null = sin fecha */
   birthDate: z.iso
     .date('Fecha inválida')
@@ -164,6 +171,7 @@ users.post('/', onlyRoot, async (c) => {
       name: fullName({ ...body, middleName: body.middleName || undefined, secondLastName: body.secondLastName || undefined }),
       username,
       role: body.role ?? AdminRole.ADMIN,
+      views: body.views ?? DEFAULT_STAFF_VIEWS,
       birthDate: body.birthDate ? dateFromISO(body.birthDate) : null,
       // La contraseña es temporal: se genera aquí y la persona la cambia en la bienvenida
       passwordHash: await hashPassword(temp),
@@ -208,6 +216,8 @@ users.patch('/:id', onlyRoot, async (c) => {
       username,
       // El principal siempre es ADMIN; el rol nuevo vale desde su siguiente petición
       role: user.isRoot ? AdminRole.ADMIN : (body.role ?? user.role),
+      // Las vistas también valen desde su siguiente petición (su panel se actualiza con el aviso `users`)
+      views: body.views ?? user.views,
       // Sin el campo, se queda la que tenía; null la borra
       birthDate: body.birthDate === undefined ? user.birthDate : body.birthDate ? dateFromISO(body.birthDate) : null,
     },

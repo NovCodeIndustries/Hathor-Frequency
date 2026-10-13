@@ -162,8 +162,10 @@ model AdminUser {
   guidesSeen          String[]             @default([]) @map("guides_seen")
   /// Usuario principal (ROOT_ADMIN_EMAIL): siempre existe, no se puede borrar y es el único que administra usuarios
   isRoot              Boolean              @default(false) @map("is_root")
-  /// Qué ve en el panel: ADMIN todo; STAFF solo Agenda, Contactos y Mi cuenta (el principal siempre es ADMIN)
+  /// Qué ve en el panel: ADMIN todo; STAFF solo sus `views` y Mi cuenta (el principal siempre es ADMIN)
   role                AdminRole            @default(ADMIN)
+  /// Vistas del panel que ve un STAFF (ids de src/data/panelViews.ts); ADMIN ve todo
+  views               String[]             @default(["agenda", "contactos"])
   /// Intentos fallidos seguidos; al llegar a 5 la cuenta se bloquea 15 min (vengan de la IP que vengan)
   failedLogins        Int                  @default(0) @map("failed_logins")
   lockedUntil         DateTime?            @map("locked_until") @db.Timestamptz(6)

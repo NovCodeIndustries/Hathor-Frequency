@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
-import { STAFF_ROUTES, AdminApiError, adminApi, formatStamp, shortName, type AdminSummary, type AdminUser } from '../../lib/adminApi'
+import { AdminApiError, adminApi, formatStamp, shortName, type AdminSummary, type AdminUser } from '../../lib/adminApi'
+import { staffCanOpen, staffHome } from '../../data/panelViews'
 import type { AdminContext } from '../../lib/useAdmin'
 import './AdminLayout.css'
 import './MaintenanceModal.css'
@@ -153,10 +154,10 @@ export function AdminLayout() {
     )
   }
 
-  // Rol STAFF: solo Agenda, Contactos y Mi cuenta; cualquier otra ruta lleva a la Agenda
+  // Rol STAFF: solo sus vistas (panel · Usuarios) y Mi cuenta; cualquier otra ruta lleva a su primera vista
   const staffOnly = admin.role === 'STAFF'
-  if (staffOnly && !STAFF_ROUTES.some((r) => location.pathname === r || location.pathname.startsWith(`${r}/`))) {
-    return <Navigate to="/admin/reservas" replace />
+  if (staffOnly && !staffCanOpen(location.pathname, admin.views)) {
+    return <Navigate to={staffHome(admin.views)} replace />
   }
 
   const pendingTotal = (summary?.pendingBookings ?? 0) + (summary?.pendingReviews ?? 0) + (summary?.openContacts ?? 0)
@@ -170,7 +171,7 @@ export function AdminLayout() {
     { to: '/admin/plugins', label: 'Plugins', count: summary?.pluginChanges, kind: 'gold' },
     { to: '/admin/usuarios', label: admin.isRoot ? 'Usuarios' : 'Mi cuenta' },
   ]
-  const tabs = staffOnly ? allTabs.filter((t) => STAFF_ROUTES.includes(t.to)) : allTabs
+  const tabs = staffOnly ? allTabs.filter((t) => staffCanOpen(t.to, admin.views)) : allTabs
 
   return (
     <div className="hf-admin">

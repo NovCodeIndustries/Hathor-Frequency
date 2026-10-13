@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from 'react'
+import { DEFAULT_STAFF_VIEWS, panelViews, viewsText } from '../../data/panelViews'
 import { ROLE_HINT, ROLE_LABEL, adminApi, describeDevice, formatStamp, type AccessLogRow, type AdminRole, type AdminSessionRow, type AdminUserProfile, type AdminUserRow, type NewAdminUser } from '../../lib/adminApi'
 import { staffUsername } from '../../data/staff'
 import { useAdmin } from '../../lib/useAdmin'
@@ -41,7 +42,7 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
   const [list, setList] = useState<AdminUserRow[] | null>(null)
   const [error, setError] = useState('')
   const [msg, setMsg] = useState('')
-  const EMPTY: NewAdminUser = { firstName: '', middleName: '', lastName: '', secondLastName: '', phone: '', role: 'ADMIN', birthDate: '' }
+  const EMPTY: NewAdminUser = { firstName: '', middleName: '', lastName: '', secondLastName: '', phone: '', role: 'ADMIN', views: DEFAULT_STAFF_VIEWS, birthDate: '' }
   const [form, setForm] = useState(EMPTY)
   const [busy, setBusy] = useState(false)
   /** La temporal recién generada (alta o "Nueva temporal"), para mostrarla con su botón de copiar */
@@ -127,7 +128,7 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
                     {u.isRoot ? (
                       <span className="hf-chip hf-chip--done">Principal</span>
                     ) : (
-                      <span className={`hf-chip ${u.role === 'STAFF' ? 'hf-chip--off' : 'hf-chip--tag'}`} title={ROLE_HINT[u.role]}>{ROLE_LABEL[u.role]}</span>
+                      <span className={`hf-chip ${u.role === 'STAFF' ? 'hf-chip--off' : 'hf-chip--tag'}`} title={u.role === 'STAFF' ? `Ve ${viewsText(u.views)}, más Mi cuenta` : ROLE_HINT[u.role]}>{ROLE_LABEL[u.role]}</span>
                     )}
                     {u.lockedUntil && (
                       <span className="hf-chip hf-chip--pending hf-ausers__lock" title="Por intentos fallidos; una contraseña nueva lo quita">
@@ -184,6 +185,7 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
           <BirthDateField value={form.birthDate ?? ''} onChange={(birthDate) => setForm({ ...form, birthDate })} />
           <RolePicker value={form.role} onChange={(role) => setForm({ ...form, role })} />
         </div>
+        {form.role === 'STAFF' && <ViewsPicker value={form.views} onChange={(views) => setForm({ ...form, views })} />}
         <p className="hf-ausers__muted">La contraseña se genera sola y es temporal: la ves aquí hasta que la persona entre y ponga la suya en la bienvenida.</p>
         <button type="submit" className="hf-admin__btn hf-admin__btn--primary hf-ausers__submit" disabled={busy}>Crear usuario</button>
       </form>
@@ -391,6 +393,35 @@ function RolePicker({ value, onChange }: { value: AdminRole; onChange: (r: Admin
   )
 }
 
+/**
+ * Vistas del panel que ve un Staff (registro en src/data/panelViews.ts): un módulo nuevo sale aquí solo
+ * y nace apagado. Mi cuenta siempre la ve.
+ */
+function ViewsPicker({ value, onChange }: { value: string[]; onChange: (views: string[]) => void }) {
+  const id = useId()
+  return (
+    <fieldset className="hf-ausers__views" aria-describedby={`${id}-hint`}>
+      <legend>Vistas que puede ver</legend>
+      <div className="hf-ausers__views-grid">
+        {panelViews.map((v) => (
+          <label key={v.id} className={`hf-ausers__view ${value.includes(v.id) ? 'is-on' : ''}`}>
+            <input
+              type="checkbox"
+              checked={value.includes(v.id)}
+              onChange={(e) => onChange(panelViews.filter((x) => (x.id === v.id ? e.target.checked : value.includes(x.id))).map((x) => x.id))}
+            />
+            <span className="hf-ausers__view-name">{v.label}</span>
+            <span className="hf-ausers__view-hint">{v.hint}</span>
+          </label>
+        ))}
+      </div>
+      <span id={`${id}-hint`} className="hf-ausers__match">
+        {value.length ? `Verá ${viewsText(value)}, más Mi cuenta.` : 'Sin vistas: solo verá Mi cuenta.'} El cambio le llega al momento.
+      </span>
+    </fieldset>
+  )
+}
+
 /** El usuario sin el número que se agrega cuando ya existía ("jnunez2" → "jnunez") */
 const usernameBase = (username: string) => username.replace(/\d+$/, '')
 
@@ -404,6 +435,7 @@ function EditUser({ user, busy, onCancel, onSave }: { user: AdminUserRow; busy: 
     secondLastName: user.secondLastName ?? '',
     phone: user.phone ?? '',
     role: user.role,
+    views: user.views,
     birthDate: user.birthDate ?? '',
   })
   const [regenerate, setRegenerate] = useState(false)
@@ -468,7 +500,10 @@ function EditUser({ user, busy, onCancel, onSave }: { user: AdminUserRow; busy: 
         {user.isRoot ? (
           <p className="hf-ausers__muted">El usuario principal siempre es Admin, y su usuario no cambia: es el de ROOT_ADMIN_USERNAME en .env.</p>
         ) : (
-          <RolePicker value={f.role} onChange={(role) => setF({ ...f, role })} />
+          <>
+            <RolePicker value={f.role} onChange={(role) => setF({ ...f, role })} />
+            {f.role === 'STAFF' && <ViewsPicker value={f.views} onChange={(views) => setF({ ...f, views })} />}
+          </>
         )}
         {canRegenerate && (
           <label className="hf-ausers__check">

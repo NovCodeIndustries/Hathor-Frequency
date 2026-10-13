@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
+import { panelViews, viewsText } from '../../data/panelViews'
 import { createPortal } from 'react-dom'
 import { adminApi, type AdminUser } from '../../lib/adminApi'
 import './PanelWelcome.css'
@@ -6,12 +7,13 @@ import './PanelWelcome.css'
 const MONTHS_SHORT = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
 
 /** Lo que ve cada rol en el panel (Pista 2) */
+/** Lo que ve un Staff: sus vistas (panel · Usuarios) y Mi cuenta */
+const staffAreas = (views: string[]) => [
+  ...panelViews.filter((v) => views.includes(v.id)).map((v) => ({ name: v.label, text: `${v.hint}.` })),
+  { name: 'Mi cuenta', text: 'Tu contraseña y tus sesiones abiertas.' },
+]
+
 const AREAS = {
-  STAFF: [
-    { name: 'Agenda', text: 'Reservas y bloqueos por día. Confirma sesiones, agenda las que piden por WhatsApp y cierra días.' },
-    { name: 'Contactos', text: 'Quien pidió información desde la web. Responde y márcalo como atendido.' },
-    { name: 'Mi cuenta', text: 'Tu contraseña y tus sesiones abiertas.' },
-  ],
   ADMIN: [
     { name: 'Inicio', text: 'El resumen del día: sesiones, pendientes, ingresos y visitas.' },
     { name: 'Agenda', text: 'Reservas, bloqueos y sesiones agendadas por el estudio.' },
@@ -65,7 +67,7 @@ export function PanelWelcome({ admin, onDone, onLogout, onError }: { admin: Admi
   const ok = a.length >= 10 && a === b
   const steps = [
     ['Tu pase', 'Quién eres aquí'],
-    ['Lo que vas a usar', role === 'STAFF' ? 'Agenda y Contactos' : 'Todo el panel'],
+    ['Lo que vas a usar', role === 'STAFF' ? viewsText(admin.views) : 'Todo el panel'],
     ['Tu contraseña', 'Hazla tuya'],
   ]
 
@@ -189,11 +191,11 @@ export function PanelWelcome({ admin, onDone, onLogout, onError }: { admin: Admi
             </h2>
             <p className="hf-welcome__text">
               {role === 'STAFF'
-                ? 'Llevas la Agenda y respondes a quien nos escribe. Esto es lo que vas a ver en el panel:'
+                ? 'Te dieron estas partes del panel; si necesitas otra, pídela a quien administra el estudio:'
                 : 'Llevas todo el estudio y lo que se ve en la web. Esto es lo que vas a ver en el panel:'}
             </p>
             <div className="hf-welcome__areas">
-              {AREAS[role].map((x) => (
+              {(role === 'STAFF' ? staffAreas(admin.views) : AREAS.ADMIN).map((x) => (
                 <div key={x.name} className="hf-welcome__area">
                   <span className="hf-welcome__area-name">{x.name}</span>
                   <span>{x.text}</span>

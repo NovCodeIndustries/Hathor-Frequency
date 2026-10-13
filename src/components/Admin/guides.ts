@@ -134,7 +134,7 @@ export const GUIDES: Record<string, Guide> = {
     steps: [
       { say: '¡Hola! Soy el alien del estudio.', text: 'Te enseño Usuarios: quién entra al panel y qué ve.' },
       { target: '[data-guide="users-list"]', say: 'Todo el equipo.', text: 'Cada quien con su usuario, rol y cumpleaños. "Editar" cambia sus datos y su rol; "Nueva temporal" le da otra contraseña si la perdió.' },
-      { target: '[data-guide="users-new"]', say: '¿Llega alguien nuevo?', text: 'Su usuario y una contraseña temporal se generan solos. La ves aquí hasta que entre y ponga la suya en su bienvenida.', tip: 'Staff solo ve Agenda, Contactos y Mi cuenta; Admin ve todo.' },
+      { target: '[data-guide="users-new"]', say: '¿Llega alguien nuevo?', text: 'Su usuario y una contraseña temporal se generan solos. La ves aquí hasta que entre y ponga la suya en su bienvenida.', tip: 'Admin ve todo; a Staff le eliges qué vistas ve, y siempre tiene Mi cuenta.' },
       { target: '[data-guide="users-me"]', say: 'Tu cuenta.', text: 'Cambia tu contraseña cuando quieras.' },
       { target: '[data-guide="users-sessions"]', say: '¿Dónde está abierta tu cuenta?', text: 'Si ves una sesión que no reconoces, ciérrala y cambia tu contraseña.' },
       { target: '[data-guide="users-log"]', say: 'Y quién ha entrado.', text: 'Cada intento de entrar, bueno o fallido. Tras 5 fallidos seguidos, la cuenta se bloquea 15 minutos.' },

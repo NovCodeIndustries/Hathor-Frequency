@@ -55,3 +55,26 @@
 .hf-ausers__creds { margin: 0; display: flex; flex-direction: column; gap: 12px; }
 .hf-ausers__creds dt { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--c-text-3); }
 .hf-ausers__creds dd { margin: 4px 0 0; font-size: 18px; color: var(--c-gold); }
+
+/* Vistas de un Staff (al crear y editar) */
+.hf-ausers__views { margin: 0; padding: 0; border: 0; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.hf-ausers__views legend { padding: 0; margin-bottom: 10px; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--c-text-2); }
+.hf-ausers__views-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
+.hf-ausers__view {
+  position: relative;
+  padding: 12px 14px 12px 42px;
+  border: 1px solid var(--c-line-2);
+  border-radius: var(--radius-card);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+}
+.hf-ausers__view:hover { border-color: var(--c-text-2); }
+.hf-ausers__view.is-on { border-color: var(--c-gold); background: rgba(242,201,76,0.08); }
+.hf-ausers__view input { position: absolute; left: 14px; top: 14px; width: 18px; height: 18px; margin: 0; accent-color: var(--c-gold); }
+.hf-ausers__view:has(input:focus-visible) { outline: 2px solid var(--c-gold); outline-offset: 2px; }
+.hf-ausers__view-name { font-size: 15px; }
+.hf-ausers__view.is-on .hf-ausers__view-name { color: var(--c-gold); }
+.hf-ausers__view-hint { font-size: 12px; color: var(--c-text-3); }

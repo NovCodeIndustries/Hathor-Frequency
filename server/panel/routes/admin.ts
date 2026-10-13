@@ -73,7 +73,7 @@ admin.post('/login', rateLimit({ max: 10, windowMs: 15 * 60_000 }), async (c) =>
   // El registro guarda 90 días
   void prisma.adminLoginEvent.deleteMany({ where: { createdAt: { lt: new Date(Date.now() - 90 * 86_400_000) } } }).catch(() => {})
   emitAdmin('users')
-  return c.json({ id: user.id, username: user.username, name: user.name, firstName: user.firstName, lastName: user.lastName, isRoot: user.isRoot, role: user.role, birthday: isBirthdayToday(user.birthDate), mustChangePassword: user.mustChangePassword, guidesSeen: user.guidesSeen })
+  return c.json({ id: user.id, username: user.username, name: user.name, firstName: user.firstName, lastName: user.lastName, isRoot: user.isRoot, role: user.role, views: user.views, birthday: isBirthdayToday(user.birthDate), mustChangePassword: user.mustChangePassword, guidesSeen: user.guidesSeen })
 })
 
 admin.post('/logout', async (c) => {
@@ -81,7 +81,7 @@ admin.post('/logout', async (c) => {
   return c.json({ ok: true })
 })
 
-// Todo lo de abajo exige sesión, y el rol STAFF solo llega a Agenda, Contactos y su cuenta
+// Todo lo de abajo exige sesión, y el rol STAFF solo llega a sus vistas (src/data/panelViews.ts) y su cuenta
 admin.use('*', requireAdmin)
 admin.use('*', requireRole)
 
@@ -129,10 +129,25 @@ admin.get('/summary', async (c) => {
   const d = draft?.disabled ?? published.disabled
   const siteChanges = d.filter((id) => !published.disabled.includes(id)).length + published.disabled.filter((id) => !d.includes(id)).length
   // El rol STAFF solo ve sus contadores
-  if (c.get('admin').role === 'STAFF') return c.json({ pendingBookings, openContacts, pendingReviews: 0, siteChanges: 0, contentChanges: 0, pluginChanges: 0, maintenance, birthdays })
   // Plugins se edita en su propia sección del panel: su punto va en esa pestaña, no en Contenido
   const pluginChanges = contentDirty.includes('plugins') ? 1 : 0
-  return c.json({ pendingBookings, pendingReviews, openContacts, siteChanges, contentChanges: contentDirty.length - pluginChanges, pluginChanges, maintenance, birthdays })
+  const counts = { pendingBookings, pendingReviews, openContacts, siteChanges, contentChanges: contentDirty.length - pluginChanges, pluginChanges }
+  // El rol STAFF solo ve los contadores de sus vistas
+  const { role, views } = c.get('admin')
+  if (role === 'STAFF') {
+    const has = (v: string) => views.includes(v)
+    return c.json({
+      pendingBookings: has('agenda') ? counts.pendingBookings : 0,
+      pendingReviews: has('opiniones') ? counts.pendingReviews : 0,
+      openContacts: has('contactos') ? counts.openContacts : 0,
+      siteChanges: has('sitio') ? counts.siteChanges : 0,
+      contentChanges: has('contenido') ? counts.contentChanges : 0,
+      pluginChanges: has('plugins') ? counts.pluginChanges : 0,
+      maintenance,
+      birthdays,
+    })
+  }
+  return c.json({ ...counts, maintenance, birthdays })
 })
 
 // ── Reservas ──────────────────────────────────────────────

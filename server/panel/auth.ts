@@ -1,4 +1,5 @@
 import { createHash, randomBytes, scrypt, timingSafeEqual } from 'node:crypto'
+import { staffCanUseApi } from '../../src/data/panelViews'
 import { promisify } from 'node:util'
 import type { Context, MiddlewareHandler } from 'hono'
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie'
@@ -62,22 +63,19 @@ export async function endSession(c: Context) {
 }
 
 export interface AdminVariables {
-  admin: { id: string; username: string; name: string; firstName: string; lastName: string; isRoot: boolean; role: AdminRole; birthday: boolean; mustChangePassword: boolean; guidesSeen: string[] }
+  admin: { id: string; username: string; name: string; firstName: string; lastName: string; isRoot: boolean; role: AdminRole; views: string[]; birthday: boolean; mustChangePassword: boolean; guidesSeen: string[] }
   /** Sesión de esta petición (para no cerrarla al cerrar "las demás") */
   sessionId: string
 }
 
 /**
- * Lo que puede usar el rol STAFF, además de su sesión y su cuenta: Agenda (reservas y bloqueos) y Contactos.
- * Rutas bajo /api/admin; vale la ruta exacta o lo que cuelga de ella.
+ * Va después de requireAdmin: el rol STAFF recibe 403 fuera de sus vistas (`AdminUser.views`, registro en
+ * src/data/panelViews.ts) y de su sesión y cuenta. No basta con ocultar pestañas.
  */
-const STAFF_ALLOWED = ['/me', '/summary', '/events', '/bookings', '/blocks', '/contacts', '/users/me', '/dedications']
-
-/** Va después de requireAdmin: el rol STAFF recibe 403 fuera de lo suyo (no basta con ocultar pestañas) */
 export const requireRole: MiddlewareHandler<{ Variables: AdminVariables }> = async (c, next) => {
-  if (c.get('admin').role === AdminRole.STAFF) {
-    const sub = c.req.path.replace(/^\/api\/admin/, '')
-    if (!STAFF_ALLOWED.some((p) => sub === p || sub.startsWith(`${p}/`))) return fail(c, 403, 'Tu rol solo tiene acceso a Agenda y Contactos')
+  const admin = c.get('admin')
+  if (admin.role === AdminRole.STAFF && !staffCanUseApi(c.req.path.replace(/^\/api\/admin/, ''), admin.views)) {
+    return fail(c, 403, 'No tienes acceso a esta sección. Pídelo a quien administra el estudio.')
   }
   await next()
 }
@@ -88,7 +86,7 @@ export const requireAdmin: MiddlewareHandler<{ Variables: AdminVariables }> = as
   if (!token) return fail(c, 401, 'Inicia sesión')
   const session = await prisma.adminSession.findUnique({
     where: { tokenHash: sha256(token) },
-    include: { user: { select: { id: true, username: true, name: true, firstName: true, lastName: true, isRoot: true, role: true, birthDate: true, mustChangePassword: true, guidesSeen: true } } },
+    include: { user: { select: { id: true, username: true, name: true, firstName: true, lastName: true, isRoot: true, role: true, views: true, birthDate: true, mustChangePassword: true, guidesSeen: true } } },
   })
   const now = Date.now()
   if (!session || session.expiresAt.getTime() <= now || session.lastSeenAt.getTime() + IDLE_MS <= now) {
