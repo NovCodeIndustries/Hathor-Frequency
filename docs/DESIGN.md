@@ -667,6 +667,26 @@ Cambio del 2026-10-09. En el nav va después de Artistas (Servicios · Artistas 
 - **Contacto**: el testimonio fijo se cambió por la rotación de opiniones (`ReviewsRotator.tsx`): cada 6s (`reviewRotateMs`) cambia con fundido; estrellas, cita en Cinzel 20px y "— Nombre · Servicio"; puntos para elegir una (se queda en esa), barra de tiempo, y el link "¿Ya grabaste con nosotros? *Deja tu opinión →*" a `/opiniones?opinar=1`. Se pausa con el mouse encima, con el foco dentro y con reduced-motion.
 - **Datos**: `submitReview` guarda en la tabla `reviews` (calificación, nombre, proyecto, servicio, texto, permiso y estado `pending/published/rejected`). La página y la rotación muestran solo las PUBLISHED (`GET /api/reviews`, hook `useReviews`); sin permiso de nombre salen como "Anónimo". Se aprueban en el panel (§7.4).
 
+## 7.3.1 Plugins (`/plugins`, canvas https://claude.ai/artifact/5kr28fDbP2c7tTmyuaTgno)
+
+Cambio del 2026-10-13. Plugins de audio que desarrolla el estudio. En el nav va después de Opiniones (Servicios · Artistas · Opiniones · Plugins); para que quepan 4 links a la izquierda, la barra del Nav pasó a `minmax(0,1fr) auto minmax(0,1fr)` (el logo toma solo su ancho) con gap de 32px. Componentes en `src/components/Plugins/`; datos en `useContent('plugins')` (inicial en `src/data/plugins.ts`, se edita en panel · Plugins) y la versión actual de cada uno en `GET /api/plugins/releases` (`usePluginReleases`, en vivo con el evento `plugins`).
+- **Escritorio · P2 Pedalera** (`PluginPedal.tsx`):
+  - cabecera centrada: "Plugins · Hathor Frequency" en dorado, h1 "Pisa el pedal. / *Cambia el sonido.*", la introducción (editable) y el eslogan en cursiva dorada;
+  - grid `auto-fill` de 260px con gap 48/28px. Cada pedal es un botón: caja de 220×300 con radius 18px y degradado `#141414 → #070707`, dos perillas (las 2 primeras de `controls`), LED, nombre en Cinzel, tipo y el footswitch. Si el plugin está **disponible**, borde dorado, glow y LED encendido; en beta, LED con contorno; próximamente, apagado. Debajo: nombre, formatos, precio ("Gratis" en dorado) y la pill "Ver pedal";
+  - **Antes y después** (`DemoAB.tsx`, módulo `plugins.demo`): tarjeta 5fr / 7fr con "Escúchalo", el título, pills para elegir el plugin (si hay más de uno con demo), la onda decorativa (se pinta en dorado con el avance), play/pausa y Antes / Después. Al cambiar de lado sigue en el mismo segundo. Solo aparece si algún plugin tiene los dos audios.
+- **Móvil · P1 Rack** (`PluginRackUnit.tsx`):
+  - eyebrow "Hechos en el estudio", h1 "Las herramientas *que usamos al mezclar.*" alineado a la izquierda y la introducción;
+  - filtros en pills con scroll horizontal: Todos, cada tipo y Gratis (solo si hay más de una opción);
+  - el rack: caja `#050505` con unidades apiladas (tornillo, "01 · Tipo", nombre en Cinzel 22px, LED y estado; hasta 4 perillas con nombre; chips de formatos y la pill "Ver");
+  - al final, "¿Los quieres probar en una sesión?" y "Reservar sesión".
+- **Detalle** (`PluginDrawer.tsx`, el `Drawer` compartido): "Plugin 01 · Tipo", nombre y estado; captura de la interfaz, descripción, la demo Antes y después, y Formatos, Sistemas, Versión y Precio. El botón depende del plugin:
+  - próximamente: "Avísame cuando salga" (a `/contacto`);
+  - con link de tienda o beta: "Comprar", "Descargar" o "Unirme a la beta";
+  - sin link: "Descargar para macOS / Windows", con los instaladores de la versión actual;
+  - sin nada de eso: "Pregúntanos por él".
+  Toda descarga pasa por `GET /api/plugins/:id/download?os=mac|win|link` (servicio web), que la cuenta en `plugin_downloads` y redirige. Responde 404 si el plugin está apagado o es "Próximamente", y 503 en mantenimiento.
+- **Sitio**: página `page.plugins`, sección `plugins.demo` y un módulo por plugin (`plugins.<id>`).
+
 ## 7.4 Panel del estudio (`/admin`, canvas https://claude.ai/artifact/PQevfwPDA7oRfVuasV4cXF)
 
 Cambio del 2026-10-11. Es privado y, desde el 2026-10-12, **es otra app y otro servicio**: su propio build (`src/panel/`, `vite.panel.config.ts`), su API (`server/panel/`) y su subdominio en producción (en dev, :5180). Va sin Nav, Ufo, ticker, bienvenida ni temporadas, lleva `noindex` y no se deja meter en iframes. La web no contiene nada del panel; los dos solo se conectan por PostgreSQL, así que la web sigue funcionando aunque el panel esté detenido. Componentes en `src/components/Admin/`, cliente en `src/lib/adminApi.ts` y contexto en `src/lib/useAdmin.ts`. Misma paleta y tipografía del sitio. Sin sesión, cualquier ruta `/admin/*` manda a `/admin/login?next=…`.
@@ -686,7 +706,7 @@ Cambio del 2026-10-11. Es privado y, desde el 2026-10-12, **es otra app y otro s
 - **Estructura** (`AdminLayout.tsx`): barra lateral izquierda de 260px, como en **A1** (cambio del 2026-10-11, reemplaza la barra superior de A2):
   - va fija al hacer scroll y lleva borde derecho `#333`;
   - arriba, el lockup "HATHOR / FREQUENCY" + "Panel del estudio" en dorado;
-  - las secciones en pills de 44px (Inicio, Agenda, Opiniones, Contactos, Sitio, Contenido, Usuarios; la activa en dorado sobre `rgba(242,201,76,.12)`), con contadores: reservas pendientes desde hoy en Agenda (pastilla dorada rellena), opiniones pendientes (contorno dorado) y contactos sin atender (gris);
+  - las secciones en pills de 44px (Inicio, Agenda, Opiniones, Contactos, Sitio, Contenido, Plugins, Usuarios; la activa en dorado sobre `rgba(242,201,76,.12)`), con contadores: reservas pendientes desde hoy en Agenda (pastilla dorada rellena), opiniones pendientes (contorno dorado) y contactos sin atender (gris);
   - abajo, el nombre, el correo y "Cerrar sesión";
   - **excepción al breakpoint único**: por debajo de 1024px, la barra pasa arriba con el logo y un **menú hamburguesa** (como la web). El botón muestra cuántos pendientes hay en total; al abrirlo, las secciones y la sesión salen en lista, y se cierra al elegir, con la X o con Escape.
 - **D4 · Inicio** (`/admin`, `AdminDashboard.tsx`; datos de `GET /api/admin/dashboard?range=week|month|quarter|year`). Es la combinación de D2 y D3, la primera sección de la barra y adonde lleva el login. Cambio del 2026-10-11.
@@ -807,6 +827,14 @@ Cambio del 2026-10-11. Es privado y, desde el 2026-10-12, **es otra app y otro s
   - **F5 · Barra de la sección**: contenido inicial / cambios sin publicar (con errores) / guardando / publicando / "publicado · la web ya lo muestra"; Historial, Descartar y **Publicar {sección}**. Cada sección se publica por separado.
   - **F6 · Historial**: quién, cuándo y qué cambió ("Agregó EP · Cambió Sencillo"), con Restaurar, también para el contenido inicial.
   - Al publicar, la web abierta cambia al instante (SSE `content`).
+- **Plugins** (`/admin/plugins`, `AdminPlugins.tsx` + `AdminPlugins.css`; diseño **K3 = K1 + K2**, canvas https://claude.ai/artifact/5kr28fDbP2c7tTmyuaTgno, cambio del 2026-10-13). Solo `ADMIN` (no está en `STAFF_ALLOWED` ni en `STAFF_ROUTES`):
+  - cabecera "Plugins" con Vista previa (el iframe de la web en `?modo=vista` con el borrador, como en Contenido), Descartar y "Publicar · N cambios". Debajo, el estado del borrador;
+  - **cifras** (de K2): descargas de 30 días (y de los 30 anteriores), el más descargado, cuántos están en beta y las visitas a /plugins (Umami, `pathViews`; "—" sin Umami). Salen de `GET /api/admin/plugins/stats` y se actualizan con el evento `plugins`;
+  - a la izquierda, la **lista** (de K1): "+ Agregar plugin", el buscador, "Textos de la página" (la introducción) y una tarjeta por plugin con nombre, chip de estado ("Borrador" si cambió y no se ha publicado), tipo · versión actual y una barra con las descargas del mes;
+  - a la derecha, la **tarjeta del plugin** con el selector **Ficha / Versiones**:
+    - Ficha: el formulario de `sectionForms.plugins` (nombre, tipo, estado, descripciones, formatos y sistemas con chips, gratis, precio, link de tienda, perillas, captura y los dos audios de la demo, con el buscador del HDD, que ahora también elige audios). Se guarda solo como borrador del contenido `plugins` (la misma API de Contenido, que no la muestra en sus pestañas: `ownPage`). "Eliminar plugin" pide confirmación y "Ocultarlo en Sitio →";
+    - Versiones: línea de tiempo (la actual con punto dorado y glow, "Actual · se descarga en la web", instaladores y descargas de cada una; "Marcar como actual" y "Eliminar" con confirmación) y la tarjeta punteada "Nueva versión" (número, notas, instaladores de macOS y Windows con "Buscar archivo" y "Marcar como actual"). Las versiones no tienen borrador: se aplican al guardarlas y avisan a la web (`plugins`). Tablas `plugin_releases` (una sola actual por plugin, índice parcial `plugin_releases_current_key`) y `plugin_downloads`;
+  - la barra lateral muestra un punto dorado en Plugins mientras la ficha tenga cambios sin publicar (`summary.pluginChanges`, que ya no cuenta en Contenido).
 - **Cifras de Inicio y Estudio** (cambio del 2026-10-11): en Datos del sitio, cada cifra dice de dónde sale:
   - **escrita a mano**;
   - **proyectos terminados**: reservas que el admin marca como **"Terminada"** en la agenda, con "Marcar como terminada" en el detalle; "Reabrir" lo deshace;
@@ -890,4 +918,5 @@ Cambio del 2026-10-11. Es privado y, desde el 2026-10-12, **es otra app y otro s
 - **Artistas y FAQ**: faltan las bios, redes (links), videos y fotos reales de los artistas, y los datos que faltan en dos respuestas de FAQ (marcadores `[..]` de pago y tiempo de entrega).
 - **Nav**: el rango 768–1199px usa el nav móvil (hamburguesa) porque con FAQs no cabe el nav completo; no hay diseño específico de tablet.
 - **Tablet**: no hay diseño para 768–1200px; se usa el layout desktop fluido.
+- **Plugins**: los 4 plugins son marcadores (`[Plugin 01]`…, tipos, formatos y precios de ejemplo); faltan los reales, sus capturas, demos e instaladores. Las descargas cuentan clics al botón (sin deduplicar por persona). El ajuste del Nav para 4 links a la izquierda falta revisarlo en el navegador entre 1200 y 1440px.
 - **Paquetes**: faltan los paquetes reales (nombres, contenido, precios, IVA, tiempos de entrega y sesiones); hoy son una propuesta con marcadores `[..]`. "Reservar este paquete" lleva a `/reservar` sin preseleccionar el paquete. (Ya existe el enlace directo `/servicios?vista=paquetes`.)

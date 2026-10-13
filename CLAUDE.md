@@ -9,7 +9,7 @@ La landing está construida (React + TypeScript + Vite) siguiendo `docs/DESIGN.m
 - Multipágina con `react-router`, definido en `src/App.tsx`:
   - `src/components/Layout/` contiene Nav sticky + `<Outlet>` + Ticker + Footer;
   - las páginas están en `src/pages/`;
-  - rutas públicas: `/`, `/servicios`, `/artistas`, `/opiniones` (después de Artistas en el nav), `/reservar`, `/contacto`, `/faq` (FAQs en el nav, después de Reservar) y `/estudio` (tour de los espacios, `src/data/studio.ts`).
+  - rutas públicas: `/`, `/servicios`, `/artistas`, `/opiniones` (después de Artistas en el nav), `/plugins` (después de Opiniones; DESIGN §7.3.1), `/reservar`, `/contacto`, `/faq` (FAQs en el nav, después de Reservar) y `/estudio` (tour de los espacios, `src/data/studio.ts`).
   - `/servicios` alterna dos vistas sin cambiar de ruta, Servicios (consola) y Paquetes (`src/data/packages.ts`), con la transición de cambio de frecuencia de `TuneTransition.tsx` (DESIGN §4.1).
   - En producción, el hosting debe redirigir toda ruta a `index.html` (SPA fallback).
 - El panel lateral de detalle (paquetes y artistas) es `src/components/shared/Drawer.tsx`; la galería del artista (`Artists/MediaPanel.tsx`) se monta a su izquierda.
@@ -43,6 +43,7 @@ La landing está construida (React + TypeScript + Vite) siguiendo `docs/DESIGN.m
   - **usuario principal** (`ROOT_ADMIN_USERNAME` / `ROOT_ADMIN_PASSWORD` en `.env`, fuera de git; `hathor`): la API lo crea al arrancar si falta (`server/panel/lib/rootAdmin.ts`, `isRoot`). No se puede borrar y es el único que crea, cambia y quita admins en `/admin/usuarios` (`server/panel/routes/users.ts`); cualquier admin cambia su propia contraseña. `npm run admin:create` sigue sirviendo desde la terminal;
   - Agenda (`/admin/reservas`, `AdminAgenda.tsx`) junta reservas y bloqueos; el estudio también agenda sesiones ahí (`NewBookingModal.tsx`, `POST /api/admin/bookings`, correo opcional): en escritorio R2 "Pistas por día" y en móvil R1 "Agenda única" (`useMediaQuery`); `/admin/bloqueos` redirige ahí. El detalle de una reserva es `BookingDetail.tsx`;
   - el login (`AdminLogin.tsx`) lleva el alien con audífonos que reacciona al formulario (`LoginAlien.tsx`, A4/M1); Opiniones permite borrar (`DELETE /api/admin/reviews/:id`, con confirmación);
+  - **Plugins** (`/admin/plugins`, `AdminPlugins.tsx`, diseño K3): la ficha de cada plugin es el contenido `plugins` (borrador y publicar con la API de Contenido; `ownPage` lo saca de las pestañas de Contenido) y sus versiones e instaladores van en `PluginRelease` (una sola `current` por plugin: índice parcial `plugin_releases_current_key`, SQL crudo en la migración `plugins`; conservarlo). API `/api/admin/plugins/*` (`stats`, `:id/releases`, `releases/:rid`). En la web, `GET /api/plugins/releases` da la versión actual y `GET /api/plugins/:id/download?os=mac|win|link` (servicio web) cuenta en `PluginDownload` y redirige. Evento `plugins` en los dos canales;
   - Inicio (`/admin`) es el dashboard D4 (`AdminDashboard.tsx`, `server/panel/routes/dashboard.ts`); el cobro de una reserva (`amountCents`, `paymentStatus`, `depositCents`) se captura en la ventana `ChargeModal.tsx`.
 - Visitas: Umami en docker-compose (`umami` + `umami-db`, host :3100):
   - el sitio público lo carga desde `src/lib/analytics.ts`, solo si existe `VITE_UMAMI_WEBSITE_ID`, por el proxy `/umami` de Vite;
@@ -50,18 +51,18 @@ La landing está construida (React + TypeScript + Vite) siguiendo `docs/DESIGN.m
   - el panel no se cuenta.
 - Correos: fuera de alcance por ahora.
 - Contenido editable (panel · Contenido):
-  - las secciones son servicios, paquetes, precios, horarios, artistas, faq, estudio y sitio (`src/data/content.ts`, con los valores de `src/data/*` como contenido inicial);
+  - las secciones son servicios, paquetes, precios, horarios, artistas, faq, plugins (se edita en panel · Plugins), estudio y sitio (`src/data/content.ts`, con los valores de `src/data/*` como contenido inicial);
   - **los componentes leen con `useContent('paquetes')`** (`src/lib/content.ts`), no importan directo de `src/data` para lo editable;
   - la validación por sección está en `server/shared/content/schemas.ts`;
   - la API es `GET /api/content` y `/api/admin/content/:key/*` (draft, publish, discard, history, restore);
   - en la BD están `ContentDraft` y `ContentVersion`; al publicar se manda el SSE `content` (`src/lib/live.ts` es el canal en vivo compartido);
   - los formularios se definen en `src/components/Admin/contentForms.ts`; al agregar un campo editable, agrégalo al tipo, al schema y al formulario. Una lista con `searchOf` (y `searchHint`) lleva buscador: Artistas, Paquetes y FAQs. Con `actionsInForm` (Artistas), "+ Agregar" va arriba de la lista y "Publicar" dentro del formulario (dice qué se publica junto, con `keyOf`).
 - Tiempo real:
-  - la web escucha `GET /api/site/events` (`site`, `content`, `stats`, `availability`, `reviews`; `src/lib/live.ts`);
-  - el panel escucha `GET /api/admin/events` (`booking`, `contact`, `review`, `block`, `site`, `content`, `users`; `src/lib/useAdminLive.ts`, que se conecta en `AdminLayout`). Al agregar algo que cambie datos, emite el evento (`server/shared/lib/siteEvents.ts`).
+  - la web escucha `GET /api/site/events` (`site`, `content`, `stats`, `availability`, `reviews`, `plugins`; `src/lib/live.ts`);
+  - el panel escucha `GET /api/admin/events` (`booking`, `contact`, `review`, `block`, `site`, `content`, `users`, `plugins`; `src/lib/useAdminLive.ts`, que se conecta en `AdminLayout`). Al agregar algo que cambie datos, emite el evento (`server/shared/lib/siteEvents.ts`).
 - Calendarios del panel: `MonthPair.tsx` (dos meses), en la vista "Ver mes" de la Agenda móvil.
 - Cifras: "Proyectos" = reservas `COMPLETED` (el admin las marca como terminadas en la agenda) y "Artistas" = artistas publicados sin los ocultos. Salen de `GET /api/site/stats` (`server/shared/lib/stats.ts`) y la web las lee con `useStats()`. El estado `COMPLETED` sigue ocupando su horario (índice `bookings_active_slot_key`).
-- Medios: fotos y videos en un HDD aparte; en el panel se eligen con el buscador (`MediaPicker.tsx`, `GET /api/admin/media/list?dir=|q=`). Docker lo monta (`MEDIA_DIR` en `.env`) en `/app/media`, la API lo sirve en `/media/...` y la BD solo guarda rutas o URLs (`server/shared/lib/media.ts`).
+- Medios: fotos, videos, audios e instaladores en un HDD aparte; en el panel se eligen con el buscador (`MediaPicker.tsx`, `accept` image | video | audio | file; `GET /api/admin/media/list?dir=|q=`). Docker lo monta (`MEDIA_DIR` en `.env`) en `/app/media`, la API lo sirve en `/media/...` y la BD solo guarda rutas o URLs (`server/shared/lib/media.ts`).
 - **Mantenimiento** (panel · Sitio · "Mantenimiento"): apaga la web completa al instante, sin borrador. Una fila en `SiteMaintenance` (`server/shared/lib/maintenance.ts`; `GET/PUT /api/admin/site/maintenance`). `GET /api/site` lo incluye (`maintenance`), el evento en vivo es `maintenance`, y la web pinta `components/Maintenance/` en lugar del Layout (`useMaintenance()`, nunca dentro de los iframes del panel). Los formularios responden 503. El panel muestra un aviso arriba mientras dure (`summary.maintenance`).
 - Módulos del sitio (panel · Sitio), para apagar cosas sin borrarlas:
   - registro en `src/data/modules.ts`, con páginas, secciones, elementos de listas y globales; **los ids publicados no se cambian**;
