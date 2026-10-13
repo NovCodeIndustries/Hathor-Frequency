@@ -1,11 +1,11 @@
-import { Hono } from 'hono'
+import { Hono, type Context } from 'hono'
 import { z } from 'zod'
 import { timePattern } from '../../../src/data/booking'
 import { normalizeUsername } from '../../../src/data/staff'
 import { DUMMY_HASH, endSession, requireAdmin, requireRole, startSession, userAgentOf, verifyPassword, type AdminVariables } from '../auth'
 import { prisma } from '../../shared/db'
 import { BookingStatus, PaymentStatus, ReviewStatus } from '../../generated/prisma/enums'
-import type { Booking } from '../../generated/prisma/client'
+import type { AdminUser, Booking } from '../../generated/prisma/client'
 import { parseBody } from '../../shared/lib/body'
 import { dateFromISO, isoFromDate, todayISO } from '../../shared/lib/dates'
 import { fail, invalid } from '../../shared/lib/errors'
@@ -22,6 +22,8 @@ import { adminSite } from './site'
 import { users } from './users'
 import { dedications } from './dedications'
 import { adminPlugins } from './plugins'
+import { readPass, signPass } from '../lib/secretBox'
+import { verifySecondFactor } from '../lib/twoFactor'
 import { publishedDisabled } from '../../shared/lib/site'
 import { getMaintenance } from '../../shared/lib/maintenance'
 import { birthdaysToday, isBirthdayToday } from '../../shared/lib/birthdays'
@@ -40,40 +42,96 @@ const loginSchema = z.object({ username: z.string().max(254).transform(normalize
 const LOCK_AFTER = 5
 const LOCK_MS = 15 * 60_000
 
+/** Lo que recibe el panel al entrar */
+const loginUser = (user: AdminUser) => ({
+  id: user.id,
+  username: user.username,
+  name: user.name,
+  firstName: user.firstName,
+  lastName: user.lastName,
+  isRoot: user.isRoot,
+  role: user.role,
+  views: user.views,
+  twoFactor: !!user.twoFactorAt,
+  birthday: isBirthdayToday(user.birthDate),
+  mustChangePassword: user.mustChangePassword,
+  guidesSeen: user.guidesSeen,
+})
+
+type LoginReason = 'password' | 'unknown' | 'locked' | 'code' | 'recovery' | null
+const logLogin = (c: Context, username: string, success: boolean, userId: string | null, reason: LoginReason) =>
+  prisma.adminLoginEvent.create({ data: { username: username.slice(0, 254), userId, success, reason, ip: clientIp(c), userAgent: userAgentOf(c) } })
+
+/** Un fallo más (contraseña o código): al llegar a LOCK_AFTER la cuenta se bloquea LOCK_MS */
+async function countFailure(user: AdminUser) {
+  const failed = user.failedLogins + 1
+  const lock = failed >= LOCK_AFTER
+  await prisma.adminUser.update({
+    where: { id: user.id },
+    data: lock ? { failedLogins: 0, lockedUntil: new Date(Date.now() + LOCK_MS) } : { failedLogins: failed },
+  })
+}
+
+/** Entra: limpia los fallos, abre la sesión y lo anota */
+async function finishLogin(c: Context, user: AdminUser, reason: LoginReason) {
+  if (user.failedLogins || user.lockedUntil) await prisma.adminUser.update({ where: { id: user.id }, data: { failedLogins: 0, lockedUntil: null } })
+  await startSession(c, user.id, clientIp(c))
+  await logLogin(c, user.username, true, user.id, reason)
+  // El registro guarda 90 días
+  void prisma.adminLoginEvent.deleteMany({ where: { createdAt: { lt: new Date(Date.now() - 90 * 86_400_000) } } }).catch(() => {})
+  emitAdmin('users')
+  return c.json(loginUser(user))
+}
+
+const lockedFor = (user: AdminUser) => Math.ceil((user.lockedUntil!.getTime() - Date.now()) / 60_000)
+
+/** Pase del segundo paso del login (2FA): firmado con APP_SECRET, vale 5 minutos */
+const TICKET = 'login-2fa'
+const TICKET_MS = 5 * 60_000
+
 admin.post('/login', rateLimit({ max: 10, windowMs: 15 * 60_000 }), async (c) => {
   const body = await parseBody(c, loginSchema)
   if (body instanceof Response) return body
-  const ip = clientIp(c)
-  const log = (success: boolean, userId: string | null, reason: 'password' | 'unknown' | 'locked' | null) =>
-    prisma.adminLoginEvent.create({ data: { username: body.username.slice(0, 254), userId, success, reason, ip, userAgent: userAgentOf(c) } })
 
   const user = await prisma.adminUser.findUnique({ where: { username: body.username } })
   if (user?.lockedUntil && user.lockedUntil > new Date()) {
-    await log(false, user.id, 'locked')
-    const min = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60_000)
-    return fail(c, 429, `Demasiados intentos fallidos. Intenta de nuevo en ${min} min.`)
+    await logLogin(c, body.username, false, user.id, 'locked')
+    return fail(c, 429, `Demasiados intentos fallidos. Intenta de nuevo en ${lockedFor(user)} min.`)
   }
   // Con un usuario que no existe también se compara una contraseña, para que tarde lo mismo
   const ok = await verifyPassword(body.password, user?.passwordHash ?? DUMMY_HASH)
   if (!user || !ok) {
-    if (user) {
-      const failed = user.failedLogins + 1
-      const lock = failed >= LOCK_AFTER
-      await prisma.adminUser.update({
-        where: { id: user.id },
-        data: lock ? { failedLogins: 0, lockedUntil: new Date(Date.now() + LOCK_MS) } : { failedLogins: failed },
-      })
-    }
-    await log(false, user?.id ?? null, user ? 'password' : 'unknown')
+    if (user) await countFailure(user)
+    await logLogin(c, body.username, false, user?.id ?? null, user ? 'password' : 'unknown')
     return fail(c, 401, 'Usuario o contraseña incorrectos')
   }
-  if (user.failedLogins || user.lockedUntil) await prisma.adminUser.update({ where: { id: user.id }, data: { failedLogins: 0, lockedUntil: null } })
-  await startSession(c, user.id, ip)
-  await log(true, user.id, null)
-  // El registro guarda 90 días
-  void prisma.adminLoginEvent.deleteMany({ where: { createdAt: { lt: new Date(Date.now() - 90 * 86_400_000) } } }).catch(() => {})
-  emitAdmin('users')
-  return c.json({ id: user.id, username: user.username, name: user.name, firstName: user.firstName, lastName: user.lastName, isRoot: user.isRoot, role: user.role, views: user.views, birthday: isBirthdayToday(user.birthDate), mustChangePassword: user.mustChangePassword, guidesSeen: user.guidesSeen })
+  // Con 2FA, la contraseña sola no abre sesión: falta el código (los fallos no se limpian hasta entrar)
+  if (user.twoFactorAt) {
+    const ticket = signPass(TICKET, user.id, TICKET_MS)
+    if (!ticket) return fail(c, 500, 'Falta APP_SECRET en .env: no se puede verificar el segundo paso')
+    return c.json({ twoFactor: true, ticket })
+  }
+  return finishLogin(c, user, null)
+})
+
+/** Segundo paso del login: código de la app (6 dígitos) o de respaldo, con el pase del primer paso */
+admin.post('/login/2fa', rateLimit({ max: 10, windowMs: 15 * 60_000 }), async (c) => {
+  const body = await parseBody(c, z.object({ ticket: z.string().max(400), code: z.string().trim().min(6, 'Escribe el código').max(20) }))
+  if (body instanceof Response) return body
+  const userId = readPass(TICKET, body.ticket)
+  const user = userId ? await prisma.adminUser.findUnique({ where: { id: userId } }) : null
+  if (!user?.twoFactorAt) return fail(c, 401, 'Pasaron más de 5 minutos. Vuelve a escribir tu contraseña.')
+  if (user.lockedUntil && user.lockedUntil > new Date()) {
+    await logLogin(c, user.username, false, user.id, 'locked')
+    return fail(c, 429, `Demasiados intentos fallidos. Intenta de nuevo en ${lockedFor(user)} min.`)
+  }
+  const used = await verifySecondFactor(user, body.code)
+  if (!used) {
+    await countFailure(user)
+    await logLogin(c, user.username, false, user.id, 'code')
+    return fail(c, 401, 'Código incorrecto', { code: 'No coincide' })
+  }
+  return finishLogin(c, user, used === 'recovery' ? 'recovery' : null)
 })
 
 admin.post('/logout', async (c) => {

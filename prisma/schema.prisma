@@ -166,6 +166,13 @@ model AdminUser {
   role                AdminRole            @default(ADMIN)
   /// Vistas del panel que ve un STAFF (ids de src/data/panelViews.ts); ADMIN ve todo
   views               String[]             @default(["agenda", "contactos"])
+  /// Verificación en dos pasos (app autenticadora, TOTP): la clave cifrada con APP_SECRET (AES-GCM). Con `twoFactorAt` null
+  /// es una clave a medio activar (se mostró el QR y aún no confirma el código). Obligatoria para ADMIN, opcional para STAFF
+  twoFactorSecret     String?              @map("two_factor_secret") @db.VarChar(200)
+  twoFactorAt         DateTime?            @map("two_factor_at") @db.Timestamptz(6)
+  /// Último paso de 30 s aceptado: un código no sirve dos veces
+  twoFactorLastStep   Int?                 @map("two_factor_last_step")
+  recoveryCodes       AdminRecoveryCode[]
   /// Intentos fallidos seguidos; al llegar a 5 la cuenta se bloquea 15 min (vengan de la IP que vengan)
   failedLogins        Int                  @default(0) @map("failed_logins")
   lockedUntil         DateTime?            @map("locked_until") @db.Timestamptz(6)
@@ -234,7 +241,7 @@ model AdminLoginEvent {
   userId    String?    @map("user_id") @db.Uuid
   user      AdminUser? @relation(fields: [userId], references: [id], onDelete: SetNull)
   success   Boolean
-  /// Por qué falló: "password", "unknown" (correo sin cuenta) o "locked"
+  /// Por qué falló: "password", "unknown" (correo sin cuenta), "locked" o "code" (código de 2FA); al entrar, "recovery" si usó un código de respaldo
   reason    String?    @db.VarChar(20)
   ip        String?    @db.VarChar(64)
   userAgent String?    @map("user_agent") @db.VarChar(300)
@@ -342,4 +349,16 @@ model PluginDownload {
   @@index([pluginId, createdAt])
   @@index([createdAt])
   @@map("plugin_downloads")
+}
+
+/// Códigos de respaldo del 2FA (8 al activarlo; cada uno sirve una vez). Solo se guarda su hash
+model AdminRecoveryCode {
+  id       String    @id @default(uuid()) @db.Uuid
+  userId   String    @map("user_id") @db.Uuid
+  user     AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash String    @map("code_hash") @db.VarChar(64)
+  usedAt   DateTime? @map("used_at") @db.Timestamptz(6)
+
+  @@index([userId])
+  @@map("admin_recovery_codes")
 }

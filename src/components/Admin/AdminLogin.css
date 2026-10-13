@@ -70,6 +70,8 @@
 .hf-login__submit:disabled { opacity: .6; cursor: wait; }
 
 .hf-login__help { margin: 0; font-size: 13px; color: var(--c-text-3); text-align: center; line-height: 1.5; }
+.hf-login__help--left { margin-top: -8px; text-align: left; }
+.hf-login__code { font-size: 22px; letter-spacing: .4em; text-align: center; }
 
 
 /* Cumpleaños (B3): tarjeta de felicitación y globo de diálogo del alien */

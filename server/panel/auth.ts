@@ -63,10 +63,13 @@ export async function endSession(c: Context) {
 }
 
 export interface AdminVariables {
-  admin: { id: string; username: string; name: string; firstName: string; lastName: string; isRoot: boolean; role: AdminRole; views: string[]; birthday: boolean; mustChangePassword: boolean; guidesSeen: string[] }
+  admin: { id: string; username: string; name: string; firstName: string; lastName: string; isRoot: boolean; role: AdminRole; views: string[]; twoFactor: boolean; birthday: boolean; mustChangePassword: boolean; guidesSeen: string[] }
   /** Sesión de esta petición (para no cerrarla al cerrar "las demás") */
   sessionId: string
 }
+
+/** Lo único que puede usar un Admin mientras no active su 2FA (es obligatorio para el rol ADMIN) */
+const TWO_FACTOR_SETUP_API = ['/me', '/users/me/2fa', '/users/me/first-password']
 
 /**
  * Va después de requireAdmin: el rol STAFF recibe 403 fuera de sus vistas (`AdminUser.views`, registro en
@@ -74,7 +77,12 @@ export interface AdminVariables {
  */
 export const requireRole: MiddlewareHandler<{ Variables: AdminVariables }> = async (c, next) => {
   const admin = c.get('admin')
-  if (admin.role === AdminRole.STAFF && !staffCanUseApi(c.req.path.replace(/^\/api\/admin/, ''), admin.views)) {
+  const sub = c.req.path.replace(/^\/api\/admin/, '')
+  // Admin sin 2FA: hasta activarlo solo su sesión, la bienvenida y la activación (el panel le muestra la pantalla)
+  if (admin.role === AdminRole.ADMIN && !admin.twoFactor && !TWO_FACTOR_SETUP_API.some((p) => sub === p || sub.startsWith(`${p}/`))) {
+    return fail(c, 403, 'Activa la verificación en dos pasos para seguir usando el panel')
+  }
+  if (admin.role === AdminRole.STAFF && !staffCanUseApi(sub, admin.views)) {
     return fail(c, 403, 'No tienes acceso a esta sección. Pídelo a quien administra el estudio.')
   }
   await next()
@@ -86,7 +94,7 @@ export const requireAdmin: MiddlewareHandler<{ Variables: AdminVariables }> = as
   if (!token) return fail(c, 401, 'Inicia sesión')
   const session = await prisma.adminSession.findUnique({
     where: { tokenHash: sha256(token) },
-    include: { user: { select: { id: true, username: true, name: true, firstName: true, lastName: true, isRoot: true, role: true, views: true, birthDate: true, mustChangePassword: true, guidesSeen: true } } },
+    include: { user: { select: { id: true, username: true, name: true, firstName: true, lastName: true, isRoot: true, role: true, views: true, twoFactorAt: true, birthDate: true, mustChangePassword: true, guidesSeen: true } } },
   })
   const now = Date.now()
   if (!session || session.expiresAt.getTime() <= now || session.lastSeenAt.getTime() + IDLE_MS <= now) {
@@ -98,8 +106,8 @@ export const requireAdmin: MiddlewareHandler<{ Variables: AdminVariables }> = as
     await prisma.adminSession.updateMany({ where: { id: session.id }, data: { lastSeenAt: new Date(now) } })
   }
   // Solo si hoy es su cumpleaños (para la animación del panel); la fecha no sale de aquí
-  const { birthDate, ...user } = session.user
-  c.set('admin', { ...user, birthday: isBirthdayToday(birthDate) })
+  const { birthDate, twoFactorAt, ...user } = session.user
+  c.set('admin', { ...user, twoFactor: !!twoFactorAt, birthday: isBirthdayToday(birthDate) })
   c.set('sessionId', session.id)
   await next()
 }

@@ -136,6 +136,7 @@ export const GUIDES: Record<string, Guide> = {
       { target: '[data-guide="users-list"]', say: 'Todo el equipo.', text: 'Cada quien con su usuario, rol y cumpleaños. "Editar" cambia sus datos y su rol; "Nueva temporal" le da otra contraseña si la perdió.' },
       { target: '[data-guide="users-new"]', say: '¿Llega alguien nuevo?', text: 'Su usuario y una contraseña temporal se generan solos. La ves aquí hasta que entre y ponga la suya en su bienvenida.', tip: 'Admin ve todo; a Staff le eliges qué vistas ve, y siempre tiene Mi cuenta.' },
       { target: '[data-guide="users-me"]', say: 'Tu cuenta.', text: 'Cambia tu contraseña cuando quieras.' },
+      { target: '[data-guide="users-2fa"]', say: 'Tu segundo candado.', text: 'La verificación en dos pasos pide, además de tu contraseña, un código de Google Authenticator o Authy. Para Admin es obligatoria.', tip: 'Guarda tus códigos de respaldo: son tu entrada si pierdes el teléfono.' },
       { target: '[data-guide="users-sessions"]', say: '¿Dónde está abierta tu cuenta?', text: 'Si ves una sesión que no reconoces, ciérrala y cambia tu contraseña.' },
       { target: '[data-guide="users-log"]', say: 'Y quién ha entrado.', text: 'Cada intento de entrar, bueno o fallido. Tras 5 fallidos seguidos, la cuenta se bloquea 15 minutos.' },
       help('esta sección'),

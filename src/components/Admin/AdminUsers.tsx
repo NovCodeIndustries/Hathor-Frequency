@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from 'react'
+import { RecoveryCodes, TwoFactorSetup } from './TwoFactorSetup'
 import { DEFAULT_STAFF_VIEWS, panelViews, viewsText } from '../../data/panelViews'
-import { ROLE_HINT, ROLE_LABEL, adminApi, describeDevice, formatStamp, type AccessLogRow, type AdminRole, type AdminSessionRow, type AdminUserProfile, type AdminUserRow, type NewAdminUser } from '../../lib/adminApi'
+import { ROLE_HINT, ROLE_LABEL, adminApi, describeDevice, formatStamp, type AccessLogRow, type AdminRole, type AdminSessionRow, type AdminUserProfile, type AdminUserRow, type NewAdminUser, type TwoFactorStatus } from '../../lib/adminApi'
 import { staffUsername } from '../../data/staff'
 import { useAdmin } from '../../lib/useAdmin'
 import './AdminSite.css'
@@ -30,6 +31,7 @@ export function AdminUsers() {
       <div className="hf-ausers">
         {admin.isRoot && <UsersAdmin meId={admin.id} onError={onError} onSelfEdited={refreshMe} />}
         <MyPassword name={admin.name} username={admin.username} onError={onError} />
+        <MyTwoFactor username={admin.username} onError={onError} onChanged={refreshMe} />
         <MySessions onError={onError} />
         {admin.isRoot && <AccessLog onError={onError} />}
       </div>
@@ -48,6 +50,7 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
   /** La temporal recién generada (alta o "Nueva temporal"), para mostrarla con su botón de copiar */
   const [fresh, setFresh] = useState<{ username: string; temp: string } | null>(null)
   const [renewId, setRenewId] = useState<string | null>(null)
+  const [resetId, setResetId] = useState<string | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [editId, setEditId] = useState<string | null>(null)
 
@@ -89,6 +92,7 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
   const target = list?.find((u) => u.id === deleteId)
   const editing = list?.find((u) => u.id === editId)
   const renewing = list?.find((u) => u.id === renewId)
+  const resetting = list?.find((u) => u.id === resetId)
   const newUsername = staffUsername(form.firstName, form.lastName)
 
   return (
@@ -130,6 +134,13 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
                     ) : (
                       <span className={`hf-chip ${u.role === 'STAFF' ? 'hf-chip--off' : 'hf-chip--tag'}`} title={u.role === 'STAFF' ? `Ve ${viewsText(u.views)}, más Mi cuenta` : ROLE_HINT[u.role]}>{ROLE_LABEL[u.role]}</span>
                     )}
+                    {u.twoFactorAt ? (
+                      <span className="hf-chip hf-chip--tag hf-ausers__lock" title={`Desde el ${formatStamp(u.twoFactorAt)}`}>2FA</span>
+                    ) : (
+                      <span className="hf-chip hf-chip--off hf-ausers__lock" title={u.role === 'ADMIN' ? 'Se lo pide el panel al entrar' : 'Opcional para Staff'}>
+                        {u.role === 'ADMIN' ? 'Sin 2FA · pendiente' : 'Sin 2FA'}
+                      </span>
+                    )}
                     {u.lockedUntil && (
                       <span className="hf-chip hf-chip--pending hf-ausers__lock" title="Por intentos fallidos; una contraseña nueva lo quita">
                         Bloqueada hasta {formatStamp(u.lockedUntil).split(', ')[1]}
@@ -142,6 +153,9 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
                       <button type="button" className="hf-admin__btn hf-admin__btn--sm" onClick={() => setEditId(u.id)}>Editar</button>
                       {u.id !== meId && (
                         <button type="button" className="hf-admin__btn hf-admin__btn--sm" onClick={() => setRenewId(u.id)}>Nueva temporal</button>
+                      )}
+                      {u.id !== meId && u.twoFactorAt && (
+                        <button type="button" className="hf-admin__btn hf-admin__btn--sm" onClick={() => setResetId(u.id)}>Restablecer 2FA</button>
                       )}
                       {!u.isRoot && (
                         <button type="button" className="hf-admin__btn hf-admin__btn--ghost hf-admin__btn--sm" onClick={() => setDeleteId(u.id)}>Quitar acceso</button>
@@ -204,6 +218,35 @@ function UsersAdmin({ meId, onError, onSelfEdited }: { meId: string; onError: (e
             </dl>
             <div className="hf-asite__confirm-actions">
               <button type="button" className="hf-admin__btn hf-admin__btn--primary" onClick={() => setFresh(null)}>Listo</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {resetting && (
+        <div className="hf-asite__modal">
+          <button type="button" className="hf-asite__backdrop" aria-label="Cerrar" tabIndex={-1} onClick={() => setResetId(null)} />
+          <div className="hf-asite__confirm" role="dialog" aria-modal="true" aria-labelledby={`${id}-reset2fa`}>
+            <h2 id={`${id}-reset2fa`} className="hf-asite__confirm-title">
+              ¿Restablecer el 2FA de <span className="hf-asite__gold">{resetting.username}?</span>
+            </h2>
+            <p className="hf-ausers__muted">
+              Úsalo si perdió su teléfono y sus códigos de respaldo. Se le quita la verificación en dos pasos y se cierran sus sesiones.
+              {resetting.role === 'ADMIN' ? ' Como es Admin, al entrar el panel le pedirá activarla de nuevo antes de todo.' : ' Puede volver a activarla en Mi cuenta.'}
+            </p>
+            <div className="hf-asite__confirm-actions">
+              <button type="button" className="hf-admin__btn" onClick={() => setResetId(null)}>Cancelar</button>
+              <button
+                type="button"
+                className="hf-admin__btn hf-admin__btn--primary"
+                disabled={busy}
+                onClick={async () => {
+                  const who = resetting
+                  if (await run(() => adminApi.resetUserTwoFactor(who.id), `2FA de ${who.username} restablecido.`)) setResetId(null)
+                }}
+              >
+                Restablecer
+              </button>
             </div>
           </div>
         </div>
@@ -590,6 +633,148 @@ const REASON: Record<NonNullable<AccessLogRow['reason']>, string> = {
   password: 'Contraseña incorrecta',
   unknown: 'Usuario que no existe',
   locked: 'Cuenta bloqueada',
+  code: 'Código 2FA incorrecto',
+  recovery: 'Con código de respaldo',
+}
+
+/**
+ * Mi cuenta · verificación en dos pasos: activarla (opcional para Staff), ver cuántos códigos de respaldo quedan,
+ * generar nuevos (con un código de la app) y, solo Staff, quitarla con su contraseña.
+ */
+function MyTwoFactor({ username, onError, onChanged }: { username: string; onError: (e: unknown) => string; onChanged: () => void }) {
+  const id = useId()
+  const [status, setStatus] = useState<TwoFactorStatus | null>(null)
+  const [setting, setSetting] = useState(false)
+  const [action, setAction] = useState<'codes' | 'off' | null>(null)
+  const [value, setValue] = useState('')
+  const [codes, setCodes] = useState<string[] | null>(null)
+  const [saved, setSaved] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [msg, setMsg] = useState('')
+
+  const load = useCallback(() => {
+    adminApi.twoFactor().then(setStatus).catch((err) => setError(onError(err)))
+  }, [onError])
+  useEffect(load, [load])
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault()
+    setBusy(true)
+    setError('')
+    try {
+      if (action === 'codes') {
+        setCodes((await adminApi.twoFactorRecovery(value)).codes)
+        setSaved(false)
+      } else {
+        await adminApi.twoFactorDisable(value)
+        setMsg('Quitaste la verificación en dos pasos.')
+        onChanged()
+      }
+      setAction(null)
+      setValue('')
+      load()
+    } catch (err) {
+      setError(onError(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section className="hf-ausers__card" data-guide="users-2fa" aria-labelledby={`${id}-2fa`}>
+      <h2 id={`${id}-2fa`} className="hf-ausers__title">Verificación en dos pasos</h2>
+      {error && <p className="hf-admin__error" role="alert">{error}</p>}
+      {msg && <p className="hf-ausers__ok" role="status">{msg}</p>}
+      {!status ? (
+        <p className="hf-ausers__muted">Cargando…</p>
+      ) : status.enabled ? (
+        <>
+          <p className="hf-2fa-account__state">
+            <span className="hf-chip hf-chip--tag">Activa</span>
+            <span className="hf-ausers__muted">
+              Desde el {formatStamp(status.enabledAt!)} · te quedan {status.recoveryLeft} {status.recoveryLeft === 1 ? 'código' : 'códigos'} de respaldo
+              {status.required && ' · obligatoria para Admin'}
+            </span>
+          </p>
+          {status.recoveryLeft <= 2 && <p className="hf-admin__error">Te quedan pocos códigos de respaldo: genera nuevos.</p>}
+          {action ? (
+            <form className="hf-2fa-account__form" onSubmit={submit}>
+              <label className="hf-admin__field" htmlFor={`${id}-v`}>
+                {action === 'codes' ? 'Código de tu app' : 'Tu contraseña'}
+                <input
+                  id={`${id}-v`}
+                  className="hf-admin__input"
+                  type={action === 'codes' ? 'text' : 'password'}
+                  inputMode={action === 'codes' ? 'numeric' : undefined}
+                  autoComplete={action === 'codes' ? 'one-time-code' : 'current-password'}
+                  required
+                  autoFocus
+                  value={value}
+                  onChange={(e) => setValue(e.target.value)}
+                />
+              </label>
+              <button type="submit" className="hf-admin__btn hf-admin__btn--primary" disabled={busy}>
+                {action === 'codes' ? 'Generar códigos' : 'Quitar 2FA'}
+              </button>
+              <button type="button" className="hf-admin__btn hf-admin__btn--ghost" onClick={() => (setAction(null), setValue(''))}>Cancelar</button>
+            </form>
+          ) : (
+            <div className="hf-2fa-account__actions">
+              <button type="button" className="hf-admin__btn hf-admin__btn--sm" onClick={() => setAction('codes')}>Nuevos códigos de respaldo</button>
+              {!status.required && (
+                <button type="button" className="hf-admin__btn hf-admin__btn--ghost hf-admin__btn--sm" onClick={() => setAction('off')}>Quitar</button>
+              )}
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          <p className="hf-ausers__muted">
+            Además de tu contraseña, al entrar te pediremos un código de 6 dígitos de Google Authenticator o Authy en tu teléfono. Así nadie entra aunque sepa tu contraseña.
+          </p>
+          <div className="hf-2fa-account__actions">
+            <button type="button" className="hf-admin__btn hf-admin__btn--primary hf-admin__btn--sm" onClick={() => setSetting(true)}>Activar</button>
+          </div>
+        </>
+      )}
+      {setting && (
+        <TwoFactorSetup
+          mode="modal"
+          username={username}
+          onCancel={() => setSetting(false)}
+          onDone={() => {
+            setSetting(false)
+            setMsg('Listo: la verificación en dos pasos está activa.')
+            load()
+            onChanged()
+          }}
+          onError={onError}
+        />
+      )}
+      {codes && (
+        <div className="hf-2fa hf-2fa--modal">
+          <span className="hf-2fa__backdrop" aria-hidden="true" />
+          <div className="hf-2fa__card" role="dialog" aria-modal="true" aria-labelledby={`${id}-codes`}>
+            <span className="hf-2fa__kicker">Verificación en dos pasos</span>
+            <RecoveryCodes
+              titleId={`${id}-codes`}
+              codes={codes}
+              username={username}
+              saved={saved}
+              copied={copied}
+              onSaved={setSaved}
+              onCopy={() => {
+                navigator.clipboard?.writeText(codes.join('\n')).then(() => setCopied(true)).catch(() => {})
+              }}
+              onDone={() => setCodes(null)}
+            />
+          </div>
+        </div>
+      )}
+    </section>
+  )
 }
 
 /** Registro de accesos (solo el principal): los últimos 100 intentos de login, buenos y fallidos */
@@ -629,7 +814,7 @@ function AccessLog({ onError }: { onError: (e: unknown) => string }) {
                     {e.user && <span className="hf-ausers__phone">{e.username}</span>}
                   </td>
                   <td data-label="Resultado">
-                    {e.success ? <span className="hf-chip hf-chip--done">Entró</span> : <span className="hf-chip hf-chip--off">{e.reason ? REASON[e.reason] : 'Falló'}</span>}
+                    {e.success ? <span className="hf-chip hf-chip--done" title={e.reason === 'recovery' ? REASON.recovery : undefined}>{e.reason === 'recovery' ? 'Entró · respaldo' : 'Entró'}</span> : <span className="hf-chip hf-chip--off">{e.reason ? REASON[e.reason] : 'Falló'}</span>}
                   </td>
                   <td data-label="Desde" className="hf-acontacts__muted">
                     {e.ip ?? 'IP desconocida'}

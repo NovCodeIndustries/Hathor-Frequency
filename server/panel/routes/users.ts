@@ -8,6 +8,8 @@ import { fail } from '../../shared/lib/errors'
 import { emitAdmin } from '../../shared/lib/siteEvents'
 import { staffUsername } from '../../../src/data/staff'
 import { generateTempPassword, openTempPassword, sealTempPassword } from '../lib/tempPassword'
+import { hasAppSecret } from '../lib/secretBox'
+import { checkPendingCode, clearTwoFactor, newRecoveryCodes, startSetup, verifySecondFactor } from '../lib/twoFactor'
 import { AdminRole } from '../../generated/prisma/enums'
 import { dateFromISO, isoFromDate, todayISO } from '../../shared/lib/dates'
 
@@ -20,7 +22,7 @@ const onlyRoot: MiddlewareHandler<{ Variables: AdminVariables }> = async (c, nex
 }
 
 const password = z.string().min(10, 'Mínimo 10 caracteres').max(200)
-const select = { id: true, username: true, name: true, firstName: true, middleName: true, lastName: true, secondLastName: true, phone: true, isRoot: true, role: true, views: true, birthDate: true, lockedUntil: true, tempPassword: true, mustChangePassword: true, createdAt: true } as const
+const select = { id: true, username: true, name: true, firstName: true, middleName: true, lastName: true, secondLastName: true, phone: true, isRoot: true, role: true, views: true, twoFactorAt: true, birthDate: true, lockedUntil: true, tempPassword: true, mustChangePassword: true, createdAt: true } as const
 const part = (max: number) => z.string().trim().max(max)
 /** Nombre completo: primer nombre, segundo nombre, primer apellido, segundo apellido */
 const fullName = (u: { firstName: string; middleName?: string; lastName: string; secondLastName?: string }) =>
@@ -90,6 +92,66 @@ users.delete('/me/sessions/:id', async (c) => {
 users.delete('/me/sessions', async (c) => {
   const { count } = await prisma.adminSession.deleteMany({ where: { userId: c.get('admin').id, id: { not: c.get('sessionId') } } })
   return c.json({ ok: true, closed: count })
+})
+
+// ── Verificación en dos pasos (2FA): obligatoria para Admin, opcional para Staff ──
+
+const codeSchema = z.object({ code: z.string().trim().min(6, 'Escribe el código de 6 dígitos').max(20) })
+
+/** Estado de mi 2FA: si está activo, desde cuándo, cuántos códigos de respaldo me quedan y si es obligatorio */
+users.get('/me/2fa', async (c) => {
+  const me = c.get('admin')
+  const [user, recoveryLeft] = await Promise.all([
+    prisma.adminUser.findUnique({ where: { id: me.id }, select: { twoFactorAt: true } }),
+    prisma.adminRecoveryCode.count({ where: { userId: me.id, usedAt: null } }),
+  ])
+  return c.json({ enabled: !!user?.twoFactorAt, enabledAt: user?.twoFactorAt ?? null, recoveryLeft, required: me.role === AdminRole.ADMIN })
+})
+
+/** Paso 1: clave nueva y su QR (si ya está activo, primero hay que quitarlo o pedir que lo restablezcan) */
+users.post('/me/2fa/setup', async (c) => {
+  const me = c.get('admin')
+  if (me.twoFactor) return fail(c, 409, 'Ya tienes la verificación en dos pasos activa')
+  if (!hasAppSecret()) return fail(c, 500, 'Falta APP_SECRET en .env: no se puede guardar la clave del 2FA')
+  return c.json(await startSetup(me))
+})
+
+/** Paso 2: confirma con un código de la app; activa el 2FA, da los códigos de respaldo y cierra las demás sesiones */
+users.post('/me/2fa/enable', async (c) => {
+  const body = await parseBody(c, codeSchema)
+  if (body instanceof Response) return body
+  const me = await prisma.adminUser.findUnique({ where: { id: c.get('admin').id } })
+  if (!me) return fail(c, 404, 'Usuario no encontrado')
+  if (me.twoFactorAt) return fail(c, 409, 'Ya tienes la verificación en dos pasos activa')
+  const step = checkPendingCode(me, body.code)
+  if (step === null) return fail(c, 400, 'El código no coincide. Revisa que sea el de Hathor Frequency y que la hora del teléfono esté bien.', { code: 'No coincide' })
+  await prisma.adminUser.update({ where: { id: me.id }, data: { twoFactorAt: new Date(), twoFactorLastStep: step } })
+  const codes = await newRecoveryCodes(me.id)
+  await prisma.adminSession.deleteMany({ where: { userId: me.id, id: { not: c.get('sessionId') } } })
+  emitAdmin('users')
+  return c.json({ codes })
+})
+
+/** Códigos de respaldo nuevos (los anteriores dejan de servir); pide un código de la app */
+users.post('/me/2fa/recovery', async (c) => {
+  const body = await parseBody(c, codeSchema)
+  if (body instanceof Response) return body
+  const me = await prisma.adminUser.findUnique({ where: { id: c.get('admin').id } })
+  if (!me?.twoFactorAt) return fail(c, 400, 'Primero activa la verificación en dos pasos')
+  if ((await verifySecondFactor(me, body.code)) !== 'app') return fail(c, 400, 'El código no coincide', { code: 'No coincide' })
+  return c.json({ codes: await newRecoveryCodes(me.id) })
+})
+
+/** Quitar mi 2FA (solo Staff: para Admin es obligatorio); pide la contraseña */
+users.delete('/me/2fa', async (c) => {
+  const body = await parseBody(c, z.object({ password: z.string().min(1, 'Escribe tu contraseña') }))
+  if (body instanceof Response) return body
+  if (c.get('admin').role === AdminRole.ADMIN) return fail(c, 403, 'Para Admin la verificación en dos pasos es obligatoria')
+  const me = await prisma.adminUser.findUnique({ where: { id: c.get('admin').id } })
+  if (!me || !(await verifyPassword(body.password, me.passwordHash))) return fail(c, 400, 'La contraseña no es correcta', { password: 'No coincide' })
+  await clearTwoFactor(me.id)
+  emitAdmin('users')
+  return c.json({ ok: true })
 })
 
 /** Registro de accesos: los últimos 100 intentos de login (solo el principal) */
@@ -244,6 +306,23 @@ users.post('/:id/temp-password', onlyRoot, async (c) => {
   await prisma.adminSession.deleteMany({ where: { userId: id } })
   emitAdmin('users')
   return c.json({ tempPassword: temp })
+})
+
+/**
+ * El principal le quita el 2FA a alguien que perdió el teléfono y sus códigos: se cierran sus sesiones y, al volver
+ * a entrar, lo activa de nuevo (si es Admin, es lo primero que le pide el panel). El suyo se restablece con
+ * `npm run admin:reset-2fa` desde la terminal.
+ */
+users.post('/:id/2fa/reset', onlyRoot, async (c) => {
+  const id = c.req.param('id')
+  if (!z.uuid().safeParse(id).success) return fail(c, 404, 'Usuario no encontrado')
+  if (id === c.get('admin').id) return fail(c, 400, 'El tuyo se restablece desde la terminal: npm run admin:reset-2fa')
+  const user = await prisma.adminUser.findUnique({ where: { id } })
+  if (!user) return fail(c, 404, 'Usuario no encontrado')
+  await clearTwoFactor(id)
+  await prisma.adminSession.deleteMany({ where: { userId: id } })
+  emitAdmin('users')
+  return c.json({ ok: true })
 })
 
 users.delete('/:id', onlyRoot, async (c) => {

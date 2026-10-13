@@ -23,6 +23,8 @@ export interface AdminUser {
   role: AdminRole
   /** Vistas del panel que ve si es STAFF (ids de src/data/panelViews.ts); ADMIN ve todo */
   views: string[]
+  /** Tiene la verificación en dos pasos activa (obligatoria para ADMIN: sin ella el panel solo le deja activarla) */
+  twoFactor: boolean
   /** Hoy es su cumpleaños (CDMX): el panel lo festeja una vez al día */
   birthday: boolean
   /** Entró con una contraseña temporal: la bienvenida (W5) le pide poner la suya */
@@ -47,6 +49,8 @@ export interface AdminUserRow extends AdminUser {
   lockedUntil: string | null
   /** Contraseña temporal en claro, solo para el principal y solo mientras la persona no ponga la suya */
   tempPassword: string | null
+  /** Desde cuándo tiene 2FA (null = sin 2FA) */
+  twoFactorAt: string | null
   createdAt: string
 }
 
@@ -158,6 +162,29 @@ export interface PluginStats {
   /** Vistas de /plugins en Umami (null sin Umami) */
   visits: number | null
   current: Record<string, { version: string; mac: boolean; win: boolean }>
+}
+
+/** Primer paso del login con 2FA: falta el código (el pase vale 5 minutos) */
+export interface LoginChallenge {
+  twoFactor: true
+  ticket: string
+}
+
+export interface TwoFactorStatus {
+  enabled: boolean
+  enabledAt: string | null
+  /** Códigos de respaldo sin usar */
+  recoveryLeft: number
+  /** Obligatorio (rol Admin): no se puede quitar */
+  required: boolean
+}
+
+export interface TwoFactorSetup {
+  /** Clave para escribirla a mano en la app, en grupos de 4 */
+  secret: string
+  otpauth: string
+  /** QR en SVG */
+  qr: string
 }
 
 export interface ContentVersionInfo {
@@ -334,7 +361,8 @@ export interface AccessLogRow {
   /** El usuario que se escribió en el login */
   username: string
   success: boolean
-  reason: 'password' | 'unknown' | 'locked' | null
+  /** Al fallar: password, unknown, locked o code (2FA); al entrar, recovery si usó un código de respaldo */
+  reason: 'password' | 'unknown' | 'locked' | 'code' | 'recovery' | null
   ip: string | null
   userAgent: string | null
   createdAt: string
@@ -394,7 +422,8 @@ export interface NewBooking {
 }
 
 export const adminApi = {
-  login: (username: string, password: string) => request<AdminUser>('POST', '/login', { username, password }),
+  login: (username: string, password: string) => request<AdminUser | LoginChallenge>('POST', '/login', { username, password }),
+  loginCode: (ticket: string, code: string) => request<AdminUser>('POST', '/login/2fa', { ticket, code }),
   logout: () => request<{ ok: true }>('POST', '/logout', {}),
   me: () => request<AdminUser>('GET', '/me'),
   summary: () => request<AdminSummary>('GET', '/summary'),
@@ -436,6 +465,12 @@ export const adminApi = {
   createUser: (user: NewAdminUser) => request<AdminUserRow>('POST', '/users', user),
   newTempPassword: (id: string) => request<{ tempPassword: string }>('POST', `/users/${id}/temp-password`, {}),
   setFirstPassword: (next: string) => request<{ ok: true }>('PATCH', '/users/me/first-password', { next }),
+  twoFactor: () => request<TwoFactorStatus>('GET', '/users/me/2fa'),
+  twoFactorSetup: () => request<TwoFactorSetup>('POST', '/users/me/2fa/setup', {}),
+  twoFactorEnable: (code: string) => request<{ codes: string[] }>('POST', '/users/me/2fa/enable', { code }),
+  twoFactorRecovery: (code: string) => request<{ codes: string[] }>('POST', '/users/me/2fa/recovery', { code }),
+  twoFactorDisable: (password: string) => request<{ ok: true }>('DELETE', '/users/me/2fa', { password }),
+  resetUserTwoFactor: (id: string) => request<{ ok: true }>('POST', `/users/${id}/2fa/reset`, {}),
   markGuideSeen: (key: string) => request<{ ok: true }>('POST', '/users/me/guides', { key }),
   deleteUser: (id: string) => request<{ ok: true }>('DELETE', `/users/${id}`),
   updateUser: (id: string, profile: AdminUserProfile & { regenerateUsername?: boolean }) => request<AdminUserRow>('PATCH', `/users/${id}`, profile),

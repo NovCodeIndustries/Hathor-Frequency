@@ -11,6 +11,7 @@ import { BirthdayBalloons } from './BirthdayBalloons'
 import { BirthdayCake } from './BirthdayCake'
 import { DedicationsLayer } from './DedicationsLayer'
 import { PanelWelcome } from './PanelWelcome'
+import { TwoFactorSetup } from './TwoFactorSetup'
 import { GuideHelpButton, PanelGuide } from './PanelGuide'
 import { guideFor, guideTargetVisible } from './guides'
 import { SeasonGarland } from '../Season/SeasonGarland'
@@ -86,6 +87,11 @@ export function AdminLayout() {
     adminApi.summary().then(setSummary).catch(() => {})
   }, [])
 
+  // 2FA: obligatorio para Admin (hasta activarlo solo ve la pantalla de activación); al Staff se le recuerda
+  const needs2fa = !!admin && admin.role === 'ADMIN' && !admin.twoFactor
+  const [setting2fa, setSetting2fa] = useState(false)
+  const [later2fa, setLater2fa] = useState(() => readLater())
+
   const turnOn = async () => {
     try {
       await adminApi.setMaintenance({ enabled: false })
@@ -96,22 +102,23 @@ export function AdminLayout() {
   }
 
   useEffect(() => {
-    if (admin) refreshSummary()
-  }, [admin, refreshSummary])
+    if (admin && !needs2fa) refreshSummary()
+  }, [admin, needs2fa, refreshSummary])
 
   // Avisos en vivo: con sesión, la barra lateral se actualiza sola (reservas, opiniones, contactos…)
+  const live = !!admin && !needs2fa
   useEffect(() => {
-    if (!admin) return
+    if (!live) return
     startAdminLive()
     return stopAdminLive
-  }, [admin])
+  }, [live])
   useAdminLive('all', refreshSummary)
   // Si el principal te cambia el nombre o el rol, se nota sin recargar
   useAdminLive(['users'], refreshMe)
 
   // Arranque automático: cuando no haya otra ventana encima (bienvenida, festejo, dedicatorias…) y ya se vea lo que explica
   const guideKey = guide && admin && !admin.guidesSeen.includes(guide.key) ? guide.key : null
-  const blocked = welcome || !!admin?.mustChangePassword || (party !== null && party !== 'balloons')
+  const blocked = welcome || !!admin?.mustChangePassword || needs2fa || setting2fa || (party !== null && party !== 'balloons')
   useEffect(() => {
     if (!guideKey || guideOpen || blocked) return
     const g = guideFor(location.pathname)
@@ -171,7 +178,10 @@ export function AdminLayout() {
     { to: '/admin/plugins', label: 'Plugins', count: summary?.pluginChanges, kind: 'gold' },
     { to: '/admin/usuarios', label: admin.isRoot ? 'Usuarios' : 'Mi cuenta' },
   ]
-  const tabs = staffOnly ? allTabs.filter((t) => staffCanOpen(t.to, admin.views)) : allTabs
+  // Mientras un Admin no active su 2FA, la barra no lleva secciones
+  const tabs = needs2fa ? [] : staffOnly ? allTabs.filter((t) => staffCanOpen(t.to, admin.views)) : allTabs
+  // Primera pantalla de cada quien: ahí van los avisos (dedicatorias, 2FA)
+  const landing = staffOnly ? staffHome(admin.views) : '/admin'
 
   return (
     <div className="hf-admin">
@@ -258,21 +268,64 @@ export function AdminLayout() {
             onError={onError}
           />
         )}
-        {!welcome && !admin.mustChangePassword && (
-        <DedicationsLayer
-          admin={admin}
-          party={party}
-          setParty={setParty}
-          landing={location.pathname === (staffOnly ? '/admin/reservas' : '/admin')}
-          onError={onError}
-        />
+        {/* Admin sin 2FA: es obligatorio; hasta activarlo no ve nada más (el servidor tampoco le deja) */}
+        {!welcome && !admin.mustChangePassword && needs2fa && (
+          <TwoFactorSetup mode="gate" username={admin.username} onDone={refreshMe} onLogout={logout} onError={onError} />
         )}
-        {!welcome && !admin.mustChangePassword && party === 'balloons' && <BirthdayBalloons name={admin.firstName || shortName(admin)} onDone={endParty} />}
-        {!welcome && !admin.mustChangePassword && party === 'cake' && <BirthdayCake name={admin.firstName || shortName(admin)} onDone={toLetters} onSkip={endParty} />}
-        <Outlet context={{ admin, summary, refreshSummary, refreshMe, onError } satisfies AdminContext} />
-        {guide && !welcome && <GuideHelpButton guide={guide} onOpen={() => setGuideOpen(true)} />}
-        {guide && guideOpen && <PanelGuide key={guide.key} guide={guide} onClose={closeGuide} />}
+        {!welcome && !admin.mustChangePassword && !needs2fa && (
+          <>
+            {/* Staff sin 2FA: aviso en su primera pantalla (como el de las dedicatorias), hasta que lo active o diga "Hoy no" */}
+            {!admin.twoFactor && !later2fa && location.pathname === landing && party === null && (
+              <div className="hf-dnotice" role="status">
+                <span className="hf-dnotice__msg">
+                  Protege tu cuenta con la <span>verificación en dos pasos.</span>
+                </span>
+                <span className="hf-admin__maint-actions">
+                  <button type="button" className="hf-admin__btn hf-admin__btn--ghost hf-admin__btn--sm" onClick={() => setLater2fa(saveLater())}>Hoy no</button>
+                  <button type="button" className="hf-admin__btn hf-admin__btn--primary hf-admin__btn--sm" onClick={() => setSetting2fa(true)}>Activar ahora</button>
+                </span>
+              </div>
+            )}
+            {setting2fa && (
+              <TwoFactorSetup
+                mode="modal"
+                username={admin.username}
+                onCancel={() => setSetting2fa(false)}
+                onDone={() => {
+                  setSetting2fa(false)
+                  refreshMe()
+                }}
+                onError={onError}
+              />
+            )}
+            <DedicationsLayer admin={admin} party={party} setParty={setParty} landing={location.pathname === landing} onError={onError} />
+            {party === 'balloons' && <BirthdayBalloons name={admin.firstName || shortName(admin)} onDone={endParty} />}
+            {party === 'cake' && <BirthdayCake name={admin.firstName || shortName(admin)} onDone={toLetters} onSkip={endParty} />}
+            <Outlet context={{ admin, summary, refreshSummary, refreshMe, onError } satisfies AdminContext} />
+            {guide && !welcome && <GuideHelpButton guide={guide} onOpen={() => setGuideOpen(true)} />}
+            {guide && guideOpen && <PanelGuide key={guide.key} guide={guide} onClose={closeGuide} />}
+          </>
+        )}
       </main>
     </div>
   )
+}
+
+/** "Hoy no" al aviso del 2FA: se recuerda en este navegador hasta mañana */
+const LATER_KEY = 'hf-2fa-later'
+const today = () => new Date().toDateString()
+function readLater(): boolean {
+  try {
+    return localStorage.getItem(LATER_KEY) === today()
+  } catch {
+    return false
+  }
+}
+function saveLater(): boolean {
+  try {
+    localStorage.setItem(LATER_KEY, today())
+  } catch {
+    // sin almacenamiento: solo dura esta visita
+  }
+  return true
 }
